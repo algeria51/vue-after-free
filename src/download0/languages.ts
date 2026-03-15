@@ -6,7 +6,6 @@ export const lang: Record<string, string> = {
   payloadMenu: 'Payload Menu',
   config: 'Config',
   exit: 'Exit',
-  back: 'Back',
   autoLapse: 'Auto Lapse',
   autoPoop: 'Auto Poop',
   autoClose: 'Auto Close',
@@ -19,7 +18,9 @@ export const lang: Record<string, string> = {
   mainMenuLoaded: 'Main menu loaded',
   loadingConfig: 'Loading config UI...',
   configLoaded: 'Config UI loaded',
-  theme: 'Theme'
+  theme: 'Theme',
+  xToGoBack: 'X to go back',
+  oToGoBack: 'O to go back'
 }
 
 export let useImageText = false
@@ -45,7 +46,6 @@ switch (detectedLocale) {
     lang.payloadMenu = 'Menu de Payloads'
     lang.config = 'Configuracion'
     lang.exit = 'Salir'
-    lang.back = 'Volver'
     lang.autoLapse = 'Auto Lapse'
     lang.autoPoop = 'Auto Poop'
     lang.autoClose = 'Auto Cerrar'
@@ -59,6 +59,8 @@ switch (detectedLocale) {
     lang.loadingConfig = 'Cargando configuracion...'
     lang.configLoaded = 'Configuracion cargada'
     lang.theme = 'Tema'
+    lang.xToGoBack = 'X para volver'
+    lang.oToGoBack = 'O para volver'
     break
 
   case 'pt':
@@ -67,7 +69,6 @@ switch (detectedLocale) {
     lang.payloadMenu = 'Menu de Payloads'
     lang.config = 'Configuracao'
     lang.exit = 'Sair'
-    lang.back = 'Voltar'
     lang.autoLapse = 'Auto Lapse'
     lang.autoPoop = 'Auto Poop'
     lang.autoClose = 'Fechar Auto'
@@ -81,6 +82,8 @@ switch (detectedLocale) {
     lang.loadingConfig = 'Carregando configuracao...'
     lang.configLoaded = 'Configuracao carregada'
     lang.theme = 'Tema'
+    lang.xToGoBack = 'X para voltar'
+    lang.oToGoBack = 'O para voltar'
     break
 
   case 'fr':
@@ -89,7 +92,6 @@ switch (detectedLocale) {
     lang.payloadMenu = 'Menu Payload'
     lang.config = 'Configuration'
     lang.exit = 'Quitter'
-    lang.back = 'Retour'
     lang.autoLapse = 'Auto Lapse'
     lang.autoPoop = 'Auto Poop'
     lang.autoClose = 'Fermer Auto'
@@ -103,6 +105,8 @@ switch (detectedLocale) {
     lang.loadingConfig = 'Chargement de la configuration...'
     lang.configLoaded = 'Configuration chargee'
     lang.theme = 'Thème'
+    lang.xToGoBack = 'X pour retourner'
+    lang.oToGoBack = 'O pour retourner'
     break
 
   case 'de':
@@ -111,7 +115,6 @@ switch (detectedLocale) {
     lang.payloadMenu = 'Payload Menu'
     lang.config = 'Einstellungen'
     lang.exit = 'Beenden'
-    lang.back = 'Zuruck'
     lang.autoLapse = 'Auto Lapse'
     lang.autoPoop = 'Auto Poop'
     lang.autoClose = 'Auto Schliessen'
@@ -125,6 +128,8 @@ switch (detectedLocale) {
     lang.loadingConfig = 'Einstellungen werden geladen...'
     lang.configLoaded = 'Einstellungen geladen'
     lang.theme = 'Thema'
+    lang.xToGoBack = 'X für Zurueck'
+    lang.oToGoBack = 'O für Zurueck'
     break
 
   case 'it':
@@ -133,7 +138,6 @@ switch (detectedLocale) {
     lang.payloadMenu = 'Menu Payload'
     lang.config = 'Configurazione'
     lang.exit = 'Esci'
-    lang.back = 'Indietro'
     lang.autoLapse = 'Auto Lapse'
     lang.autoPoop = 'Auto Poop'
     lang.autoClose = 'Chiudi Auto'
@@ -147,6 +151,8 @@ switch (detectedLocale) {
     lang.loadingConfig = 'Caricamento configurazione...'
     lang.configLoaded = 'Configurazione caricata'
     lang.theme = 'Tema'
+    lang.xToGoBack = 'X per tornare indietro'
+    lang.oToGoBack = 'O per tornare indietro'
     break
 
   case 'nl':
@@ -155,7 +161,6 @@ switch (detectedLocale) {
     lang.payloadMenu = 'Payload Menu'
     lang.config = 'Instellingen'
     lang.exit = 'Afsluiten'
-    lang.back = 'Terug'
     lang.autoLapse = 'Auto Lapse'
     lang.autoPoop = 'Auto Poop'
     lang.autoClose = 'Auto Sluiten'
@@ -169,6 +174,8 @@ switch (detectedLocale) {
     lang.loadingConfig = 'Instellingen laden...'
     lang.configLoaded = 'Instellingen geladen'
     lang.theme = 'Thema'
+    lang.xToGoBack = 'X om terug te gaan'
+    lang.oToGoBack = 'O om terug te gaan'
     break
 
   case 'pl':
@@ -177,7 +184,6 @@ switch (detectedLocale) {
     lang.payloadMenu = 'Menu Payload'
     lang.config = 'Konfiguracja'
     lang.exit = 'Wyjscie'
-    lang.back = 'Wstecz'
     lang.autoLapse = 'Auto Lapse'
     lang.autoPoop = 'Auto Poop'
     lang.autoClose = 'Auto Zamknij'
@@ -191,6 +197,8 @@ switch (detectedLocale) {
     lang.loadingConfig = 'Ladowanie konfiguracji...'
     lang.configLoaded = 'Konfiguracja zaladowana'
     lang.theme = 'Motyw'
+    lang.xToGoBack = 'X aby wrocic'
+    lang.oToGoBack = 'O aby wrocic'
     break
 
   case 'tr':
@@ -199,7 +207,6 @@ switch (detectedLocale) {
     lang.payloadMenu = 'Payload Menusu'
     lang.config = 'Ayarlar'
     lang.exit = 'Cikis'
-    lang.back = 'Geri'
     lang.autoLapse = 'Auto Lapse'
     lang.autoPoop = 'Auto Poop'
     lang.autoClose = 'Otomatik Kapat'
@@ -213,6 +220,8 @@ switch (detectedLocale) {
     lang.loadingConfig = 'Ayarlar yukleniyor...'
     lang.configLoaded = 'Ayarlar yuklendi'
     lang.theme = 'Tema'
+    lang.xToGoBack = 'Geri gitmek icin X'
+    lang.oToGoBack = 'Geri gitmek icin O'
     break
 
   case 'ar':
@@ -221,7 +230,6 @@ switch (detectedLocale) {
     lang.payloadMenu = 'قائمة الحمولة'
     lang.config = 'الاعدادات'
     lang.exit = 'خروج'
-    lang.back = 'رجوع'
     lang.autoLapse = 'Auto Lapse'
     lang.autoPoop = 'Auto Poop'
     lang.autoClose = 'اغلاق تلقائي'
@@ -235,6 +243,8 @@ switch (detectedLocale) {
     lang.loadingConfig = 'جاري تحميل الاعدادات...'
     lang.configLoaded = 'تم تحميل الاعدادات'
     lang.theme = 'سمة'
+    lang.xToGoBack = 'X للرجوع'
+    lang.oToGoBack = 'O للرجوع'
     break
 
   case 'ja':
@@ -243,7 +253,6 @@ switch (detectedLocale) {
     lang.payloadMenu = 'ペイロードメニュー'
     lang.config = '設定'
     lang.exit = '終了'
-    lang.back = '戻る'
     lang.autoLapse = '自動Lapse'
     lang.autoPoop = '自動Poop'
     lang.autoClose = '自動終了'
@@ -257,6 +266,8 @@ switch (detectedLocale) {
     lang.loadingConfig = '設定読み込み中...'
     lang.configLoaded = '設定読み込み完了'
     lang.theme = 'テーマ'
+    lang.xToGoBack = 'Xで戻る'
+    lang.oToGoBack = 'Oで戻る'
     break
 
   case 'ko':
@@ -265,7 +276,6 @@ switch (detectedLocale) {
     lang.payloadMenu = '페이로드 메뉴'
     lang.config = '설정'
     lang.exit = '종료'
-    lang.back = '뒤로'
     lang.autoLapse = '자동 Lapse'
     lang.autoPoop = '자동 Poop'
     lang.autoClose = '자동 닫기'
@@ -279,6 +289,8 @@ switch (detectedLocale) {
     lang.loadingConfig = '설정 로딩중...'
     lang.configLoaded = '설정 로딩 완료'
     lang.theme = '테마'
+    lang.xToGoBack = 'X로 뒤로 가기'
+    lang.oToGoBack = 'O로 뒤로 가기'
     break
 
   case 'zh':
@@ -287,7 +299,6 @@ switch (detectedLocale) {
     lang.payloadMenu = '载荷菜单'
     lang.config = '设置'
     lang.exit = '退出'
-    lang.back = '返回'
     lang.autoLapse = '自动Lapse'
     lang.autoPoop = '自动Poop'
     lang.autoClose = '自动关闭'
@@ -301,6 +312,8 @@ switch (detectedLocale) {
     lang.loadingConfig = '正在加载设置...'
     lang.configLoaded = '设置已加载'
     lang.theme = '主题'
+    lang.xToGoBack = '按 X 返回'
+    lang.oToGoBack = '按 O 返回'
     break
 
   case 'en':

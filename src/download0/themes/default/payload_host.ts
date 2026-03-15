@@ -197,11 +197,22 @@ import { checkJailbroken } from 'download0/check-jailbroken'
     textOrigPos.push({ x: text.x, y: text.y })
   }
 
-  const backHint = new jsmaf.Text()
-  backHint.text = jsmaf.circleIsAdvanceButton ? 'X to go back' : 'O to go back'
-  backHint.x = 890
-  backHint.y = 1000
-  backHint.style = 'white'
+  let backHint: Image | jsmaf.Text
+  if (useImageText) {
+    backHint = new Image({
+      url: textImageBase + (jsmaf.circleIsAdvanceButton ? 'xToGoBack.png' : 'oToGoBack.png'),
+      x: 890,
+      y: 1000,
+      width: 150,
+      height: 40
+    })
+  } else {
+    backHint = new jsmaf.Text()
+    backHint.text = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
+    backHint.x = 890
+    backHint.y = 1000
+    backHint.style = 'white'
+  }
   jsmaf.root.children.push(backHint)
 
   let zoomInInterval: number | null = null

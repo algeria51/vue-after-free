@@ -278,11 +278,22 @@ if (typeof lang === 'undefined') {
     textOrigPos.push({ x: btnText.x, y: btnText.y })
   }
 
-  const backHint = new jsmaf.Text()
-  backHint.text = jsmaf.circleIsAdvanceButton ? 'X to go back' : 'O to go back'
-  backHint.x = centerX - 60
-  backHint.y = startY + configOptions.length * buttonSpacing + 120
-  backHint.style = 'white'
+  let backHint: Image | jsmaf.Text
+  if (useImageText) {
+    backHint = new Image({
+      url: textImageBase + (jsmaf.circleIsAdvanceButton ? 'xToGoBack.png' : 'oToGoBack.png'),
+      x: centerX - 60,
+      y: startY + configOptions.length * buttonSpacing + 120,
+      width: 150,
+      height: 40
+    })
+  } else {
+    backHint = new jsmaf.Text()
+    backHint.text = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
+    backHint.x = centerX - 60
+    backHint.y = startY + configOptions.length * buttonSpacing + 120
+    backHint.style = 'white'
+  }
   jsmaf.root.children.push(backHint)
 
   let zoomInInterval: number | null = null
