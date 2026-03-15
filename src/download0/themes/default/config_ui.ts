@@ -254,21 +254,12 @@ if (typeof lang === 'undefined') {
         const themeIndex = availableThemes.indexOf(currentConfig.theme)
         const displayIndex = themeIndex >= 0 ? themeIndex : 0
 
-        if (useImageText) {
-          valueLabel = new Image({
-            url: textImageBase + themeImgKeys[displayIndex] + '.png',
-            x: btnX + 230,
-            y: btnY + 15,
-            width: 150,
-            height: 50
-          })
-        } else {
-          valueLabel = new jsmaf.Text()
-          valueLabel.text = themeLabels[displayIndex] || themeLabels[0]!
-          valueLabel.x = btnX + 250
-          valueLabel.y = btnY + 28
-          valueLabel.style = 'white'
-        }
+        valueLabel = new jsmaf.Text()
+        valueLabel.text = themeLabels[displayIndex] || themeLabels[0]!
+        valueLabel.x = btnX + 250
+        valueLabel.y = btnY + 28
+        valueLabel.style = 'white'
+        
       }
       valueTexts.push(valueLabel)
       jsmaf.root.children.push(valueLabel)
@@ -435,11 +426,7 @@ if (typeof lang === 'undefined') {
         const themeIndex = availableThemes.indexOf(currentConfig.theme)
         const displayIndex = themeIndex >= 0 ? themeIndex : 0
 
-        if (useImageText) {
-          (valueText as Image).url = textImageBase + themeImgKeys[displayIndex] + '.png'
-        } else {
-          (valueText as jsmaf.Text).text = themeLabels[displayIndex] || themeLabels[0]!
-        }
+        (valueText as jsmaf.Text).text = themeLabels[displayIndex] || themeLabels[0]!
       }
     }
   }

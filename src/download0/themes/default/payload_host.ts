@@ -85,9 +85,10 @@ import { checkJailbroken } from 'download0/check-jailbroken'
 
   if (is_jailbroken) {
     scanPaths.push('/data/payloads')
-    for (let i = 0; i <= 7; i++) {
-      scanPaths.push('/mnt/usb' + i + '/payloads')
-    }
+    // this need sandbox escape to work
+    // for (let i = 0; i <= 7; i++) {
+    //   scanPaths.push('/mnt/usb' + i + '/payloads')
+    // }
   }
 
   log('Scanning paths: ' + scanPaths.join(', '))
@@ -398,12 +399,12 @@ import { checkJailbroken } from 'download0/check-jailbroken'
 
       try {
         if (fileName.toLowerCase().endsWith('.js')) {
-          // Local JavaScript file case (from /download0/payloads)
+          // Local JavaScript file case (from "/download0/payloads")
           if (filePath.startsWith('/download0/')) {
             log('Including JavaScript file: ' + fileName)
             include('payloads/' + fileName)
           } else {
-            // External JavaScript file case (from /data/payloads or /mnt/usbX/payloads)
+            // External JavaScript file case (from "/data/payloads")
             log('Reading external JavaScript file: ' + filePath)
             const p_addr = mem.malloc(256)
             for (let i = 0; i < filePath.length; i++) {
