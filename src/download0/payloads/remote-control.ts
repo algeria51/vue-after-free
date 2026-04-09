@@ -16,44 +16,44 @@ if (libc_addr === null) {
 jsmaf.remotePlay = true
 
 // ── syscalls ─────────────────────────────────────────────────────────────────
-fn.register(97,   'socket',      ['bigint','bigint','bigint'],            'bigint')
-fn.register(98,   'connect',     ['bigint','bigint','bigint'],            'bigint')
-fn.register(104,  'bind',        ['bigint','bigint','bigint'],            'bigint')
-fn.register(105,  'setsockopt',  ['bigint','bigint','bigint','bigint','bigint'], 'bigint')
-fn.register(106,  'listen',      ['bigint','bigint'],                     'bigint')
-fn.register(30,   'accept',      ['bigint','bigint','bigint'],            'bigint')
-fn.register(32,   'getsockname', ['bigint','bigint','bigint'],            'bigint')
-fn.register(3,    'read',        ['bigint','bigint','bigint'],            'bigint')
-fn.register(4,    'write',       ['bigint','bigint','bigint'],            'bigint')
-fn.register(5,    'open',        ['string','number','number'],            'bigint')
-fn.register(6,    'close',       ['bigint'],                              'bigint')
-fn.register(0x110,'getdents',    ['number','bigint','bigint'],            'bigint')
-fn.register(93,   'select',      ['bigint','bigint','bigint','bigint','bigint'], 'bigint')
+fn.register(97, 'socket', ['bigint', 'bigint', 'bigint'], 'bigint')
+fn.register(98, 'connect', ['bigint', 'bigint', 'bigint'], 'bigint')
+fn.register(104, 'bind', ['bigint', 'bigint', 'bigint'], 'bigint')
+fn.register(105, 'setsockopt', ['bigint', 'bigint', 'bigint', 'bigint', 'bigint'], 'bigint')
+fn.register(106, 'listen', ['bigint', 'bigint'], 'bigint')
+fn.register(30, 'accept', ['bigint', 'bigint', 'bigint'], 'bigint')
+fn.register(32, 'getsockname', ['bigint', 'bigint', 'bigint'], 'bigint')
+fn.register(3, 'read', ['bigint', 'bigint', 'bigint'], 'bigint')
+fn.register(4, 'write', ['bigint', 'bigint', 'bigint'], 'bigint')
+fn.register(5, 'open', ['string', 'number', 'number'], 'bigint')
+fn.register(6, 'close', ['bigint'], 'bigint')
+fn.register(0x110, 'getdents', ['number', 'bigint', 'bigint'], 'bigint')
+fn.register(93, 'select', ['bigint', 'bigint', 'bigint', 'bigint', 'bigint'], 'bigint')
 
-const socket_sys     = fn.socket
-const connect_sys    = fn.connect
-const bind_sys       = fn.bind
+const socket_sys = fn.socket
+const connect_sys = fn.connect
+const bind_sys = fn.bind
 const setsockopt_sys = fn.setsockopt
-const listen_sys     = fn.listen
-const accept_sys     = fn.accept
-const getsockname_sys= fn.getsockname
-const read_sys       = fn.read
-const write_sys      = fn.write
-const open_sys       = fn.open
-const close_sys      = fn.close
-const getdents_sys   = fn.getdents
-const select_sys     = fn.select
+const listen_sys = fn.listen
+const accept_sys = fn.accept
+const getsockname_sys = fn.getsockname
+const read_sys = fn.read
+const write_sys = fn.write
+const open_sys = fn.open
+const close_sys = fn.close
+const getdents_sys = fn.getdents
+const select_sys = fn.select
 
-const AF_INET      = 2
-const SOCK_STREAM  = 1
-const SOCK_DGRAM   = 2
-const SOL_SOCKET   = 0xFFFF
+const AF_INET = 2
+const SOCK_STREAM = 1
+const SOCK_DGRAM = 2
+const SOL_SOCKET = 0xFFFF
 const SO_REUSEADDR = 0x4
-const O_RDONLY     = 0
+const O_RDONLY = 0
 
 // ── log ring buffer ───────────────────────────────────────────────────────────
 const LOG_RING: string[] = []
-let   LOG_SEQ = 0
+let LOG_SEQ = 0
 
 function rc_log (msg: string) {
   LOG_RING.push(msg)
@@ -77,7 +77,7 @@ function detect_local_ip (): string {
   let ip = '127.0.0.1'
   if (getsockname_sys(fd, la, ll).lo >= 0) {
     const n = mem.view(la).getUint32(4, false)
-    ip = ((n>>24)&0xFF)+'.'+((n>>16)&0xFF)+'.'+((n>>8)&0xFF)+'.'+(n&0xFF)
+    ip = ((n >> 24) & 0xFF) + '.' + ((n >> 16) & 0xFF) + '.' + ((n >> 8) & 0xFF) + '.' + (n & 0xFF)
   }
   close_sys(fd)
   return ip
@@ -107,7 +107,7 @@ function bind_random_port (fd: number): number {
 
 function read_request (fd: number): string {
   const buf = mem.malloc(8192)
-  const n   = read_sys(new BigInt(fd), buf, new BigInt(0, 8192)).lo
+  const n = read_sys(new BigInt(fd), buf, new BigInt(0, 8192)).lo
   if (n <= 0) return ''
   let s = ''
   for (let i = 0; i < n && i < 8192; i++) {
@@ -180,7 +180,7 @@ function list_dir (dirpath: string): string[] {
     let off = 0
     while (off < n) {
       const reclen = mem.view(buf).getUint16(off + 4, true)
-      const dtype  = mem.view(buf).getUint8(off + 6)
+      const dtype = mem.view(buf).getUint8(off + 6)
       const namlen = mem.view(buf).getUint8(off + 7)
       let name = ''
       for (let i = 0; i < namlen; i++) name += String.fromCharCode(mem.view(buf).getUint8(off + 8 + i))
@@ -196,7 +196,7 @@ function read_file (filepath: string, maxbytes: number): string {
   const fd = open_sys(filepath, O_RDONLY, 0).lo
   if (fd < 0) return ''
   const buf = mem.malloc(maxbytes)
-  const n   = read_sys(new BigInt(fd), buf, new BigInt(0, maxbytes)).lo
+  const n = read_sys(new BigInt(fd), buf, new BigInt(0, maxbytes)).lo
   close_sys(new BigInt(fd))
   let out = ''
   for (let i = 0; i < n; i++) {
@@ -684,13 +684,13 @@ try {
 }
 
 // ── non-blocking accept loop via onEnterFrame ─────────────────────────────────
-const _sel_fds   = mem.malloc(128)
-const _sel_tv    = mem.malloc(16) // zero timeout = poll
-const _cli_addr  = mem.malloc(16)
-const _cli_len   = mem.malloc(4)
+const _sel_fds = mem.malloc(128)
+const _sel_tv = mem.malloc(16) // zero timeout = poll
+const _cli_addr = mem.malloc(16)
+const _cli_len = mem.malloc(4)
 
 let rcRunning = true
-let reqCount  = 0
+let reqCount = 0
 
 jsmaf.onEnterFrame = function () {
   if (!rcRunning) return
