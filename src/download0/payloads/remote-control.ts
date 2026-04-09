@@ -427,7 +427,7 @@ function loadPayloads() {
       const row = document.createElement('div');
       row.className = 'payload-item';
       row.innerHTML = '<span class="payload-name">' + f + '</span>' +
-        '<button class="payload-btn" onclick="loadPayload(this, \'' + f + '\')">Load</button>';
+        '<button class="payload-btn" onclick="loadPayload(this, ' + "'" + f + "'" + ')">Load</button>';
       list.appendChild(row);
     }
   }).catch(() => { list.innerHTML = '<div style="color:#f85149;padding:20px">Failed to list payloads.</div>'; });
