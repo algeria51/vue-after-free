@@ -130,6 +130,21 @@ if (typeof lang === 'undefined') {
   const normalButtonImg = 'file:///assets/img/button_over_9.png'
   const selectedButtonImg = 'file:///assets/img/button_over_9.png'
 
+  // ── Sound helpers ────────────────────────────────────────────────────────────
+  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
+  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
+
+  function playSound (url: string) {
+    try {
+      const clip = new jsmaf.AudioClip()
+      clip.volume = 1.0
+      clip.open(url)
+    } catch (e) {
+      log('SFX error: ' + (e as Error).message)
+    }
+  }
+
   jsmaf.root.children.length = 0
 
   new Style({ name: 'white', color: 'white', size: 24 })
@@ -182,7 +197,7 @@ if (typeof lang === 'undefined') {
 
   const centerX = 960
   const startY = 200
-  const buttonSpacing = 120
+  const buttonSpacing = 105
   const buttonWidth = 400
   const buttonHeight = 80
 
@@ -273,7 +288,7 @@ if (typeof lang === 'undefined') {
     backHint = new Image({
       url: textImageBase + (jsmaf.circleIsAdvanceButton ? 'xToGoBack.png' : 'oToGoBack.png'),
       x: centerX - 60,
-      y: startY + configOptions.length * buttonSpacing + 120,
+      y: startY + configOptions.length * buttonSpacing + 60,
       width: 150,
       height: 40
     })
@@ -281,7 +296,7 @@ if (typeof lang === 'undefined') {
     backHint = new jsmaf.Text()
     backHint.text = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
     backHint.x = centerX - 60
-    backHint.y = startY + configOptions.length * buttonSpacing + 120
+    backHint.y = startY + configOptions.length * buttonSpacing + 60
     backHint.style = 'white'
   }
   jsmaf.root.children.push(backHint)
@@ -430,9 +445,10 @@ if (typeof lang === 'undefined') {
     }
   }
 
-  function saveConfig () {
+  function saveConfig (onDone?: () => void) {
     if (!configLoaded) {
       log('Config not loaded yet, skipping save')
+      if (onDone) onDone()
       return
     }
     const configData = {
@@ -456,6 +472,7 @@ if (typeof lang === 'undefined') {
       } else {
         log('Config saved successfully')
       }
+      if (onDone) onDone()
     })
   }
 
@@ -575,19 +592,21 @@ if (typeof lang === 'undefined') {
   jsmaf.onKeyDown = function (keyCode) {
     if (keyCode === 6 || keyCode === 5) {
       currentButton = (currentButton + 1) % buttons.length
+      playSound(SFX_CURSOR)
       updateHighlight()
     } else if (keyCode === 4 || keyCode === 7) {
       currentButton = (currentButton - 1 + buttons.length) % buttons.length
+      playSound(SFX_CURSOR)
       updateHighlight()
     } else if (keyCode === confirmKey) {
+      playSound(SFX_CONFIRM)
       handleButtonPress()
     } else if (keyCode === backKey) {
-      log('Restarting...')
-      // Save config before restart
-      saveConfig()
-      jsmaf.setTimeout(function () {
+      log('Saving and restarting...')
+      playSound(SFX_CANCEL)
+      saveConfig(function () {
         debugging.restart()
-      }, 100)
+      })
     }
   }
 

@@ -40,6 +40,21 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   const normalButtonImg = 'file:///assets/img/button_over_9.png'
   const selectedButtonImg = 'file:///assets/img/button_over_9.png'
 
+  // ── Sound helpers ────────────────────────────────────────────────────────────
+  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
+  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
+
+  function playSound (url: string) {
+    try {
+      const clip = new jsmaf.AudioClip()
+      clip.volume = 1.0
+      clip.open(url)
+    } catch (e) {
+      log('SFX error: ' + (e as Error).message)
+    }
+  }
+
   const background = new Image({
     url: 'file:///../download0/img/multiview_bg_VAF.png',
     x: 0,
@@ -348,12 +363,14 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       const nextButton = currentButton + buttonsPerRow
       if (nextButton < fileButtonCount) {
         currentButton = nextButton
+        playSound(SFX_CURSOR)
       }
       updateHighlight()
     } else if (keyCode === 4) {
       const nextButton = currentButton - buttonsPerRow
       if (nextButton >= 0) {
         currentButton = nextButton
+        playSound(SFX_CURSOR)
       }
       updateHighlight()
     } else if (keyCode === 5) {
@@ -362,18 +379,22 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       const nextRow = Math.floor(nextButton / buttonsPerRow)
       if (nextButton < fileButtonCount && nextRow === row) {
         currentButton = nextButton
+        playSound(SFX_CURSOR)
       }
       updateHighlight()
     } else if (keyCode === 7) {
       const col = currentButton % buttonsPerRow
       if (col > 0) {
         currentButton = currentButton - 1
+        playSound(SFX_CURSOR)
       }
       updateHighlight()
     } else if (keyCode === confirmKey) {
+      playSound(SFX_CONFIRM)
       handleButtonPress()
     } else if (keyCode === backKey) {
       log('Going back to main menu...')
+      playSound(SFX_CANCEL)
       try {
         include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'default') + '/main.js')
       } catch (e) {
