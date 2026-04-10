@@ -13,132 +13,163 @@ import { fn, BigInt } from 'download0/types'
   const buttonOrigPos: { x: number, y: number }[] = []
   const textOrigPos: { x: number, y: number }[] = []
 
-  // Red jailbreak theme colors
-  const COLOR_RED_BRIGHT = 'rgb(255,60,60)'
-  const COLOR_RED_MID = 'rgb(200,30,30)'
-  const COLOR_RED_DARK = 'rgb(120,10,10)'
-  const COLOR_WHITE = 'white'
-  const COLOR_GREY = 'rgba(255,255,255,0.45)'
+  // ── Professional Dark Theme ──────────────────────────────────────────────────
+  const COLOR_RED        = 'rgb(220,40,40)'
+  const COLOR_RED_BRIGHT = 'rgb(255,75,75)'
+  const COLOR_WHITE      = 'rgb(255,255,255)'
+  const COLOR_WHITE_DIM  = 'rgba(255,255,255,0.55)'
+  const COLOR_WHITE_FAINT= 'rgba(255,255,255,0.3)'
 
-  const normalButtonImg = 'file:///assets/img/button_over_9.png'
+  const normalButtonImg   = 'file:///assets/img/button_over_9.png'
   const selectedButtonImg = 'file:///assets/img/button_over_9.png'
 
+  // ── Sound helpers ────────────────────────────────────────────────────────────
+  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
+  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
+
+  function playSound (url: string) {
+    try {
+      const clip = new jsmaf.AudioClip()
+      clip.volume = 1.0
+      clip.open(url)
+    } catch (e) {
+      log('SFX error: ' + (e as Error).message)
+    }
+  }
+
+  // ── Reset scene ──────────────────────────────────────────────────────────────
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'white', color: COLOR_WHITE, size: 24 })
-  new Style({ name: 'title', color: COLOR_WHITE, size: 36 })
-  new Style({ name: 'red', color: COLOR_RED_BRIGHT, size: 26 })
-  new Style({ name: 'selected', color: COLOR_WHITE, size: 26 })
-  new Style({ name: 'dim', color: COLOR_GREY, size: 22 })
+  // ── Styles ───────────────────────────────────────────────────────────────────
+  new Style({ name: 'white',    color: COLOR_WHITE,       size: 25 })
+  new Style({ name: 'selected', color: COLOR_WHITE,       size: 26 })
+  new Style({ name: 'dim',      color: COLOR_WHITE_DIM,   size: 23 })
+  new Style({ name: 'faint',    color: COLOR_WHITE_FAINT, size: 21 })
+  new Style({ name: 'red',      color: COLOR_RED_BRIGHT,  size: 25 })
 
   if (typeof startBgmIfEnabled === 'function') {
     startBgmIfEnabled()
   }
 
-  // ── Background ──────────────────────────────────────────────────────────────
+  // ── Background ───────────────────────────────────────────────────────────────
   const background = new Image({
     url: 'file:///../download0/img/multiview_bg_VAF.png',
-    x: 0,
-    y: 0,
-    width: 1920,
-    height: 1080
+    x: 0, y: 0,
+    width: 1920, height: 1080
   })
   jsmaf.root.children.push(background)
 
-  // Dark vignette overlay for depth
-  const vignette = new Image({
-    url: 'file:///assets/img/button_over_9.png',
-    x: 0,
-    y: 0,
-    width: 1920,
-    height: 1080,
-    alpha: 0.55
+  // Full dark overlay for readability
+  const darkOverlay = new Image({
+    url: normalButtonImg,
+    x: 0, y: 0,
+    width: 1920, height: 1080,
+    alpha: 0.68
   })
-  jsmaf.root.children.push(vignette)
+  jsmaf.root.children.push(darkOverlay)
 
-  // ── Logo ────────────────────────────────────────────────────────────────────
+  // Bottom vignette
+  const bottomVignette = new Image({
+    url: normalButtonImg,
+    x: 0, y: 680,
+    width: 1920, height: 400,
+    alpha: 0.4
+  })
+  jsmaf.root.children.push(bottomVignette)
+
+  // ── Logo ─────────────────────────────────────────────────────────────────────
   const centerX = 960
-  const logoWidth = 560
-  const logoHeight = 316
+  const logoW   = 580
+  const logoH   = 327
 
   const logo = new Image({
     url: 'file:///../download0/img/logo.png',
-    x: centerX - logoWidth / 2,
-    y: 40,
-    width: logoWidth,
-    height: logoHeight
+    x: centerX - logoW / 2,
+    y: 28,
+    width: logoW,
+    height: logoH
   })
   jsmaf.root.children.push(logo)
 
-  // Red accent line under logo
-  const accentLine = new Image({
-    url: 'file:///assets/img/button_over_9.png',
-    x: centerX - 220,
-    y: 370,
-    width: 440,
-    height: 3,
-    alpha: 0.9
+  // ── Separator under logo ─────────────────────────────────────────────────────
+  const sepOuter = new Image({
+    url: normalButtonImg,
+    x: centerX - 300, y: 368,
+    width: 600, height: 1,
+    alpha: 0.18
   })
-  accentLine.borderColor = COLOR_RED_BRIGHT
-  accentLine.borderWidth = 0
-  jsmaf.root.children.push(accentLine)
+  jsmaf.root.children.push(sepOuter)
+
+  const sepMain = new Image({
+    url: normalButtonImg,
+    x: centerX - 200, y: 372,
+    width: 400, height: 3,
+    alpha: 0.95
+  })
+  sepMain.borderColor = COLOR_RED
+  sepMain.borderWidth = 0
+  jsmaf.root.children.push(sepMain)
+
+  const sepInner = new Image({
+    url: normalButtonImg,
+    x: centerX - 55, y: 378,
+    width: 110, height: 1,
+    alpha: 0.45
+  })
+  jsmaf.root.children.push(sepInner)
 
   // ── Menu options ─────────────────────────────────────────────────────────────
   const menuOptions = [
-    { label: lang.jailbreak, script: 'loader.js', imgKey: 'jailbreak' },
+    { label: lang.jailbreak,   script: 'loader.js',       imgKey: 'jailbreak'   },
     { label: lang.payloadMenu, script: 'payload_host.js', imgKey: 'payloadMenu' },
-    { label: lang.config, script: 'config_ui.js', imgKey: 'config' }
+    { label: lang.config,      script: 'config_ui.js',    imgKey: 'config'      }
   ]
 
-  const startY = 420
-  const buttonSpacing = 110
-  const buttonWidth = 460
-  const buttonHeight = 76
+  const startY        = 415
+  const buttonSpacing = 112
+  const buttonWidth   = 480
+  const buttonHeight  = 78
 
   for (let i = 0; i < menuOptions.length; i++) {
     const btnX = centerX - buttonWidth / 2
     const btnY = startY + i * buttonSpacing
 
-    // Button background
     const button = new Image({
       url: normalButtonImg,
-      x: btnX,
-      y: btnY,
+      x: btnX, y: btnY,
       width: buttonWidth,
       height: buttonHeight,
-      alpha: 0.6
+      alpha: 0.55
     })
     buttons.push(button)
     jsmaf.root.children.push(button)
 
-    // Glow placeholder (reuse button_over_9 tinted)
     const glow = new Image({
       url: normalButtonImg,
-      x: btnX - 6,
-      y: btnY - 6,
-      width: buttonWidth + 12,
-      height: buttonHeight + 12,
+      x: btnX - 5, y: btnY - 5,
+      width: buttonWidth + 10,
+      height: buttonHeight + 10,
       alpha: 0,
       visible: false
     })
     buttonGlows.push(glow)
     jsmaf.root.children.push(glow)
 
-    // Button text / image
     let btnText: Image | jsmaf.Text
     if (useImageText) {
       btnText = new Image({
         url: textImageBase + menuOptions[i]!.imgKey + '.png',
-        x: btnX + 24,
-        y: btnY + 13,
+        x: btnX + 28,
+        y: btnY + 14,
         width: 300,
         height: 50
       })
     } else {
       btnText = new jsmaf.Text()
-      btnText.text = menuOptions[i]!.label
-      btnText.x = btnX + buttonWidth / 2 - 60
-      btnText.y = btnY + buttonHeight / 2 - 13
+      btnText.text  = menuOptions[i]!.label
+      btnText.x     = btnX + buttonWidth / 2 - 60
+      btnText.y     = btnY + buttonHeight / 2 - 13
       btnText.style = 'white'
     }
     buttonTexts.push(btnText)
@@ -148,27 +179,25 @@ import { fn, BigInt } from 'download0/types'
     textOrigPos.push({ x: btnText.x, y: btnText.y })
   }
 
-  // ── Exit button ──────────────────────────────────────────────────────────────
+  // ── Exit button ───────────────────────────────────────────────────────────────
   const exitX = centerX - buttonWidth / 2
-  const exitY = startY + menuOptions.length * buttonSpacing + 50
+  const exitY = startY + menuOptions.length * buttonSpacing + 40
 
   const exitButton = new Image({
     url: normalButtonImg,
-    x: exitX,
-    y: exitY,
+    x: exitX, y: exitY,
     width: buttonWidth,
     height: buttonHeight,
-    alpha: 0.45
+    alpha: 0.35
   })
   buttons.push(exitButton)
   jsmaf.root.children.push(exitButton)
 
   const exitGlow = new Image({
     url: normalButtonImg,
-    x: exitX - 6,
-    y: exitY - 6,
-    width: buttonWidth + 12,
-    height: buttonHeight + 12,
+    x: exitX - 5, y: exitY - 5,
+    width: buttonWidth + 10,
+    height: buttonHeight + 10,
     alpha: 0,
     visible: false
   })
@@ -179,16 +208,16 @@ import { fn, BigInt } from 'download0/types'
   if (useImageText) {
     exitText = new Image({
       url: textImageBase + 'exit.png',
-      x: exitX + 24,
-      y: exitY + 13,
+      x: exitX + 28,
+      y: exitY + 14,
       width: 300,
       height: 50
     })
   } else {
     exitText = new jsmaf.Text()
-    exitText.text = lang.exit
-    exitText.x = exitX + buttonWidth / 2 - 20
-    exitText.y = exitY + buttonHeight / 2 - 13
+    exitText.text  = lang.exit
+    exitText.x     = exitX + buttonWidth / 2 - 20
+    exitText.y     = exitY + buttonHeight / 2 - 13
     exitText.style = 'dim'
   }
   buttonTexts.push(exitText)
@@ -197,41 +226,50 @@ import { fn, BigInt } from 'download0/types'
   buttonOrigPos.push({ x: exitX, y: exitY })
   textOrigPos.push({ x: exitText.x, y: exitText.y })
 
-  // ── Animation helpers ────────────────────────────────────────────────────────
-  let zoomInInterval: number | null = null
+  // ── Footer navigation hint ────────────────────────────────────────────────────
+  const hint = new jsmaf.Text()
+  hint.text  = 'Navigate  ↑↓      Select  ✕      Back  ○'
+  hint.x     = centerX - 195
+  hint.y     = 1022
+  hint.style = 'faint'
+  jsmaf.root.children.push(hint)
+
+  // ── Easing ───────────────────────────────────────────────────────────────────
+  function easeOut (t: number) {
+    return 1 - Math.pow(1 - t, 3)
+  }
+
+  // ── Animation ────────────────────────────────────────────────────────────────
+  let zoomInInterval:  number | null = null
   let zoomOutInterval: number | null = null
   let prevButton = -1
-
-  function easeInOut (t: number) {
-    return (1 - Math.cos(t * Math.PI)) / 2
-  }
 
   function animateZoomIn (btn: Image, text: Image | jsmaf.Text, glow: Image,
     btnOrigX: number, btnOrigY: number,
     textOrigX: number, textOrigY: number) {
     if (zoomInInterval) jsmaf.clearInterval(zoomInInterval)
     const startScale = btn.scaleX || 1.0
-    const endScale = 1.08
-    const duration = 160
-    let elapsed = 0
-    const step = 16
+    const endScale   = 1.06
+    const duration   = 140
+    let elapsed      = 0
+    const step       = 14
 
     glow.visible = true
     zoomInInterval = jsmaf.setInterval(function () {
       elapsed += step
-      const t = Math.min(elapsed / duration, 1)
-      const eased = easeInOut(t)
+      const t     = Math.min(elapsed / duration, 1)
+      const eased = easeOut(t)
       const scale = startScale + (endScale - startScale) * eased
 
-      btn.scaleX = scale
-      btn.scaleY = scale
-      btn.x = btnOrigX - (buttonWidth * (scale - 1)) / 2
-      btn.y = btnOrigY - (buttonHeight * (scale - 1)) / 2
+      btn.scaleX  = scale
+      btn.scaleY  = scale
+      btn.x       = btnOrigX  - (buttonWidth  * (scale - 1)) / 2
+      btn.y       = btnOrigY  - (buttonHeight * (scale - 1)) / 2
       text.scaleX = scale
       text.scaleY = scale
-      text.x = textOrigX - (buttonWidth * (scale - 1)) / 2
-      text.y = textOrigY - (buttonHeight * (scale - 1)) / 2
-      glow.alpha = eased * 0.5
+      text.x      = textOrigX - (buttonWidth  * (scale - 1)) / 2
+      text.y      = textOrigY - (buttonHeight * (scale - 1)) / 2
+      glow.alpha  = eased * 0.42
 
       if (t >= 1 && zoomInInterval) {
         jsmaf.clearInterval(zoomInInterval)
@@ -244,27 +282,27 @@ import { fn, BigInt } from 'download0/types'
     btnOrigX: number, btnOrigY: number,
     textOrigX: number, textOrigY: number) {
     if (zoomOutInterval) jsmaf.clearInterval(zoomOutInterval)
-    const startScale = btn.scaleX || 1.08
-    const endScale = 1.0
-    const duration = 160
-    let elapsed = 0
-    const step = 16
+    const startScale = btn.scaleX || 1.06
+    const endScale   = 1.0
+    const duration   = 140
+    let elapsed      = 0
+    const step       = 14
 
     zoomOutInterval = jsmaf.setInterval(function () {
       elapsed += step
-      const t = Math.min(elapsed / duration, 1)
-      const eased = easeInOut(t)
+      const t     = Math.min(elapsed / duration, 1)
+      const eased = easeOut(t)
       const scale = startScale + (endScale - startScale) * eased
 
-      btn.scaleX = scale
-      btn.scaleY = scale
-      btn.x = btnOrigX - (buttonWidth * (scale - 1)) / 2
-      btn.y = btnOrigY - (buttonHeight * (scale - 1)) / 2
+      btn.scaleX  = scale
+      btn.scaleY  = scale
+      btn.x       = btnOrigX  - (buttonWidth  * (scale - 1)) / 2
+      btn.y       = btnOrigY  - (buttonHeight * (scale - 1)) / 2
       text.scaleX = scale
       text.scaleY = scale
-      text.x = textOrigX - (buttonWidth * (scale - 1)) / 2
-      text.y = textOrigY - (buttonHeight * (scale - 1)) / 2
-      glow.alpha = (1 - eased) * 0.5
+      text.x      = textOrigX - (buttonWidth  * (scale - 1)) / 2
+      text.y      = textOrigY - (buttonHeight * (scale - 1)) / 2
+      glow.alpha  = (1 - eased) * 0.42
 
       if (t >= 1 && zoomOutInterval) {
         jsmaf.clearInterval(zoomOutInterval)
@@ -274,54 +312,56 @@ import { fn, BigInt } from 'download0/types'
     }, step)
   }
 
-  // ── Highlight logic ──────────────────────────────────────────────────────────
+  // ── Highlight ─────────────────────────────────────────────────────────────────
   function updateHighlight () {
-    const prevBtn = buttons[prevButton]
+    const prevBtn  = buttons[prevButton]
     const prevGlow = buttonGlows[prevButton]
     if (prevButton >= 0 && prevButton !== currentButton && prevBtn && prevGlow) {
-      prevBtn.url = normalButtonImg
-      prevBtn.alpha = 0.6
+      prevBtn.url         = normalButtonImg
+      prevBtn.alpha       = prevButton === buttons.length - 1 ? 0.35 : 0.55
       prevBtn.borderColor = 'transparent'
       prevBtn.borderWidth = 0
       animateZoomOut(prevBtn, buttonTexts[prevButton]!, prevGlow,
         buttonOrigPos[prevButton]!.x, buttonOrigPos[prevButton]!.y,
-        textOrigPos[prevButton]!.x, textOrigPos[prevButton]!.y)
+        textOrigPos[prevButton]!.x,   textOrigPos[prevButton]!.y)
     }
 
     for (let i = 0; i < buttons.length; i++) {
-      const button = buttons[i]
-      const glow = buttonGlows[i]
+      const button     = buttons[i]
+      const glow       = buttonGlows[i]
       const buttonText = buttonTexts[i]
-      const origBtn = buttonOrigPos[i]
-      const origTxt = textOrigPos[i]
+      const origBtn    = buttonOrigPos[i]
+      const origTxt    = textOrigPos[i]
       if (!button || !buttonText || !origBtn || !origTxt || !glow) continue
 
+      const isExit = (i === buttons.length - 1)
+
       if (i === currentButton) {
-        button.url = selectedButtonImg
-        button.alpha = 1.0
-        button.borderColor = COLOR_RED_BRIGHT
-        button.borderWidth = 4
+        button.url         = selectedButtonImg
+        button.alpha       = 1.0
+        button.borderColor = isExit ? COLOR_WHITE_DIM : COLOR_RED_BRIGHT
+        button.borderWidth = 3
         animateZoomIn(button, buttonText, glow,
           origBtn.x, origBtn.y, origTxt.x, origTxt.y)
         if (!useImageText) {
-          (buttonText as jsmaf.Text).style = (i === buttons.length - 1) ? 'red' : 'selected'
+          (buttonText as jsmaf.Text).style = isExit ? 'red' : 'selected'
         }
       } else if (i !== prevButton) {
-        button.url = normalButtonImg
-        button.alpha = i === buttons.length - 1 ? 0.45 : 0.6
+        button.url         = normalButtonImg
+        button.alpha       = isExit ? 0.35 : 0.55
         button.borderColor = 'transparent'
         button.borderWidth = 0
-        button.scaleX = 1.0
-        button.scaleY = 1.0
-        button.x = origBtn.x
-        button.y = origBtn.y
-        buttonText.scaleX = 1.0
-        buttonText.scaleY = 1.0
-        buttonText.x = origTxt.x
-        buttonText.y = origTxt.y
-        glow.visible = false
+        button.scaleX      = 1.0
+        button.scaleY      = 1.0
+        button.x           = origBtn.x
+        button.y           = origBtn.y
+        buttonText.scaleX  = 1.0
+        buttonText.scaleY  = 1.0
+        buttonText.x       = origTxt.x
+        buttonText.y       = origTxt.y
+        glow.visible       = false
         if (!useImageText) {
-          (buttonText as jsmaf.Text).style = (i === buttons.length - 1) ? 'dim' : 'white'
+          (buttonText as jsmaf.Text).style = isExit ? 'dim' : 'white'
         }
       }
     }
@@ -329,13 +369,16 @@ import { fn, BigInt } from 'download0/types'
     prevButton = currentButton
   }
 
-  // ── Input handling ───────────────────────────────────────────────────────────
+  // ── Input ─────────────────────────────────────────────────────────────────────
   function handleButtonPress () {
-    if (currentButton === buttons.length - 1) {
+    const isExit = (currentButton === buttons.length - 1)
+    if (isExit) {
+      playSound(SFX_CANCEL)
       include('includes/kill_vue.js')
     } else if (currentButton < menuOptions.length) {
       const selectedOption = menuOptions[currentButton]
       if (!selectedOption) return
+      playSound(SFX_CONFIRM)
       if (selectedOption.script === 'loader.js') {
         jsmaf.onKeyDown = function () {}
       }
@@ -356,9 +399,11 @@ import { fn, BigInt } from 'download0/types'
   jsmaf.onKeyDown = function (keyCode) {
     if (keyCode === 6 || keyCode === 5) {
       currentButton = (currentButton + 1) % buttons.length
+      playSound(SFX_CURSOR)
       updateHighlight()
     } else if (keyCode === 4 || keyCode === 7) {
       currentButton = (currentButton - 1 + buttons.length) % buttons.length
+      playSound(SFX_CURSOR)
       updateHighlight()
     } else if (keyCode === 14) {
       handleButtonPress()
