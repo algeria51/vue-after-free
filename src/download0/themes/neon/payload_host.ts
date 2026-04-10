@@ -41,9 +41,9 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   const selectedButtonImg = 'file:///assets/img/button_over_9.png'
 
   // ── Sound helpers ────────────────────────────────────────────────────────────
-  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CURSOR = 'file:///../download0/sfx/cursor.wav'
   const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
-  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
+  const SFX_CANCEL = 'file:///../download0/sfx/cancel.wav'
 
   function playSound (url: string) {
     try {
@@ -57,7 +57,10 @@ import { checkJailbroken } from 'download0/check-jailbroken'
 
   const background = new Image({
     url: 'file:///../download0/img/NeonBG.png',
-    x: 0, y: 0, width: 1920, height: 1080
+    x: 0,
+    y: 0,
+    width: 1920,
+    height: 1080
   })
   jsmaf.root.children.push(background)
 
