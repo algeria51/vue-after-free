@@ -327,7 +327,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       if (i === currentButton) {
         button.url = selectedButtonImg
         button.alpha = 1.0
-        button.borderColor = 'rgb(100,180,255)'
+        button.borderColor = 'rgb(0,230,255)'
         button.borderWidth = 3
         if (buttonMarker) buttonMarker.visible = true
         animateZoomIn(button, buttonText, buttonOrigPos_.x, buttonOrigPos_.y, textOrigPos_.x, textOrigPos_.y)
@@ -396,7 +396,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       log('Going back to main menu...')
       playSound(SFX_CANCEL)
       try {
-        include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'default') + '/main.js')
+        include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'neon') + '/main.js')
       } catch (e) {
         const err = e as Error
         log('ERROR loading main.js: ' + err.message)

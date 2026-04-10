@@ -397,7 +397,7 @@ if (typeof lang === 'undefined') {
       if (i === currentButton) {
         button.url = selectedButtonImg
         button.alpha = 1.0
-        button.borderColor = 'rgb(100,180,255)'
+        button.borderColor = 'rgb(0,230,255)'
         button.borderWidth = 3
         if (buttonMarker) buttonMarker.visible = true
         animateZoomIn(button, buttonText, buttonOrigPos_.x, buttonOrigPos_.y, textOrigPos_.x, textOrigPos_.y)
@@ -501,7 +501,7 @@ if (typeof lang === 'undefined') {
             currentConfig.theme = CONFIG.theme
           } else {
             log('WARNING: Theme "' + (CONFIG.theme || 'undefined') + '" not found in available themes, using default')
-            currentConfig.theme = availableThemes[0] || 'default'
+            currentConfig.theme = availableThemes[0] || 'neon'
           }
 
           // Preserve user's payloads

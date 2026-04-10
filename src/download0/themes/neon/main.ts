@@ -4,7 +4,7 @@ import { fn, BigInt } from 'download0/types'
 
 (function () {
   include('languages.js')
-  log('Loading main menu...')
+  log('Loading neon main menu...')
 
   let currentButton = 0
   const buttons: Image[] = []
@@ -13,12 +13,13 @@ import { fn, BigInt } from 'download0/types'
   const buttonOrigPos: { x: number, y: number }[] = []
   const textOrigPos: { x: number, y: number }[] = []
 
-  // ── Professional Dark Theme ──────────────────────────────────────────────────
-  const COLOR_RED        = 'rgb(220,40,40)'
-  const COLOR_RED_BRIGHT = 'rgb(255,75,75)'
-  const COLOR_WHITE      = 'rgb(255,255,255)'
-  const COLOR_WHITE_DIM  = 'rgba(255,255,255,0.55)'
-  const COLOR_WHITE_FAINT= 'rgba(255,255,255,0.3)'
+  // ── Neon Theme ───────────────────────────────────────────────────────────────
+  const COLOR_CYAN        = 'rgb(0,230,255)'
+  const COLOR_CYAN_BRIGHT = 'rgb(80,255,255)'
+  const COLOR_PURPLE      = 'rgb(180,80,255)'
+  const COLOR_WHITE       = 'rgb(255,255,255)'
+  const COLOR_WHITE_DIM   = 'rgba(255,255,255,0.55)'
+  const COLOR_WHITE_FAINT = 'rgba(255,255,255,0.25)'
 
   const normalButtonImg   = 'file:///assets/img/button_over_9.png'
   const selectedButtonImg = 'file:///assets/img/button_over_9.png'
@@ -43,10 +44,10 @@ import { fn, BigInt } from 'download0/types'
 
   // ── Styles ───────────────────────────────────────────────────────────────────
   new Style({ name: 'white',    color: COLOR_WHITE,       size: 25 })
-  new Style({ name: 'selected', color: COLOR_WHITE,       size: 26 })
+  new Style({ name: 'selected', color: COLOR_CYAN_BRIGHT, size: 26 })
   new Style({ name: 'dim',      color: COLOR_WHITE_DIM,   size: 23 })
   new Style({ name: 'faint',    color: COLOR_WHITE_FAINT, size: 21 })
-  new Style({ name: 'red',      color: COLOR_RED_BRIGHT,  size: 25 })
+  new Style({ name: 'cyan',     color: COLOR_CYAN_BRIGHT, size: 25 })
 
   if (typeof startBgmIfEnabled === 'function') {
     startBgmIfEnabled()
@@ -60,12 +61,12 @@ import { fn, BigInt } from 'download0/types'
   })
   jsmaf.root.children.push(background)
 
-  // Full dark overlay for readability
+  // Deep dark overlay
   const darkOverlay = new Image({
     url: normalButtonImg,
     x: 0, y: 0,
     width: 1920, height: 1080,
-    alpha: 0.68
+    alpha: 0.82
   })
   jsmaf.root.children.push(darkOverlay)
 
@@ -74,7 +75,7 @@ import { fn, BigInt } from 'download0/types'
     url: normalButtonImg,
     x: 0, y: 680,
     width: 1920, height: 400,
-    alpha: 0.4
+    alpha: 0.35
   })
   jsmaf.root.children.push(bottomVignette)
 
@@ -92,7 +93,7 @@ import { fn, BigInt } from 'download0/types'
   })
   jsmaf.root.children.push(logo)
 
-  // ── Separator under logo ─────────────────────────────────────────────────────
+  // ── Cyan separator under logo ─────────────────────────────────────────────────
   const sepOuter = new Image({
     url: normalButtonImg,
     x: centerX - 300, y: 368,
@@ -107,7 +108,7 @@ import { fn, BigInt } from 'download0/types'
     width: 400, height: 3,
     alpha: 0.95
   })
-  sepMain.borderColor = COLOR_RED
+  sepMain.borderColor = COLOR_CYAN
   sepMain.borderWidth = 0
   jsmaf.root.children.push(sepMain)
 
@@ -140,7 +141,7 @@ import { fn, BigInt } from 'download0/types'
       x: btnX, y: btnY,
       width: buttonWidth,
       height: buttonHeight,
-      alpha: 0.55
+      alpha: 0.45
     })
     buttons.push(button)
     jsmaf.root.children.push(button)
@@ -188,7 +189,7 @@ import { fn, BigInt } from 'download0/types'
     x: exitX, y: exitY,
     width: buttonWidth,
     height: buttonHeight,
-    alpha: 0.35
+    alpha: 0.28
   })
   buttons.push(exitButton)
   jsmaf.root.children.push(exitButton)
@@ -269,7 +270,7 @@ import { fn, BigInt } from 'download0/types'
       text.scaleY = scale
       text.x      = textOrigX - (buttonWidth  * (scale - 1)) / 2
       text.y      = textOrigY - (buttonHeight * (scale - 1)) / 2
-      glow.alpha  = eased * 0.42
+      glow.alpha  = eased * 0.5
 
       if (t >= 1 && zoomInInterval) {
         jsmaf.clearInterval(zoomInInterval)
@@ -302,7 +303,7 @@ import { fn, BigInt } from 'download0/types'
       text.scaleY = scale
       text.x      = textOrigX - (buttonWidth  * (scale - 1)) / 2
       text.y      = textOrigY - (buttonHeight * (scale - 1)) / 2
-      glow.alpha  = (1 - eased) * 0.42
+      glow.alpha  = (1 - eased) * 0.5
 
       if (t >= 1 && zoomOutInterval) {
         jsmaf.clearInterval(zoomOutInterval)
@@ -318,7 +319,7 @@ import { fn, BigInt } from 'download0/types'
     const prevGlow = buttonGlows[prevButton]
     if (prevButton >= 0 && prevButton !== currentButton && prevBtn && prevGlow) {
       prevBtn.url         = normalButtonImg
-      prevBtn.alpha       = prevButton === buttons.length - 1 ? 0.35 : 0.55
+      prevBtn.alpha       = prevButton === buttons.length - 1 ? 0.28 : 0.45
       prevBtn.borderColor = 'transparent'
       prevBtn.borderWidth = 0
       animateZoomOut(prevBtn, buttonTexts[prevButton]!, prevGlow,
@@ -339,16 +340,16 @@ import { fn, BigInt } from 'download0/types'
       if (i === currentButton) {
         button.url         = selectedButtonImg
         button.alpha       = 1.0
-        button.borderColor = isExit ? COLOR_WHITE_DIM : COLOR_RED_BRIGHT
+        button.borderColor = isExit ? COLOR_PURPLE : COLOR_CYAN_BRIGHT
         button.borderWidth = 3
         animateZoomIn(button, buttonText, glow,
           origBtn.x, origBtn.y, origTxt.x, origTxt.y)
         if (!useImageText) {
-          (buttonText as jsmaf.Text).style = isExit ? 'red' : 'selected'
+          (buttonText as jsmaf.Text).style = isExit ? 'cyan' : 'selected'
         }
       } else if (i !== prevButton) {
         button.url         = normalButtonImg
-        button.alpha       = isExit ? 0.35 : 0.55
+        button.alpha       = isExit ? 0.28 : 0.45
         button.borderColor = 'transparent'
         button.borderWidth = 0
         button.scaleX      = 1.0
@@ -411,5 +412,5 @@ import { fn, BigInt } from 'download0/types'
   }
 
   updateHighlight()
-  log('Main menu loaded.')
+  log('Neon main menu loaded.')
 })()
