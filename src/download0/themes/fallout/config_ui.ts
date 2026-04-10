@@ -131,9 +131,9 @@ if (typeof lang === 'undefined') {
   const selectedButtonImg = 'file:///assets/img/button_over_9.png'
 
   // ── Sound helpers ────────────────────────────────────────────────────────────
-  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CURSOR = 'file:///../download0/sfx/cursor.wav'
   const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
-  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
+  const SFX_CANCEL = 'file:///../download0/sfx/cancel.wav'
 
   function playSound (url: string) {
     try {
@@ -148,17 +148,20 @@ if (typeof lang === 'undefined') {
   jsmaf.root.children.length = 0
 
   // ── Fallout 4 Terminal Styles ──────────────────────────────────────────────
-  new Style({ name: 'white',           color: 'rgb(0,220,0)',  size: 24 })
-  new Style({ name: 'title',           color: 'rgb(0,240,0)',  size: 32 })
-  new Style({ name: 'terminal',        color: 'rgb(0,220,0)',  size: 22 })
-  new Style({ name: 'terminal_shadow', color: 'rgb(0,0,0)',    size: 22 })
-  new Style({ name: 'dim_text',        color: 'rgb(6,200,6)',  size: 20 })
-  new Style({ name: 'prompt',          color: 'rgb(0,240,0)',  size: 22 })
+  new Style({ name: 'white', color: 'rgb(0,220,0)', size: 24 })
+  new Style({ name: 'title', color: 'rgb(0,240,0)', size: 32 })
+  new Style({ name: 'terminal', color: 'rgb(0,220,0)', size: 22 })
+  new Style({ name: 'terminal_shadow', color: 'rgb(0,0,0)', size: 22 })
+  new Style({ name: 'dim_text', color: 'rgb(6,200,6)', size: 20 })
+  new Style({ name: 'prompt', color: 'rgb(0,240,0)', size: 22 })
 
   // ── Background ────────────────────────────────────────────────────────────
   const background = new Image({
     url: 'file:///../download0/img/FalloutBG.png',
-    x: 0, y: 0, width: 1920, height: 1080
+    x: 0,
+    y: 0,
+    width: 1920,
+    height: 1080
   })
   background.alpha = 0.6
   jsmaf.root.children.push(background)
@@ -166,7 +169,10 @@ if (typeof lang === 'undefined') {
   // Dark overlay for readability
   const overlay = new Image({
     url: 'file:///../download0/img/FalloutBG.png',
-    x: 0, y: 0, width: 1920, height: 1080
+    x: 0,
+    y: 0,
+    width: 1920,
+    height: 1080
   })
   overlay.alpha = 0.45
   jsmaf.root.children.push(overlay)
@@ -194,7 +200,10 @@ if (typeof lang === 'undefined') {
   if (useImageText) {
     const title = new Image({
       url: textImageBase + 'config.png',
-      x: 860, y: 160, width: 200, height: 60
+      x: 860,
+      y: 160,
+      width: 200,
+      height: 60
     })
     jsmaf.root.children.push(title)
   } else {
@@ -633,12 +642,12 @@ if (typeof lang === 'undefined') {
 
   // ── Fallout Footer ────────────────────────────────────────────────────────
   const footerLine = new jsmaf.Text()
-  footerLine.text  = '___________________________________________________________________________________'
+  footerLine.text = '___________________________________________________________________________________'
   footerLine.x = 100; footerLine.y = 960; footerLine.style = 'terminal'
   jsmaf.root.children.push(footerLine)
 
   const footerStatus = new jsmaf.Text()
-  footerStatus.text  = '>Vue after Free 2.0 compatible'
+  footerStatus.text = '>Vue after Free 2.0 compatible'
   footerStatus.x = 100; footerStatus.y = 990; footerStatus.style = 'prompt'
   jsmaf.root.children.push(footerStatus)
 
