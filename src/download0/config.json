@@ -6,7 +6,7 @@
         "autoclose_delay": 3000,
         "music": false,
         "jb_behavior": 0,
-        "theme": "default"
+        "theme": "neon"
     },
     "payloads": []
 }

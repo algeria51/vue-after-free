@@ -130,44 +130,77 @@ if (typeof lang === 'undefined') {
   const normalButtonImg = 'file:///assets/img/button_over_9.png'
   const selectedButtonImg = 'file:///assets/img/button_over_9.png'
 
+  // ── Sound helpers ────────────────────────────────────────────────────────────
+  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
+  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
+
+  function playSound (url: string) {
+    try {
+      const clip = new jsmaf.AudioClip()
+      clip.volume = 1.0
+      clip.open(url)
+    } catch (e) {
+      log('SFX error: ' + (e as Error).message)
+    }
+  }
+
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'white', color: 'white', size: 24 })
-  new Style({ name: 'title', color: 'white', size: 32 })
+  // ── Fallout 4 Terminal Styles ──────────────────────────────────────────────
+  new Style({ name: 'white',           color: 'rgb(0,220,0)',  size: 24 })
+  new Style({ name: 'title',           color: 'rgb(0,240,0)',  size: 32 })
+  new Style({ name: 'terminal',        color: 'rgb(0,220,0)',  size: 22 })
+  new Style({ name: 'terminal_shadow', color: 'rgb(0,0,0)',    size: 22 })
+  new Style({ name: 'dim_text',        color: 'rgb(6,200,6)',  size: 20 })
+  new Style({ name: 'prompt',          color: 'rgb(0,240,0)',  size: 22 })
 
+  // ── Background ────────────────────────────────────────────────────────────
   const background = new Image({
-    url: 'file:///../download0/img/multiview_bg_VAF.png',
-    x: 0,
-    y: 0,
-    width: 1920,
-    height: 1080
+    url: 'file:///../download0/img/FalloutBG.png',
+    x: 0, y: 0, width: 1920, height: 1080
   })
+  background.alpha = 0.6
   jsmaf.root.children.push(background)
 
-  const logo = new Image({
-    url: 'file:///../download0/img/logo.png',
-    x: 1620,
-    y: 0,
-    width: 300,
-    height: 169
+  // Dark overlay for readability
+  const overlay = new Image({
+    url: 'file:///../download0/img/FalloutBG.png',
+    x: 0, y: 0, width: 1920, height: 1080
   })
-  jsmaf.root.children.push(logo)
+  overlay.alpha = 0.45
+  jsmaf.root.children.push(overlay)
 
+  // ── Terminal Header ───────────────────────────────────────────────────────
+  const termHeaders = [
+    '>PIP SET >D:TERMINAL',
+    '>PIP SET >D:"FILE/PROTECTION=OWNER -R/W READY"',
+    '>PIP SET >D:FrontEnd',
+    '>PIP SET >D:DevMode',
+    '>PIP SET >D:Fallout/Config_ui.js',
+  ]
+  termHeaders.forEach((text, i) => {
+    const t = new jsmaf.Text()
+    t.text = text; t.x = 100; t.y = 30 + i * 20; t.style = 'dim_text'
+    jsmaf.root.children.push(t)
+  })
+
+  const dividerTop = new jsmaf.Text()
+  dividerTop.text = '___________________________________________________________________________________'
+  dividerTop.x = 100; dividerTop.y = 148; dividerTop.style = 'terminal'
+  jsmaf.root.children.push(dividerTop)
+
+  // ── Title ─────────────────────────────────────────────────────────────────
   if (useImageText) {
     const title = new Image({
       url: textImageBase + 'config.png',
-      x: 860,
-      y: 100,
-      width: 200,
-      height: 60
+      x: 860, y: 160, width: 200, height: 60
     })
     jsmaf.root.children.push(title)
   } else {
     const title = new jsmaf.Text()
-    title.text = lang.config
-    title.x = 910
-    title.y = 120
-    title.style = 'title'
+    title.text = '>> ' + lang.config.toUpperCase() + ' <<'
+    title.x = 820; title.y = 168; title.style = 'title'
     jsmaf.root.children.push(title)
   }
 
@@ -182,7 +215,7 @@ if (typeof lang === 'undefined') {
 
   const centerX = 960
   const startY = 200
-  const buttonSpacing = 120
+  const buttonSpacing = 105
   const buttonWidth = 400
   const buttonHeight = 80
 
@@ -273,7 +306,7 @@ if (typeof lang === 'undefined') {
     backHint = new Image({
       url: textImageBase + (jsmaf.circleIsAdvanceButton ? 'xToGoBack.png' : 'oToGoBack.png'),
       x: centerX - 60,
-      y: startY + configOptions.length * buttonSpacing + 120,
+      y: startY + configOptions.length * buttonSpacing + 60,
       width: 150,
       height: 40
     })
@@ -281,7 +314,7 @@ if (typeof lang === 'undefined') {
     backHint = new jsmaf.Text()
     backHint.text = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
     backHint.x = centerX - 60
-    backHint.y = startY + configOptions.length * buttonSpacing + 120
+    backHint.y = startY + configOptions.length * buttonSpacing + 60
     backHint.style = 'white'
   }
   jsmaf.root.children.push(backHint)
@@ -382,7 +415,7 @@ if (typeof lang === 'undefined') {
       if (i === currentButton) {
         button.url = selectedButtonImg
         button.alpha = 1.0
-        button.borderColor = 'rgb(100,180,255)'
+        button.borderColor = 'rgb(0,230,0)'
         button.borderWidth = 3
         if (buttonMarker) buttonMarker.visible = true
         animateZoomIn(button, buttonText, buttonOrigPos_.x, buttonOrigPos_.y, textOrigPos_.x, textOrigPos_.y)
@@ -486,7 +519,7 @@ if (typeof lang === 'undefined') {
             currentConfig.theme = CONFIG.theme
           } else {
             log('WARNING: Theme "' + (CONFIG.theme || 'undefined') + '" not found in available themes, using default')
-            currentConfig.theme = availableThemes[0] || 'default'
+            currentConfig.theme = availableThemes[0] || 'fallout'
           }
 
           // Preserve user's payloads
@@ -577,14 +610,18 @@ if (typeof lang === 'undefined') {
   jsmaf.onKeyDown = function (keyCode) {
     if (keyCode === 6 || keyCode === 5) {
       currentButton = (currentButton + 1) % buttons.length
+      playSound(SFX_CURSOR)
       updateHighlight()
     } else if (keyCode === 4 || keyCode === 7) {
       currentButton = (currentButton - 1 + buttons.length) % buttons.length
+      playSound(SFX_CURSOR)
       updateHighlight()
     } else if (keyCode === confirmKey) {
+      playSound(SFX_CONFIRM)
       handleButtonPress()
     } else if (keyCode === backKey) {
       log('Saving and restarting...')
+      playSound(SFX_CANCEL)
       saveConfig(function () {
         debugging.restart()
       })
@@ -594,5 +631,16 @@ if (typeof lang === 'undefined') {
   updateHighlight()
   loadConfig()
 
-  log('Config UI loaded.')
+  // ── Fallout Footer ────────────────────────────────────────────────────────
+  const footerLine = new jsmaf.Text()
+  footerLine.text  = '___________________________________________________________________________________'
+  footerLine.x = 100; footerLine.y = 960; footerLine.style = 'terminal'
+  jsmaf.root.children.push(footerLine)
+
+  const footerStatus = new jsmaf.Text()
+  footerStatus.text  = '>Vue after Free 2.0 compatible'
+  footerStatus.x = 100; footerStatus.y = 990; footerStatus.style = 'prompt'
+  jsmaf.root.children.push(footerStatus)
+
+  log('Fallout Config UI loaded.')
 })()
