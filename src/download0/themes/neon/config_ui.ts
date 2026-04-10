@@ -131,9 +131,9 @@ if (typeof lang === 'undefined') {
   const selectedButtonImg = 'file:///assets/img/button_over_9.png'
 
   // ── Sound helpers ────────────────────────────────────────────────────────────
-  const SFX_CURSOR = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
   const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
-  const SFX_CANCEL = 'file:///../download0/sfx/cancel.wav'
+  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
 
   function playSound (url: string) {
     try {
@@ -147,15 +147,14 @@ if (typeof lang === 'undefined') {
 
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'white', color: 'white', size: 24 })
-  new Style({ name: 'title', color: 'white', size: 32 })
+  // ── Neon Styles ──────────────────────────────────────────────────────────
+  new Style({ name: 'white', color: 'rgb(200,240,255)',  size: 24 })
+  new Style({ name: 'title', color: 'rgb(0,220,255)',    size: 32 })
 
+  // ── Background (dedicated dark cyberpunk) ─────────────────────────────────
   const background = new Image({
-    url: 'file:///../download0/img/multiview_bg_VAF.png',
-    x: 0,
-    y: 0,
-    width: 1920,
-    height: 1080
+    url: 'file:///../download0/img/NeonBG.png',
+    x: 0, y: 0, width: 1920, height: 1080
   })
   jsmaf.root.children.push(background)
 
