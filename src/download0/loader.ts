@@ -22,15 +22,7 @@ include('check-jailbroken.js')
 log('All scripts loaded')
 
 export function show_success (immediate?: boolean) {
-  if (immediate) {
-    jsmaf.root.children.push(bg_success)
-    log('Showing Success Image...')
-  } else {
-    setTimeout(() => {
-      jsmaf.root.children.push(bg_success)
-      log('Showing Success Image...')
-    }, 2000)
-  }
+  log('Jailbreak successful!')
 }
 
 if (typeof startBgmIfEnabled === 'function') {
