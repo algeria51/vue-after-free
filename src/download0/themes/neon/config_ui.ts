@@ -131,9 +131,9 @@ if (typeof lang === 'undefined') {
   const selectedButtonImg = 'file:///assets/img/button_over_9.png'
 
   // ── Sound helpers ────────────────────────────────────────────────────────────
-  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CURSOR = 'file:///../download0/sfx/cursor.wav'
   const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
-  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
+  const SFX_CANCEL = 'file:///../download0/sfx/cancel.wav'
 
   function playSound (url: string) {
     // Respect the music/sfx toggle
@@ -150,31 +150,40 @@ if (typeof lang === 'undefined') {
   jsmaf.root.children.length = 0
 
   // ── Neon Styles ──────────────────────────────────────────────────────────
-  new Style({ name: 'white',  color: 'rgb(255,255,255)',         size: 26 })
-  new Style({ name: 'cyan',   color: 'rgb(0,255,224)',           size: 26 })
-  new Style({ name: 'dim',    color: 'rgba(255,255,255,0.28)',   size: 24 })
-  new Style({ name: 'subdim', color: 'rgba(0,255,224,0.35)',     size: 17 })
-  new Style({ name: 'purple', color: 'rgba(160,80,255,0.65)',    size: 24 })
-  new Style({ name: 'title',  color: 'rgb(0,255,224)',           size: 30 })
-  new Style({ name: 'footer', color: 'rgba(0,255,224,0.25)',     size: 17 })
+  new Style({ name: 'white', color: 'rgb(255,255,255)', size: 26 })
+  new Style({ name: 'cyan', color: 'rgb(0,255,224)', size: 26 })
+  new Style({ name: 'dim', color: 'rgba(255,255,255,0.28)', size: 24 })
+  new Style({ name: 'subdim', color: 'rgba(0,255,224,0.35)', size: 17 })
+  new Style({ name: 'purple', color: 'rgba(160,80,255,0.65)', size: 24 })
+  new Style({ name: 'title', color: 'rgb(0,255,224)', size: 30 })
+  new Style({ name: 'footer', color: 'rgba(0,255,224,0.25)', size: 17 })
 
   // ── Background ────────────────────────────────────────────────────────────
   const background = new Image({
     url: 'file:///../download0/img/NeonBG.png',
-    x: 0, y: 0, width: 1920, height: 1080
+    x: 0,
+    y: 0,
+    width: 1920,
+    height: 1080
   })
   jsmaf.root.children.push(background)
 
   const logo = new Image({
     url: 'file:///../download0/img/logo.png',
-    x: 800, y: 60, width: 320, height: 180
+    x: 800,
+    y: 60,
+    width: 320,
+    height: 180
   })
   jsmaf.root.children.push(logo)
 
   if (useImageText) {
     const title = new Image({
       url: textImageBase + 'config.png',
-      x: 860, y: 255, width: 200, height: 50
+      x: 860,
+      y: 255,
+      width: 200,
+      height: 50
     })
     jsmaf.root.children.push(title)
   } else {
