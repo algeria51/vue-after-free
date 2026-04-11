@@ -9,33 +9,32 @@ import { fn, mem, BigInt } from 'download0/types'
   const is_jailbroken = checkJailbroken()
 
   // ── Palette ───────────────────────────────────────────────────────────────
-  const C_CYAN   = 'rgb(0,255,224)'
-  const C_DIM    = 'rgba(0,255,224,0.32)'
-  const C_WHITE  = 'rgb(255,255,255)'
-  const C_MUTED  = 'rgba(255,255,255,0.30)'
+  const C_CYAN = 'rgb(0,255,224)'
+  const C_DIM = 'rgba(0,255,224,0.32)'
+  const C_WHITE = 'rgb(255,255,255)'
+  const C_MUTED = 'rgba(255,255,255,0.30)'
   const C_PURPLE = 'rgba(160,80,255,0.70)'
   const C_FOOTER = 'rgba(0,255,224,0.28)'
 
-  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CURSOR = 'file:///../download0/sfx/cursor.wav'
   const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
-  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
-  function playSound(url: string) {
+  const SFX_CANCEL = 'file:///../download0/sfx/cancel.wav'
+  function playSound (url: string) {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { const c = new jsmaf.AudioClip(); c.volume = 1.0; c.open(url) }
-    catch(e) {}
+    try { const c = new jsmaf.AudioClip(); c.volume = 1.0; c.open(url) } catch (e) {}
   }
 
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'white',  color: C_WHITE,  size: 26 })
-  new Style({ name: 'cyan',   color: C_CYAN,   size: 26 })
-  new Style({ name: 'muted',  color: C_MUTED,  size: 24 })
-  new Style({ name: 'dim',    color: C_DIM,    size: 18 })
+  new Style({ name: 'white', color: C_WHITE, size: 26 })
+  new Style({ name: 'cyan', color: C_CYAN, size: 26 })
+  new Style({ name: 'muted', color: C_MUTED, size: 24 })
+  new Style({ name: 'dim', color: C_DIM, size: 18 })
   new Style({ name: 'purple', color: C_PURPLE, size: 24 })
-  new Style({ name: 'title',  color: C_CYAN,   size: 36 })
+  new Style({ name: 'title', color: C_CYAN, size: 36 })
   new Style({ name: 'footer', color: C_FOOTER, size: 18 })
 
-  const BG  = 'file:///../download0/img/NeonBG.png'
+  const BG = 'file:///../download0/img/NeonBG.png'
   const BTN = 'file:///../download0/img/NeonBtn.png'
 
   const bg = new Image({ url: BG, x: 0, y: 0, width: 1920, height: 1080 })
@@ -56,10 +55,10 @@ import { fn, mem, BigInt } from 'download0/types'
   jsmaf.root.children.push(divider)
 
   // ── Scan paths ────────────────────────────────────────────────────────────
-  fn.register(0x05, 'open_sys',  ['bigint','bigint','bigint'], 'bigint')
-  fn.register(0x06, 'close_sys', ['bigint'],                   'bigint')
-  fn.register(0x110,'getdents',  ['bigint','bigint','bigint'], 'bigint')
-  fn.register(0x03, 'read_sys',  ['bigint','bigint','bigint'], 'bigint')
+  fn.register(0x05, 'open_sys', ['bigint', 'bigint', 'bigint'], 'bigint')
+  fn.register(0x06, 'close_sys', ['bigint'], 'bigint')
+  fn.register(0x110, 'getdents', ['bigint', 'bigint', 'bigint'], 'bigint')
+  fn.register(0x03, 'read_sys', ['bigint', 'bigint', 'bigint'], 'bigint')
 
   const scanPaths: string[] = ['/download0/payloads']
   if (is_jailbroken) {
@@ -73,21 +72,20 @@ import { fn, mem, BigInt } from 'download0/types'
   for (const p of scanPaths) {
     for (let i = 0; i < p.length; i++) mem.view(path_addr).setUint8(i, p.charCodeAt(i))
     mem.view(path_addr).setUint8(p.length, 0)
-    const fd = fn.open_sys(path_addr, new BigInt(0,0), new BigInt(0,0))
+    const fd = fn.open_sys(path_addr, new BigInt(0, 0), new BigInt(0, 0))
     if (!fd.eq(new BigInt(0xffffffff, 0xffffffff))) {
       const count = fn.getdents(fd, buf, new BigInt(0, 4096))
       if (!count.eq(new BigInt(0xffffffff, 0xffffffff)) && count.lo > 0) {
         let off = 0
         while (off < count.lo) {
-          const reclen = mem.view(buf.add(new BigInt(0, off+4))).getUint16(0, true)
-          const dtype  = mem.view(buf.add(new BigInt(0, off+6))).getUint8(0)
-          const namlen = mem.view(buf.add(new BigInt(0, off+7))).getUint8(0)
+          const reclen = mem.view(buf.add(new BigInt(0, off + 4))).getUint16(0, true)
+          const dtype = mem.view(buf.add(new BigInt(0, off + 6))).getUint8(0)
+          const namlen = mem.view(buf.add(new BigInt(0, off + 7))).getUint8(0)
           let name = ''
-          for (let j = 0; j < namlen; j++) name += String.fromCharCode(mem.view(buf.add(new BigInt(0, off+8+j))).getUint8(0))
+          for (let j = 0; j < namlen; j++) name += String.fromCharCode(mem.view(buf.add(new BigInt(0, off + 8 + j))).getUint8(0))
           if (dtype === 8 && name !== '.' && name !== '..') {
             const low = name.toLowerCase()
-            if (low.endsWith('.elf') || low.endsWith('.bin') || low.endsWith('.js'))
-              fileList.push({ name, path: p + '/' + name })
+            if (low.endsWith('.elf') || low.endsWith('.bin') || low.endsWith('.js')) { fileList.push({ name, path: p + '/' + name }) }
           }
           off += reclen
         }
@@ -98,15 +96,15 @@ import { fn, mem, BigInt } from 'download0/types'
   log('Total files: ' + fileList.length)
 
   // ── Payload List UI ───────────────────────────────────────────────────────
-  const BTN_W   = 680
-  const BTN_H   = 96
-  const BTN_L   = CX - BTN_W / 2
+  const BTN_W = 680
+  const BTN_H = 96
+  const BTN_L = CX - BTN_W / 2
   const START_Y = 196
-  const GAP     = 108
+  const GAP = 108
 
-  const buttons:     Image[]        = []
-  const buttonTexts: jsmaf.Text[]   = []
-  const barsList:    Image[]        = []
+  const buttons: Image[] = []
+  const buttonTexts: jsmaf.Text[] = []
+  const barsList: Image[] = []
 
   if (fileList.length === 0) {
     const empty = new jsmaf.Text()
@@ -121,7 +119,7 @@ import { fn, mem, BigInt } from 'download0/types'
   const maxShow = Math.min(fileList.length, 7)
 
   for (let i = 0; i < maxShow; i++) {
-    const f  = fileList[i]!
+    const f = fileList[i]!
     const bY = START_Y + i * GAP
 
     // Button bg
@@ -147,9 +145,9 @@ import { fn, mem, BigInt } from 'download0/types'
     jsmaf.root.children.push(badgeBg)
 
     const badgeTxt = new jsmaf.Text()
-    badgeTxt.text  = ext
-    badgeTxt.x     = BTN_L + 96
-    badgeTxt.y     = bY + 30
+    badgeTxt.text = ext
+    badgeTxt.x = BTN_L + 96
+    badgeTxt.y = bY + 30
     badgeTxt.style = ext === 'ELF' ? 'dim' : 'dim'
     jsmaf.root.children.push(badgeTxt)
 
@@ -191,12 +189,12 @@ import { fn, mem, BigInt } from 'download0/types'
   footerLine.borderColor = C_CYAN; footerLine.borderWidth = 0
   jsmaf.root.children.push(footerLine)
 
-  const fKeys   = ['\u2191\u2193', 'X', 'O']
+  const fKeys = ['\u2191\u2193', 'X', 'O']
   const fLabels = ['  Navigate', '  Select', '  Back']
   let fx = CX - 300
   for (let i = 0; i < 3; i++) {
-    const k = new jsmaf.Text(); k.text = fKeys[i]!;   k.x = fx;    k.y = 1052; k.style = 'footer'
-    const h = new jsmaf.Text(); h.text = fLabels[i]!; h.x = fx+24; h.y = 1052; h.style = 'footer'
+    const k = new jsmaf.Text(); k.text = fKeys[i]!; k.x = fx; k.y = 1052; k.style = 'footer'
+    const h = new jsmaf.Text(); h.text = fLabels[i]!; h.x = fx + 24; h.y = 1052; h.style = 'footer'
     jsmaf.root.children.push(k); jsmaf.root.children.push(h)
     fx += 210
   }
@@ -204,7 +202,7 @@ import { fn, mem, BigInt } from 'download0/types'
   // ── Highlight ─────────────────────────────────────────────────────────────
   let currentButton = 0; let prevButton = -1
 
-  function updateHighlight() {
+  function updateHighlight () {
     const prev = buttons[prevButton]
     if (prev && prevButton !== currentButton) {
       prev.alpha = 0.08; prev.borderColor = 'rgba(0,255,224,0.20)'
@@ -221,11 +219,10 @@ import { fn, mem, BigInt } from 'download0/types'
   }
 
   // ── Input ─────────────────────────────────────────────────────────────────
-  function handleButtonPress() {
+  function handleButtonPress () {
     if (currentButton === buttons.length - 1) {
       playSound(SFX_CANCEL)
-      try { include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'neon') + '/main.js') }
-      catch(e) { log('ERROR: ' + (e as Error).message) }
+      try { include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'neon') + '/main.js') } catch (e) { log('ERROR: ' + (e as Error).message) }
       return
     }
     const entry = fileList[currentButton]; if (!entry) return
@@ -238,10 +235,10 @@ import { fn, mem, BigInt } from 'download0/types'
           const p = mem.malloc(256)
           for (let i = 0; i < entry.path.length; i++) mem.view(p).setUint8(i, entry.path.charCodeAt(i))
           mem.view(p).setUint8(entry.path.length, 0)
-          const fd2 = fn.open_sys(p, new BigInt(0,0), new BigInt(0,0))
+          const fd2 = fn.open_sys(p, new BigInt(0, 0), new BigInt(0, 0))
           if (!fd2.eq(new BigInt(0xffffffff, 0xffffffff))) {
-            const b2 = mem.malloc(1024*1024)
-            const rdlen = fn.read_sys(fd2, b2, new BigInt(0, 1024*1024)); fn.close_sys(fd2)
+            const b2 = mem.malloc(1024 * 1024)
+            const rdlen = fn.read_sys(fd2, b2, new BigInt(0, 1024 * 1024)); fn.close_sys(fd2)
             let code = ''
             const len = (rdlen instanceof BigInt) ? rdlen.lo : (rdlen as number)
             for (let i = 0; i < len; i++) code += String.fromCharCode(mem.view(b2).getUint8(i))
@@ -253,12 +250,12 @@ import { fn, mem, BigInt } from 'download0/types'
         const { bl_load_from_file } = binloader_init()
         bl_load_from_file(entry.path)
       }
-    } catch(e) { log('ERROR: ' + (e as Error).message) }
+    } catch (e) { log('ERROR: ' + (e as Error).message) }
   }
 
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
 
-  jsmaf.onKeyDown = function(keyCode) {
+  jsmaf.onKeyDown = function (keyCode) {
     if (keyCode === 6 || keyCode === 5) {
       currentButton = (currentButton + 1) % buttons.length
       playSound(SFX_CURSOR); updateHighlight()

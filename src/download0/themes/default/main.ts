@@ -17,9 +17,9 @@ import { fn, BigInt } from 'download0/types'
   const selectedButtonImg = 'file:///assets/img/button_over_9.png'
 
   // ── Sound effects (controlled by music setting) ───────────────────────────
-  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CURSOR = 'file:///../download0/sfx/cursor.wav'
   const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
-  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
+  const SFX_CANCEL = 'file:///../download0/sfx/cancel.wav'
 
   function playSound (url: string) {
     // Respect the music/sfx toggle from CONFIG

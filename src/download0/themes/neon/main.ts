@@ -6,40 +6,39 @@ import { libc_addr } from 'download0/userland'
   log('Loading neon main menu...')
 
   // ── Palette ───────────────────────────────────────────────────────────────
-  const C_CYAN   = 'rgb(0,255,224)'
-  const C_DIM    = 'rgba(0,255,224,0.32)'
-  const C_WHITE  = 'rgb(255,255,255)'
-  const C_MUTED  = 'rgba(255,255,255,0.30)'
+  const C_CYAN = 'rgb(0,255,224)'
+  const C_DIM = 'rgba(0,255,224,0.32)'
+  const C_WHITE = 'rgb(255,255,255)'
+  const C_MUTED = 'rgba(255,255,255,0.30)'
   const C_PURPLE = 'rgba(255,50,50,0.85)'
   const C_FOOTER = 'rgba(0,255,224,0.28)'
 
   // ── SFX ───────────────────────────────────────────────────────────────────
-  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CURSOR = 'file:///../download0/sfx/cursor.wav'
   const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
-  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
-  function playSound(url: string) {
+  const SFX_CANCEL = 'file:///../download0/sfx/cancel.wav'
+  function playSound (url: string) {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { const c = new jsmaf.AudioClip(); c.volume = 1.0; c.open(url) }
-    catch(e) { log('SFX: ' + (e as Error).message) }
+    try { const c = new jsmaf.AudioClip(); c.volume = 1.0; c.open(url) } catch (e) { log('SFX: ' + (e as Error).message) }
   }
 
   // ── Reset Scene ───────────────────────────────────────────────────────────
   jsmaf.root.children.length = 0
 
   // ── Styles ────────────────────────────────────────────────────────────────
-  new Style({ name: 'white',  color: C_WHITE,  size: 32 })
-  new Style({ name: 'cyan',   color: C_CYAN,   size: 32 })
-  new Style({ name: 'muted',  color: C_MUTED,  size: 30 })
-  new Style({ name: 'dim',    color: C_DIM,    size: 20 })
+  new Style({ name: 'white', color: C_WHITE, size: 32 })
+  new Style({ name: 'cyan', color: C_CYAN, size: 32 })
+  new Style({ name: 'muted', color: C_MUTED, size: 30 })
+  new Style({ name: 'dim', color: C_DIM, size: 20 })
   new Style({ name: 'purple', color: C_PURPLE, size: 28 })
-  new Style({ name: 'footer',  color: C_FOOTER,          size: 18 })
+  new Style({ name: 'footer', color: C_FOOTER, size: 18 })
   new Style({ name: 'exitdim', color: 'rgba(255,80,80,0.35)', size: 20 })
-  new Style({ name: 'red',     color: 'rgb(255,80,80)',       size: 32 })
+  new Style({ name: 'red', color: 'rgb(255,80,80)', size: 32 })
 
   if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
   // ── Background ────────────────────────────────────────────────────────────
-  const BG  = 'file:///../download0/img/NeonBG.png'
+  const BG = 'file:///../download0/img/NeonBG.png'
   const BTN = 'file:///../download0/img/NeonBtn.png'
 
   const bg = new Image({ url: BG, x: 0, y: 0, width: 1920, height: 1080 })
@@ -51,18 +50,18 @@ import { libc_addr } from 'download0/userland'
     r.borderColor = C_CYAN; r.borderWidth = 0
     jsmaf.root.children.push(r)
   }
-  mkCorner(52, 24, 48, 2);  mkCorner(52, 24, 2, 48)   // TL
+  mkCorner(52, 24, 48, 2); mkCorner(52, 24, 2, 48)   // TL
   mkCorner(1820, 24, 48, 2); mkCorner(1866, 24, 2, 48) // TR
   mkCorner(52, 1004, 48, 2); mkCorner(52, 956, 2, 48)  // BL
   mkCorner(1820, 1004, 48, 2); mkCorner(1866, 956, 2, 48) // BR
 
   // ── Layout ────────────────────────────────────────────────────────────────
-  const CX      = 960
-  const BTN_W   = 680
-  const BTN_H   = 110
-  const BTN_L   = CX - BTN_W / 2
+  const CX = 960
+  const BTN_W = 680
+  const BTN_H = 110
+  const BTN_L = CX - BTN_W / 2
   const START_Y = 390
-  const GAP     = 130   // equal spacing between all buttons
+  const GAP = 130   // equal spacing between all buttons
 
   // ── Logo ──────────────────────────────────────────────────────────────────
   const logo = new Image({ url: 'file:///../download0/img/logo.png', x: CX - 170, y: 80, width: 340, height: 192 })
@@ -80,21 +79,21 @@ import { libc_addr } from 'download0/userland'
 
   // ── Menu Buttons ─────────────────────────────────────────────────────────
   const menuOptions = [
-    { label: lang.jailbreak,   script: 'loader.js',       imgKey: 'jailbreak',   num: '01' },
+    { label: lang.jailbreak, script: 'loader.js', imgKey: 'jailbreak', num: '01' },
     { label: lang.payloadMenu, script: 'payload_host.js', imgKey: 'payloadMenu', num: '02' },
-    { label: lang.config,      script: 'config_ui.js',    imgKey: 'config',      num: '03' },
+    { label: lang.config, script: 'config_ui.js', imgKey: 'config', num: '03' },
   ]
 
-  const buttons:     Image[]                 = []
-  const buttonTexts: (Image | jsmaf.Text)[]  = []
-  const barsLeft:    Image[]                 = []
+  const buttons: Image[] = []
+  const buttonTexts: (Image | jsmaf.Text)[] = []
+  const barsLeft: Image[] = []
   const buttonOrigPos: { x: number; y: number }[] = []
-  const textOrigPos:   { x: number; y: number }[] = []
+  const textOrigPos: { x: number; y: number }[] = []
 
   for (let i = 0; i < menuOptions.length; i++) {
-    const opt  = menuOptions[i]!
-    const bX   = BTN_L
-    const bY   = START_Y + i * GAP
+    const opt = menuOptions[i]!
+    const bX = BTN_L
+    const bY = START_Y + i * GAP
 
     // Button background
     const btn = new Image({ url: BTN, x: bX, y: bY, width: BTN_W, height: BTN_H, alpha: 0.08 })
@@ -167,12 +166,12 @@ import { libc_addr } from 'download0/userland'
   footerLine.borderColor = C_CYAN; footerLine.borderWidth = 0
   jsmaf.root.children.push(footerLine)
 
-  const fKeys   = ['\u2191\u2193', 'X', 'O']
+  const fKeys = ['\u2191\u2193', 'X', 'O']
   const fLabels = ['  Navigate', '  Select', '  Back']
   let fx = CX - 300
   for (let i = 0; i < 3; i++) {
-    const k = new jsmaf.Text(); k.text = fKeys[i]!;   k.x = fx;    k.y = 1052; k.style = 'footer'
-    const h = new jsmaf.Text(); h.text = fLabels[i]!; h.x = fx+24; h.y = 1052; h.style = 'footer'
+    const k = new jsmaf.Text(); k.text = fKeys[i]!; k.x = fx; k.y = 1052; k.style = 'footer'
+    const h = new jsmaf.Text(); h.text = fLabels[i]!; h.x = fx + 24; h.y = 1052; h.style = 'footer'
     jsmaf.root.children.push(k); jsmaf.root.children.push(h)
     fx += 210
   }
@@ -180,7 +179,7 @@ import { libc_addr } from 'download0/userland'
   // ── Highlight ─────────────────────────────────────────────────────────────
   let prevButton = -1
 
-  function updateHighlight() {
+  function updateHighlight () {
     // Restore previous
     const prev = buttons[prevButton]
     if (prev && prevButton !== currentButton) {
@@ -202,15 +201,15 @@ import { libc_addr } from 'download0/userland'
   // ── Input ─────────────────────────────────────────────────────────────────
   let currentButton = 0
 
-  function handleButtonPress() {
+  function handleButtonPress () {
     if (currentButton === buttons.length - 1) {
       playSound(SFX_CANCEL)
-      try { include('includes/kill_vue.js') } catch(e) {}
+      try { include('includes/kill_vue.js') } catch (e) {}
       jsmaf.exit()
     } else {
       const opt = menuOptions[currentButton]; if (!opt) return
       playSound(SFX_CONFIRM)
-      if (opt.script === 'loader.js') jsmaf.onKeyDown = function() {}
+      if (opt.script === 'loader.js') jsmaf.onKeyDown = function () {}
       log('Loading ' + opt.script)
       try {
         if (opt.script.includes('loader.js')) {
@@ -218,13 +217,13 @@ import { libc_addr } from 'download0/userland'
         } else {
           include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'neon') + '/' + opt.script)
         }
-      } catch(e) { log('ERROR: ' + (e as Error).message) }
+      } catch (e) { log('ERROR: ' + (e as Error).message) }
     }
   }
 
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
 
-  jsmaf.onKeyDown = function(keyCode) {
+  jsmaf.onKeyDown = function (keyCode) {
     if (keyCode === 6 || keyCode === 5) {
       currentButton = (currentButton + 1) % buttons.length
       playSound(SFX_CURSOR); updateHighlight()
