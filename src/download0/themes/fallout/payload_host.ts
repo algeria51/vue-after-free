@@ -12,12 +12,12 @@
   jsmaf.root.children.length = 0
 
   // ── Fallout Styles ────────────────────────────────────────────────────────
-  new Style({ name: 'terminal', color: 'rgb(0,220,0)', size: 26 })
-  new Style({ name: 'terminal_shadow', color: 'rgb(0,0,0)', size: 26 })
-  new Style({ name: 'selected', color: 'rgb(0,255,0)', size: 26 })
-  new Style({ name: 'dim_text', color: 'rgb(6,200,6)', size: 20 })
-  new Style({ name: 'prompt', color: 'rgb(0,240,0)', size: 22 })
-  new Style({ name: 'help_text', color: 'rgb(0,240,0)', size: 18 })
+  new Style({ name: 'terminal',        color: 'rgb(0,220,0)',  size: 26 })
+  new Style({ name: 'terminal_shadow', color: 'rgb(0,0,0)',    size: 26 })
+  new Style({ name: 'selected',        color: 'rgb(0,255,0)',  size: 26 })
+  new Style({ name: 'dim_text',        color: 'rgb(6,200,6)',  size: 20 })
+  new Style({ name: 'prompt',          color: 'rgb(0,240,0)',  size: 22 })
+  new Style({ name: 'help_text',       color: 'rgb(0,240,0)',  size: 18 })
 
   // ── Background ────────────────────────────────────────────────────────────
   const bg = new Image({ url: 'file:///../download0/img/FalloutBG.png', x: 0, y: 0, width: 1920, height: 1080 })
@@ -52,10 +52,10 @@
   jsmaf.root.children.push(divider)
 
   // ── Scan Paths ────────────────────────────────────────────────────────────
-  fn.register(0x05, 'open_sys', ['bigint', 'bigint', 'bigint'], 'bigint')
-  fn.register(0x06, 'close_sys', ['bigint'], 'bigint')
-  fn.register(0x110, 'getdents', ['bigint', 'bigint', 'bigint'], 'bigint')
-  fn.register(0x03, 'read_sys', ['bigint', 'bigint', 'bigint'], 'bigint')
+  fn.register(0x05,  'open_sys',  ['bigint', 'bigint', 'bigint'], 'bigint')
+  fn.register(0x06,  'close_sys', ['bigint'],                     'bigint')
+  fn.register(0x110, 'getdents',  ['bigint', 'bigint', 'bigint'], 'bigint')
+  fn.register(0x03,  'read_sys',  ['bigint', 'bigint', 'bigint'], 'bigint')
 
   const scanPaths: string[] = ['/download0/payloads']
   if (is_jailbroken) {
@@ -65,7 +65,7 @@
 
   const fileList: { name: string; path: string }[] = []
   const path_addr = mem.malloc(256)
-  const buf = mem.malloc(4096)
+  const buf       = mem.malloc(4096)
 
   for (const currentPath of scanPaths) {
     log('Scanning ' + currentPath + '...')
@@ -79,7 +79,7 @@
         let offset = 0
         while (offset < count.lo) {
           const d_reclen = mem.view(buf.add(new BigInt(0, offset + 4))).getUint16(0, true)
-          const d_type = mem.view(buf.add(new BigInt(0, offset + 6))).getUint8(0)
+          const d_type   = mem.view(buf.add(new BigInt(0, offset + 6))).getUint8(0)
           const d_namlen = mem.view(buf.add(new BigInt(0, offset + 7))).getUint8(0)
           let name = ''
           for (let j = 0; j < d_namlen; j++) name += String.fromCharCode(mem.view(buf.add(new BigInt(0, offset + 8 + j))).getUint8(0))
@@ -101,22 +101,22 @@
   log('Total files: ' + fileList.length)
 
   // ── File List UI (3-column grid) ─────────────────────────────────────────
-  const buttons: Image[] = []
-  const buttonTexts: jsmaf.Text[] = []
-  const buttonMarkers: jsmaf.Text[] = []
+  const buttons:       Image[]             = []
+  const buttonTexts:   jsmaf.Text[]        = []
+  const buttonMarkers: jsmaf.Text[]        = []
   const buttonOrigPos: { x: number; y: number }[] = []
-  const textOrigPos: { x: number; y: number }[] = []
+  const textOrigPos:   { x: number; y: number }[] = []
 
-  const gridStartY = 470
-  const rowSpacing = 35
-  const columnSpacing = 350
-  const leftMargin = 100
-  const buttonImg = 'file://../download0/img/Opt_BG.png'
+  const gridStartY     = 470
+  const rowSpacing     = 35
+  const columnSpacing  = 350
+  const leftMargin     = 100
+  const buttonImg      = 'file://../download0/img/Opt_BG.png'
   let currentButton = 0
 
   for (let i = 0; i < fileList.length; i++) {
-    const row = Math.floor(i / 3)
-    const col = i % 3
+    const row  = Math.floor(i / 3)
+    const col  = i % 3
     const yPos = gridStartY + row * rowSpacing
     const xOff = col * columnSpacing
 
@@ -155,12 +155,12 @@
   // ── Help Box (top-right) ──────────────────────────────────────────────────
   const helpBoxX = 800; const helpBoxY = 240
   const helpItems = [
-    { text: '________________________', style: 'terminal', dy: 0 },
-    { text: 'PAYLOAD MENU!', style: 'terminal', dy: 30 },
+    { text: '________________________', style: 'terminal', dy: 0  },
+    { text: 'PAYLOAD MENU!',           style: 'terminal', dy: 30 },
     { text: '________________________', style: 'terminal', dy: 55 },
-    { text: 'D-PAD: Navigate', style: 'help_text', dy: 85 },
-    { text: ' X: Select', style: 'help_text', dy: 100 },
-    { text: ' O: Back', style: 'help_text', dy: 115 },
+    { text: 'D-PAD: Navigate',         style: 'help_text', dy: 85 },
+    { text: ' X: Select',              style: 'help_text', dy: 100 },
+    { text: ' O: Back',                style: 'help_text', dy: 115 },
     { text: '________________________', style: 'terminal', dy: 125 },
   ]
   helpItems.forEach(({ text, style, dy }) => {
@@ -192,7 +192,7 @@
       if (buttonTexts[i]) buttonTexts[i]!.style = 'terminal'
     }
     if (buttonMarkers[currentButton]) buttonMarkers[currentButton]!.visible = true
-    if (buttonTexts[currentButton]) buttonTexts[currentButton]!.style = 'selected'
+    if (buttonTexts[currentButton])   buttonTexts[currentButton]!.style = 'selected'
   }
 
   function handleButtonPress () {
@@ -209,8 +209,8 @@
           mem.view(p).setUint8(entry.path.length, 0)
           const fd2 = fn.open_sys(p, new BigInt(0, 0), new BigInt(0, 0))
           if (!fd2.eq(new BigInt(0xffffffff, 0xffffffff))) {
-            const b2 = mem.malloc(1024 * 1024)
-            const rdlen = fn.read_sys(fd2, b2, new BigInt(0, 1024 * 1024))
+            const b2     = mem.malloc(1024 * 1024)
+            const rdlen  = fn.read_sys(fd2, b2, new BigInt(0, 1024 * 1024))
             fn.close_sys(fd2)
             let code = ''
             const len = rdlen instanceof BigInt ? rdlen.lo : (rdlen as number)
@@ -227,7 +227,7 @@
   }
 
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
-  const backKey = jsmaf.circleIsAdvanceButton ? 14 : 13
+  const backKey    = jsmaf.circleIsAdvanceButton ? 14 : 13
   const COLS = 3
 
   jsmaf.onKeyDown = function (keyCode) {

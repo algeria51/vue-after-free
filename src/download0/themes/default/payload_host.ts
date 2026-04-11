@@ -21,9 +21,9 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   }
 
   // ── Sound effects (controlled by music setting) ───────────────────────────
-  const SFX_CURSOR = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
   const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
-  const SFX_CANCEL = 'file:///../download0/sfx/cancel.wav'
+  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
 
   function playSound (url: string) {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
