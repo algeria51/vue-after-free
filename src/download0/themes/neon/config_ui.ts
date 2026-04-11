@@ -131,11 +131,13 @@ if (typeof lang === 'undefined') {
   const selectedButtonImg = 'file:///assets/img/button_over_9.png'
 
   // ── Sound helpers ────────────────────────────────────────────────────────────
-  const SFX_CURSOR = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
   const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
-  const SFX_CANCEL = 'file:///../download0/sfx/cancel.wav'
+  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
 
   function playSound (url: string) {
+    // Respect the music/sfx toggle
+    if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
     try {
       const clip = new jsmaf.AudioClip()
       clip.volume = 1.0
@@ -148,45 +150,44 @@ if (typeof lang === 'undefined') {
   jsmaf.root.children.length = 0
 
   // ── Neon Styles ──────────────────────────────────────────────────────────
-  new Style({ name: 'white', color: 'rgb(200,240,255)', size: 24 })
-  new Style({ name: 'title', color: 'rgb(0,220,255)', size: 32 })
+  new Style({ name: 'white',  color: 'rgb(255,255,255)',         size: 26 })
+  new Style({ name: 'cyan',   color: 'rgb(0,255,224)',           size: 26 })
+  new Style({ name: 'dim',    color: 'rgba(255,255,255,0.28)',   size: 24 })
+  new Style({ name: 'subdim', color: 'rgba(0,255,224,0.35)',     size: 17 })
+  new Style({ name: 'purple', color: 'rgba(160,80,255,0.65)',    size: 24 })
+  new Style({ name: 'title',  color: 'rgb(0,255,224)',           size: 30 })
+  new Style({ name: 'footer', color: 'rgba(0,255,224,0.25)',     size: 17 })
 
-  // ── Background (dedicated dark cyberpunk) ─────────────────────────────────
+  // ── Background ────────────────────────────────────────────────────────────
   const background = new Image({
     url: 'file:///../download0/img/NeonBG.png',
-    x: 0,
-    y: 0,
-    width: 1920,
-    height: 1080
+    x: 0, y: 0, width: 1920, height: 1080
   })
   jsmaf.root.children.push(background)
 
   const logo = new Image({
     url: 'file:///../download0/img/logo.png',
-    x: 1620,
-    y: 0,
-    width: 300,
-    height: 169
+    x: 800, y: 60, width: 320, height: 180
   })
   jsmaf.root.children.push(logo)
 
   if (useImageText) {
     const title = new Image({
       url: textImageBase + 'config.png',
-      x: 860,
-      y: 100,
-      width: 200,
-      height: 60
+      x: 860, y: 255, width: 200, height: 50
     })
     jsmaf.root.children.push(title)
   } else {
     const title = new jsmaf.Text()
-    title.text = lang.config
-    title.x = 910
-    title.y = 120
-    title.style = 'title'
+    title.text = 'SETTINGS'
+    title.x = 870; title.y = 268; title.style = 'title'
     jsmaf.root.children.push(title)
   }
+
+  const divTop = new jsmaf.Text()
+  divTop.text = '________________________________________________________________'
+  divTop.x = 560; divTop.y = 305; divTop.style = 'subdim'
+  jsmaf.root.children.push(divTop)
 
   const configOptions = [
     { key: 'autolapse', label: lang.autoLapse, imgKey: 'autoLapse', type: 'toggle' },
@@ -399,7 +400,7 @@ if (typeof lang === 'undefined') {
       if (i === currentButton) {
         button.url = selectedButtonImg
         button.alpha = 1.0
-        button.borderColor = 'rgb(0,230,255)'
+        button.borderColor = 'rgba(0,255,224,0.6)'
         button.borderWidth = 3
         if (buttonMarker) buttonMarker.visible = true
         animateZoomIn(button, buttonText, buttonOrigPos_.x, buttonOrigPos_.y, textOrigPos_.x, textOrigPos_.y)

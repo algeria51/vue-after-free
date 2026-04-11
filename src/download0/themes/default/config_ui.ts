@@ -130,6 +130,22 @@ if (typeof lang === 'undefined') {
   const normalButtonImg = 'file:///assets/img/button_over_9.png'
   const selectedButtonImg = 'file:///assets/img/button_over_9.png'
 
+  // ── Sound effects (controlled by music setting) ───────────────────────────
+  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
+  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
+
+  function playSound (url: string) {
+    if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
+    try {
+      const clip = new jsmaf.AudioClip()
+      clip.volume = 1.0
+      clip.open(url)
+    } catch (e) {
+      log('SFX error: ' + (e as Error).message)
+    }
+  }
+
   jsmaf.root.children.length = 0
 
   new Style({ name: 'white', color: 'white', size: 24 })
@@ -577,14 +593,18 @@ if (typeof lang === 'undefined') {
   jsmaf.onKeyDown = function (keyCode) {
     if (keyCode === 6 || keyCode === 5) {
       currentButton = (currentButton + 1) % buttons.length
+      playSound(SFX_CURSOR)
       updateHighlight()
     } else if (keyCode === 4 || keyCode === 7) {
       currentButton = (currentButton - 1 + buttons.length) % buttons.length
+      playSound(SFX_CURSOR)
       updateHighlight()
     } else if (keyCode === confirmKey) {
+      playSound(SFX_CONFIRM)
       handleButtonPress()
     } else if (keyCode === backKey) {
       log('Saving and restarting...')
+      playSound(SFX_CANCEL)
       saveConfig(function () {
         debugging.restart()
       })

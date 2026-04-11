@@ -1,487 +1,193 @@
-import { fn, mem, BigInt } from 'download0/types'
-import { binloader_init } from 'download0/binloader'
+import { lang } from 'download0/languages'
 import { libc_addr } from 'download0/userland'
-import { lang, useImageText, textImageBase } from 'download0/languages'
-import { checkJailbroken } from 'download0/check-jailbroken'
+import { fn, mem, BigInt } from 'download0/types'
 
-(function () {
-  if (typeof libc_addr === 'undefined') {
-    log('Loading userland.js...')
-    include('userland.js')
-    log('userland.js loaded')
-  } else {
-    log('userland.js already loaded (libc_addr defined)')
-  }
-
-  log('Loading check-jailbroken.js...')
+;(function () {
+  if (typeof libc_addr === 'undefined') { log('Loading userland.js...'); include('userland.js') }
   include('check-jailbroken.js')
-
-  if (typeof startBgmIfEnabled === 'function') {
-    startBgmIfEnabled()
-  }
-
-  is_jailbroken = checkJailbroken()
+  if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
+  const is_jailbroken = checkJailbroken()
 
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'white', color: 'white', size: 24 })
-  new Style({ name: 'title', color: 'white', size: 32 })
+  const C_CYAN     = 'rgb(0,255,224)'
+  const C_CYAN_DIM = 'rgba(0,255,224,0.35)'
+  const C_WHITE    = 'rgb(255,255,255)'
+  const C_DIM      = 'rgba(255,255,255,0.28)'
+  const C_PURPLE   = 'rgba(160,80,255,0.65)'
 
-  let currentButton = 0
-  const buttons: Image[] = []
-  const buttonTexts: jsmaf.Text[] = []
-  const buttonMarkers: Image[] = []
-  const buttonOrigPos: { x: number, y: number }[] = []
-  const textOrigPos: { x: number, y: number }[] = []
-
-  type FileEntry = { name: string, path: string }
-  const fileList: FileEntry[] = []
-
-  const normalButtonImg = 'file:///assets/img/button_over_9.png'
-  const selectedButtonImg = 'file:///assets/img/button_over_9.png'
-
-  // ── Sound helpers ────────────────────────────────────────────────────────────
-  const SFX_CURSOR = 'file:///../download0/sfx/cursor.wav'
+  const SFX_CURSOR  = 'file:///../download0/sfx/cursor.wav'
   const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
-  const SFX_CANCEL = 'file:///../download0/sfx/cancel.wav'
-
-  function playSound (url: string) {
-    try {
-      const clip = new jsmaf.AudioClip()
-      clip.volume = 1.0
-      clip.open(url)
-    } catch (e) {
-      log('SFX error: ' + (e as Error).message)
-    }
+  const SFX_CANCEL  = 'file:///../download0/sfx/cancel.wav'
+  function playSound(url: string){
+    if(typeof CONFIG!=='undefined'&&CONFIG.music===false) return
+    try{const clip=new jsmaf.AudioClip();clip.volume=1.0;clip.open(url)}catch(e){}
   }
 
-  const background = new Image({
-    url: 'file:///../download0/img/NeonBG.png',
-    x: 0,
-    y: 0,
-    width: 1920,
-    height: 1080
-  })
-  jsmaf.root.children.push(background)
+  new Style({ name:'white',  color:C_WHITE,    size:24 })
+  new Style({ name:'cyan',   color:C_CYAN,     size:24 })
+  new Style({ name:'dim',    color:C_DIM,      size:22 })
+  new Style({ name:'subdim', color:C_CYAN_DIM, size:17 })
+  new Style({ name:'purple', color:C_PURPLE,   size:22 })
+  new Style({ name:'footer', color:'rgba(0,255,224,0.25)', size:17 })
 
-  const logo = new Image({
-    url: 'file:///../download0/img/logo.png',
-    x: 1620,
-    y: 0,
-    width: 300,
-    height: 169
-  })
-  jsmaf.root.children.push(logo)
+  const bg = new Image({ url:'file:///../download0/img/NeonBG.png', x:0, y:0, width:1920, height:1080 })
+  jsmaf.root.children.push(bg)
 
-  if (useImageText) {
-    const title = new Image({
-      url: textImageBase + 'payloadMenu.png',
-      x: 830,
-      y: 100,
-      width: 250,
-      height: 60
-    })
-    jsmaf.root.children.push(title)
-  } else {
-    const title = new jsmaf.Text()
-    title.text = lang.payloadMenu
-    title.x = 880
-    title.y = 120
-    title.style = 'title'
-    jsmaf.root.children.push(title)
-  }
+  const buttonImg = 'file:///../download0/img/NeonBG.png'
+  const CX = 960; const btnW = 620; const btnLeft = CX - btnW/2
 
-  fn.register(0x05, 'open_sys', ['bigint', 'bigint', 'bigint'], 'bigint')
-  fn.register(0x06, 'close_sys', ['bigint'], 'bigint')
-  fn.register(0x110, 'getdents', ['bigint', 'bigint', 'bigint'], 'bigint')
-  fn.register(0x03, 'read_sys', ['bigint', 'bigint', 'bigint'], 'bigint')
+  // Header
+  const titleTxt = new jsmaf.Text()
+  titleTxt.text='PAYLOAD MENU'; titleTxt.x=CX-120; titleTxt.y=120; titleTxt.style='cyan'
+  jsmaf.root.children.push(titleTxt)
 
-  const scanPaths = ['/download0/payloads']
+  const subTxt = new jsmaf.Text()
+  subTxt.text='SELECT A PAYLOAD TO LAUNCH'; subTxt.x=CX-160; subTxt.y=158; subTxt.style='subdim'
+  jsmaf.root.children.push(subTxt)
 
+  const divL = new Image({ url:buttonImg, x:btnLeft, y:195, width:btnW, height:1, alpha:0.4 })
+  divL.borderColor=C_CYAN; divL.borderWidth=0
+  jsmaf.root.children.push(divL)
+
+  // Scan paths & file list
+  fn.register(0x05,'open_sys',['bigint','bigint','bigint'],'bigint')
+  fn.register(0x06,'close_sys',['bigint'],'bigint')
+  fn.register(0x110,'getdents',['bigint','bigint','bigint'],'bigint')
+  fn.register(0x03,'read_sys',['bigint','bigint','bigint'],'bigint')
+
+  const scanPaths: string[] = ['/download0/payloads']
   if (is_jailbroken) {
     scanPaths.push('/data/payloads')
-    // this need sandbox escape to work
-    // for (let i = 0; i <= 7; i++) {
-    //   scanPaths.push('/mnt/usb' + i + '/payloads')
-    // }
+    for (let i=0;i<=7;i++) scanPaths.push('/mnt/usb'+i+'/payloads')
   }
 
-  log('Scanning paths: ' + scanPaths.join(', '))
-
-  const path_addr = mem.malloc(256)
-  const buf = mem.malloc(4096)
-
-  for (const currentPath of scanPaths) {
-    log('Scanning ' + currentPath + ' for files...')
-
-    for (let i = 0; i < currentPath.length; i++) {
-      mem.view(path_addr).setUint8(i, currentPath.charCodeAt(i))
-    }
-    mem.view(path_addr).setUint8(currentPath.length, 0)
-
-    const fd = fn.open_sys(path_addr, new BigInt(0, 0), new BigInt(0, 0))
-    // log('open_sys (' + currentPath + ') returned: ' + fd.toString())
-
-    if (!fd.eq(new BigInt(0xffffffff, 0xffffffff))) {
-      const count = fn.getdents(fd, buf, new BigInt(0, 4096))
-      // log('getdents returned: ' + count.toString() + ' bytes')
-
-      if (!count.eq(new BigInt(0xffffffff, 0xffffffff)) && count.lo > 0) {
-        let offset = 0
-        while (offset < count.lo) {
-          const d_reclen = mem.view(buf.add(new BigInt(0, offset + 4))).getUint16(0, true)
-          const d_type = mem.view(buf.add(new BigInt(0, offset + 6))).getUint8(0)
-          const d_namlen = mem.view(buf.add(new BigInt(0, offset + 7))).getUint8(0)
-
-          let name = ''
-          for (let i = 0; i < d_namlen; i++) {
-            name += String.fromCharCode(mem.view(buf.add(new BigInt(0, offset + 8 + i))).getUint8(0))
+  const fileList: {name:string;path:string}[] = []
+  const path_addr = mem.malloc(256); const buf = mem.malloc(4096)
+  for (const p of scanPaths) {
+    for (let i=0;i<p.length;i++) mem.view(path_addr).setUint8(i,p.charCodeAt(i))
+    mem.view(path_addr).setUint8(p.length,0)
+    const fd=fn.open_sys(path_addr,new BigInt(0,0),new BigInt(0,0))
+    if (!fd.eq(new BigInt(0xffffffff,0xffffffff))) {
+      const count=fn.getdents(fd,buf,new BigInt(0,4096))
+      if (!count.eq(new BigInt(0xffffffff,0xffffffff))&&count.lo>0) {
+        let off=0
+        while(off<count.lo){
+          const reclen=mem.view(buf.add(new BigInt(0,off+4))).getUint16(0,true)
+          const dtype=mem.view(buf.add(new BigInt(0,off+6))).getUint8(0)
+          const dnamlen=mem.view(buf.add(new BigInt(0,off+7))).getUint8(0)
+          let name=''
+          for(let j=0;j<dnamlen;j++) name+=String.fromCharCode(mem.view(buf.add(new BigInt(0,off+8+j))).getUint8(0))
+          if(dtype===8&&name!=='.'&&name!=='..'){
+            const low=name.toLowerCase()
+            if(low.endsWith('.elf')||low.endsWith('.bin')||low.endsWith('.js')) fileList.push({name,path:p+'/'+name})
           }
-
-          // log('Entry: ' + name + ' type=' + d_type)
-
-          if (d_type === 8 && name !== '.' && name !== '..') {
-            const lowerName = name.toLowerCase()
-            if (lowerName.endsWith('.elf') || lowerName.endsWith('.bin') || lowerName.endsWith('.js')) {
-              fileList.push({ name, path: currentPath + '/' + name })
-              log('Added file: ' + name + ' from ' + currentPath)
-            }
-          }
-
-          offset += d_reclen
+          off+=reclen
         }
       }
       fn.close_sys(fd)
-    } else {
-      log('Failed to open ' + currentPath)
     }
   }
 
-  log('Total files found: ' + fileList.length)
+  // Build list UI - centered single column
+  const buttons: Image[]      = []
+  const buttonTexts: jsmaf.Text[] = []
+  let currentButton = 0; let prevButton = -1
+  const itemH=72; const itemSpacing=84
+  const startY=230
 
-  const startY = 200
-  const buttonSpacing = 90
-  const buttonsPerRow = 5
-  const buttonWidth = 300
-  const buttonHeight = 80
-  const startX = 130
-  const xSpacing = 340
+  if (fileList.length===0) {
+    const empty=new jsmaf.Text(); empty.text='NO PAYLOADS FOUND'; empty.x=CX-120; empty.y=420; empty.style='dim'
+    jsmaf.root.children.push(empty)
+  }
 
-  for (let i = 0; i < fileList.length; i++) {
-    const row = Math.floor(i / buttonsPerRow)
-    const col = i % buttonsPerRow
+  const maxShow=Math.min(fileList.length,8)
+  for(let i=0;i<maxShow;i++){
+    const btnY=startY+i*itemSpacing
+    const btn=new Image({url:buttonImg,x:btnLeft,y:btnY,width:btnW,height:itemH,alpha:0.06})
+    btn.borderColor='rgba(0,255,224,0.18)'; btn.borderWidth=1
+    buttons.push(btn); jsmaf.root.children.push(btn)
 
-    let displayName = fileList[i]!.name
+    const bar=new Image({url:buttonImg,x:btnLeft,y:btnY,width:3,height:itemH,alpha:0.22})
+    bar.borderColor=C_CYAN; bar.borderWidth=0; jsmaf.root.children.push(bar)
 
-    const btnX = startX + col * xSpacing
-    const btnY = startY + row * buttonSpacing
+    const num=new jsmaf.Text(); num.text=String(i+1).padStart(2,'0'); num.x=btnLeft+22; num.y=btnY+22; num.style='subdim'
+    jsmaf.root.children.push(num)
 
-    const button = new Image({
-      url: normalButtonImg,
-      x: btnX,
-      y: btnY,
-      width: buttonWidth,
-      height: buttonHeight
-    })
-    buttons.push(button)
-    jsmaf.root.children.push(button)
+    let disp=fileList[i]!.name; if(disp.length>36) disp=disp.substring(0,33)+'...'
+    const t=new jsmaf.Text(); t.text=disp.toUpperCase(); t.x=btnLeft+80; t.y=btnY+22; t.style='dim'
+    buttonTexts.push(t); jsmaf.root.children.push(t)
+  }
 
-    const marker = new Image({
-      url: 'file:///assets/img/ad_pod_marker.png',
-      x: btnX + buttonWidth - 50,
-      y: btnY + 35,
-      width: 12,
-      height: 12,
-      visible: false
-    })
-    buttonMarkers.push(marker)
-    jsmaf.root.children.push(marker)
+  // Back button
+  const backY=startY+maxShow*itemSpacing+16
+  const backBtn=new Image({url:buttonImg,x:btnLeft,y:backY,width:btnW,height:itemH,alpha:0})
+  backBtn.borderColor='transparent'; backBtn.borderWidth=0
+  buttons.push(backBtn); jsmaf.root.children.push(backBtn)
+  const backDash=new Image({url:buttonImg,x:btnLeft+80,y:backY+34,width:30,height:1,alpha:0.5})
+  backDash.borderColor=C_PURPLE; backDash.borderWidth=0; jsmaf.root.children.push(backDash)
+  const backT=new jsmaf.Text(); backT.text='BACK'; backT.x=btnLeft+124; backT.y=backY+22; backT.style='purple'
+  buttonTexts.push(backT); jsmaf.root.children.push(backT)
 
-    if (displayName.length > 30) {
-      displayName = displayName.substring(0, 27) + '...'
+  // Footer
+  const footerHints=['  Navigate','  Select','  Back']
+  const footerKeys=['\u2191\u2193','X','O']
+  let fx=CX-280
+  for(let i=0;i<3;i++){
+    const k=new jsmaf.Text(); k.text=footerKeys[i]!; k.x=fx; k.y=1046; k.style='footer'; jsmaf.root.children.push(k)
+    const h=new jsmaf.Text(); h.text=footerHints[i]!; h.x=fx+22; h.y=1046; h.style='footer'; jsmaf.root.children.push(h)
+    fx+=190
+  }
+
+  function updateHighlight(){
+    const prev=buttons[prevButton]
+    if(prev&&prevButton!==currentButton){
+      prev.alpha=0.06; prev.borderColor='rgba(0,255,224,0.18)'
+      const pt=buttonTexts[prevButton]; if(pt) pt.style=prevButton===buttons.length-1?'purple':'dim'
     }
-
-    const text = new jsmaf.Text()
-    text.text = displayName
-    text.x = btnX + 20
-    text.y = btnY + 30
-    text.style = 'white'
-    buttonTexts.push(text)
-    jsmaf.root.children.push(text)
-
-    buttonOrigPos.push({ x: btnX, y: btnY })
-    textOrigPos.push({ x: text.x, y: text.y })
+    const cur=buttons[currentButton]
+    if(cur){cur.alpha=0.12; cur.borderColor='rgba(0,255,224,0.6)'}
+    const ct=buttonTexts[currentButton]; if(ct) ct.style=currentButton===buttons.length-1?'cyan':'white'
+    prevButton=currentButton
   }
 
-  let backHint: Image | jsmaf.Text
-  if (useImageText) {
-    backHint = new Image({
-      url: textImageBase + (jsmaf.circleIsAdvanceButton ? 'xToGoBack.png' : 'oToGoBack.png'),
-      x: 890,
-      y: 1000,
-      width: 150,
-      height: 40
-    })
-  } else {
-    backHint = new jsmaf.Text()
-    backHint.text = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
-    backHint.x = 890
-    backHint.y = 1000
-    backHint.style = 'white'
-  }
-  jsmaf.root.children.push(backHint)
-
-  let zoomInInterval: number | null = null
-  let zoomOutInterval: number | null = null
-  let prevButton = -1
-
-  function easeInOut (t: number) {
-    return (1 - Math.cos(t * Math.PI)) / 2
-  }
-
-  function animateZoomIn (btn: Image, text: jsmaf.Text, btnOrigX: number, btnOrigY: number, textOrigX: number, textOrigY: number) {
-    if (zoomInInterval) jsmaf.clearInterval(zoomInInterval)
-    const btnW = buttonWidth
-    const btnH = buttonHeight
-    const startScale = btn.scaleX || 1.0
-    const endScale = 1.1
-    const duration = 175
-    let elapsed = 0
-    const step = 16
-
-    zoomInInterval = jsmaf.setInterval(function () {
-      elapsed += step
-      const t = Math.min(elapsed / duration, 1)
-      const eased = easeInOut(t)
-      const scale = startScale + (endScale - startScale) * eased
-
-      btn.scaleX = scale
-      btn.scaleY = scale
-      btn.x = btnOrigX - (btnW * (scale - 1)) / 2
-      btn.y = btnOrigY - (btnH * (scale - 1)) / 2
-      text.scaleX = scale
-      text.scaleY = scale
-      text.x = textOrigX - (btnW * (scale - 1)) / 2
-      text.y = textOrigY - (btnH * (scale - 1)) / 2
-
-      if (t >= 1) {
-        jsmaf.clearInterval(zoomInInterval ?? -1)
-        zoomInInterval = null
-      }
-    }, step)
-  }
-
-  function animateZoomOut (btn: Image, text: jsmaf.Text, btnOrigX: number, btnOrigY: number, textOrigX: number, textOrigY: number) {
-    if (zoomOutInterval) jsmaf.clearInterval(zoomOutInterval)
-    const btnW = buttonWidth
-    const btnH = buttonHeight
-    const startScale = btn.scaleX || 1.1
-    const endScale = 1.0
-    const duration = 175
-    let elapsed = 0
-    const step = 16
-
-    zoomOutInterval = jsmaf.setInterval(function () {
-      elapsed += step
-      const t = Math.min(elapsed / duration, 1)
-      const eased = easeInOut(t)
-      const scale = startScale + (endScale - startScale) * eased
-
-      btn.scaleX = scale
-      btn.scaleY = scale
-      btn.x = btnOrigX - (btnW * (scale - 1)) / 2
-      btn.y = btnOrigY - (btnH * (scale - 1)) / 2
-      text.scaleX = scale
-      text.scaleY = scale
-      text.x = textOrigX - (btnW * (scale - 1)) / 2
-      text.y = textOrigY - (btnH * (scale - 1)) / 2
-
-      if (t >= 1) {
-        jsmaf.clearInterval(zoomOutInterval ?? -1)
-        zoomOutInterval = null
-      }
-    }, step)
-  }
-
-  function updateHighlight () {
-    // Animate out the previous button
-    const prevButtonObj = buttons[prevButton]
-    const buttonMarker = buttonMarkers[prevButton]
-    if (prevButton >= 0 && prevButton !== currentButton && prevButtonObj) {
-      prevButtonObj.url = normalButtonImg
-      prevButtonObj.alpha = 0.7
-      prevButtonObj.borderColor = 'transparent'
-      prevButtonObj.borderWidth = 0
-      if (buttonMarker) buttonMarker.visible = false
-      animateZoomOut(prevButtonObj, buttonTexts[prevButton]!, buttonOrigPos[prevButton]!.x, buttonOrigPos[prevButton]!.y, textOrigPos[prevButton]!.x, textOrigPos[prevButton]!.y)
-    }
-
-    // Set styles for all buttons
-    for (let i = 0; i < buttons.length; i++) {
-      const button = buttons[i]
-      const buttonMarker = buttonMarkers[i]
-      const buttonText = buttonTexts[i]
-      const buttonOrigPos_ = buttonOrigPos[i]
-      const textOrigPos_ = textOrigPos[i]
-      if (button === undefined || buttonText === undefined || buttonOrigPos_ === undefined || textOrigPos_ === undefined) continue
-      if (i === currentButton) {
-        button.url = selectedButtonImg
-        button.alpha = 1.0
-        button.borderColor = 'rgb(0,230,255)'
-        button.borderWidth = 3
-        if (buttonMarker) buttonMarker.visible = true
-        animateZoomIn(button, buttonText, buttonOrigPos_.x, buttonOrigPos_.y, textOrigPos_.x, textOrigPos_.y)
-      } else if (i !== prevButton) {
-        button.url = normalButtonImg
-        button.alpha = 0.7
-        button.borderColor = 'transparent'
-        button.borderWidth = 0
-        button.scaleX = 1.0
-        button.scaleY = 1.0
-        button.x = buttonOrigPos_.x
-        button.y = buttonOrigPos_.y
-        buttonText.scaleX = 1.0
-        buttonText.scaleY = 1.0
-        buttonText.x = textOrigPos_.x
-        buttonText.y = textOrigPos_.y
-        if (buttonMarker) buttonMarker.visible = false
-      }
-    }
-
-    prevButton = currentButton
-  }
-
-  const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
-  const backKey = jsmaf.circleIsAdvanceButton ? 14 : 13
-
-  jsmaf.onKeyDown = function (keyCode) {
-    log('Key pressed: ' + keyCode)
-
-    const fileButtonCount = fileList.length
-
-    if (keyCode === 6) {
-      const nextButton = currentButton + buttonsPerRow
-      if (nextButton < fileButtonCount) {
-        currentButton = nextButton
-        playSound(SFX_CURSOR)
-      }
-      updateHighlight()
-    } else if (keyCode === 4) {
-      const nextButton = currentButton - buttonsPerRow
-      if (nextButton >= 0) {
-        currentButton = nextButton
-        playSound(SFX_CURSOR)
-      }
-      updateHighlight()
-    } else if (keyCode === 5) {
-      const nextButton = currentButton + 1
-      const row = Math.floor(currentButton / buttonsPerRow)
-      const nextRow = Math.floor(nextButton / buttonsPerRow)
-      if (nextButton < fileButtonCount && nextRow === row) {
-        currentButton = nextButton
-        playSound(SFX_CURSOR)
-      }
-      updateHighlight()
-    } else if (keyCode === 7) {
-      const col = currentButton % buttonsPerRow
-      if (col > 0) {
-        currentButton = currentButton - 1
-        playSound(SFX_CURSOR)
-      }
-      updateHighlight()
-    } else if (keyCode === confirmKey) {
-      playSound(SFX_CONFIRM)
-      handleButtonPress()
-    } else if (keyCode === backKey) {
-      log('Going back to main menu...')
+  function handleButtonPress(){
+    if(currentButton===buttons.length-1){
       playSound(SFX_CANCEL)
-      try {
-        include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'neon') + '/main.js')
-      } catch (e) {
-        const err = e as Error
-        log('ERROR loading main.js: ' + err.message)
-        if (err.stack) log(err.stack)
-      }
+      try{include('themes/'+(typeof CONFIG!=='undefined'&&CONFIG.theme?CONFIG.theme:'neon')+'/main.js')}catch(e){log('ERROR: '+(e as Error).message)}
+      return
     }
+    const entry=fileList[currentButton]; if(!entry) return
+    playSound(SFX_CONFIRM); log('Loading: '+entry.name)
+    try{
+      if(entry.name.toLowerCase().endsWith('.js')){
+        if(entry.path.startsWith('/download0/')) include('payloads/'+entry.name)
+        else {
+          const p=mem.malloc(256)
+          for(let i=0;i<entry.path.length;i++) mem.view(p).setUint8(i,entry.path.charCodeAt(i))
+          mem.view(p).setUint8(entry.path.length,0)
+          const fd2=fn.open_sys(p,new BigInt(0,0),new BigInt(0,0))
+          if(!fd2.eq(new BigInt(0xffffffff,0xffffffff))){
+            const b2=mem.malloc(1024*1024); const rdlen=fn.read_sys(fd2,b2,new BigInt(0,1024*1024)); fn.close_sys(fd2)
+            let code=''; const len=(rdlen instanceof BigInt)?rdlen.lo:(rdlen as number)
+            for(let i=0;i<len;i++) code+=String.fromCharCode(mem.view(b2).getUint8(i))
+            eval(code) // eslint-disable-line no-eval
+          }
+        }
+      } else {
+        include('binloader.js'); const {bl_load_from_file}=binloader_init(); bl_load_from_file(entry.path)
+      }
+    }catch(e){log('ERROR: '+(e as Error).message)}
   }
 
-  function handleButtonPress () {
-    if (currentButton < fileList.length) {
-      const selectedEntry = fileList[currentButton]
-      if (!selectedEntry) {
-        log('No file selected!')
-        return
-      }
+  const confirmKey=jsmaf.circleIsAdvanceButton?13:14
 
-      const filePath = selectedEntry.path
-      const fileName = selectedEntry.name
-
-      log('Selected: ' + fileName + ' from ' + filePath)
-
-      try {
-        if (fileName.toLowerCase().endsWith('.js')) {
-          // Local JavaScript file case (from "/download0/payloads")
-          if (filePath.startsWith('/download0/')) {
-            log('Including JavaScript file: ' + fileName)
-            include('payloads/' + fileName)
-          } else {
-            // External JavaScript file case (from "/data/payloads")
-            log('Reading external JavaScript file: ' + filePath)
-            const p_addr = mem.malloc(256)
-            for (let i = 0; i < filePath.length; i++) {
-              mem.view(p_addr).setUint8(i, filePath.charCodeAt(i))
-            }
-            mem.view(p_addr).setUint8(filePath.length, 0)
-
-            const fd = fn.open_sys(p_addr, new BigInt(0, 0), new BigInt(0, 0))
-
-            if (!fd.eq(new BigInt(0xffffffff, 0xffffffff))) {
-              const buf_size = 1024 * 1024 * 1  // 1 MiB
-              const buf = mem.malloc(buf_size)
-              const read_len = fn.read_sys(fd, buf, new BigInt(0, buf_size))
-
-              fn.close_sys(fd)
-
-              let scriptContent = ''
-              const len = (read_len instanceof BigInt) ? read_len.lo : read_len
-
-              log('File read size: ' + len + ' bytes')
-
-              for (let i = 0; i < len; i++) {
-                scriptContent += String.fromCharCode(mem.view(buf).getUint8(i))
-              }
-
-              log('Executing via eval()...')
-              // eslint-disable-next-line no-eval
-              eval(scriptContent)
-            } else {
-              log('ERROR: Could not open file for reading!')
-            }
-          }
-        } else {
-          log('Loading binloader.js...')
-          include('binloader.js')
-          log('binloader.js loaded successfully')
-
-          log('Initializing binloader...')
-          const { bl_load_from_file } = binloader_init()
-
-          log('Loading payload from: ' + filePath)
-
-          bl_load_from_file(filePath)
-        }
-      } catch (e) {
-        const err = e as Error
-        log('ERROR: ' + err.message)
-        if (err.stack) log(err.stack)
-      }
-    }
+  jsmaf.onKeyDown=function(keyCode){
+    if(keyCode===6||keyCode===5){currentButton=(currentButton+1)%buttons.length;playSound(SFX_CURSOR);updateHighlight()}
+    else if(keyCode===4||keyCode===7){currentButton=(currentButton-1+buttons.length)%buttons.length;playSound(SFX_CURSOR);updateHighlight()}
+    else if(keyCode===confirmKey) handleButtonPress()
   }
 
   updateHighlight()
-
-  log('Interactive UI loaded!')
-  log('Total elements: ' + jsmaf.root.children.length)
-  log('Buttons: ' + buttons.length)
-  log('Use arrow keys to navigate, Enter/X to select')
+  log('Neon payload host loaded. Files: '+fileList.length)
 })()
