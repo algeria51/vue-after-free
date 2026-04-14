@@ -10,56 +10,56 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
   // ── Pixels ────────────────────────────────────────────────────────────────
-  const DARK   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
-  const WHITE  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
+  const DARK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
+  const WHITE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
   const PURPLE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNY7/YfAAOcAfXVA39DAAAAAElFTkSuQmCC'
-  const RED    = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
+  const RED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
 
   // ── Layout ────────────────────────────────────────────────────────────────
-  const SW = 1920, SH = 1080, PAD = 80
-  const HDR = 150, FTR = 50
-  const BW = SW - PAD * 2, BH = 90, GAP = 8
+  const SW = 1920; const SH = 1080; const PAD = 80
+  const HDR = 150; const FTR = 50
+  const BW = SW - PAD * 2; const BH = 90; const GAP = 8
   const AVAIL = SH - HDR - FTR - 24
-  const MAXR  = Math.min(9, Math.floor(AVAIL / (BH + GAP)))
-  const SY    = HDR + 12
+  const MAXR = Math.min(9, Math.floor(AVAIL / (BH + GAP)))
+  const SY = HDR + 12
 
-  const SFX_CUR  = 'file:///../download0/sfx/cursor.wav'
-  const SFX_OK   = 'file:///../download0/sfx/confirm.wav'
+  const SFX_CUR = 'file:///../download0/sfx/cursor.wav'
+  const SFX_OK = 'file:///../download0/sfx/confirm.wav'
   const SFX_BACK = 'file:///../download0/sfx/cancel.wav'
 
   // ── Audio pools — large pools prevent drop-outs on rapid navigation ───────
-  const poolCur  = Array.from({ length: 8 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
-  const poolOk   = Array.from({ length: 4 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
+  const poolCur = Array.from({ length: 8 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
+  const poolOk = Array.from({ length: 4 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
   const poolBack = Array.from({ length: 4 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
-  let idxCur = 0, idxOk = 0, idxBack = 0
+  let idxCur = 0; let idxOk = 0; let idxBack = 0
 
   function sfxCur () {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { poolCur[idxCur]!.open(SFX_CUR);   idxCur  = (idxCur  + 1) % poolCur.length  } catch (_e) {}
+    try { poolCur[idxCur]!.open(SFX_CUR); idxCur = (idxCur + 1) % poolCur.length } catch (_e) {}
   }
   function sfxOk () {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { poolOk[idxOk]!.open(SFX_OK);      idxOk   = (idxOk   + 1) % poolOk.length   } catch (_e) {}
+    try { poolOk[idxOk]!.open(SFX_OK); idxOk = (idxOk + 1) % poolOk.length } catch (_e) {}
   }
   function sfxBack () {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { poolBack[idxBack]!.open(SFX_BACK); idxBack = (idxBack + 1) % poolBack.length  } catch (_e) {}
+    try { poolBack[idxBack]!.open(SFX_BACK); idxBack = (idxBack + 1) % poolBack.length } catch (_e) {}
   }
 
   is_jailbroken = checkJailbroken()
 
   // ── Scan payloads ─────────────────────────────────────────────────────────
-  try { fn.register(0x05,  'ph_open',    ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
-  try { fn.register(0x06,  'ph_close',   ['bigint'],                   'bigint') } catch (_e) {}
-  try { fn.register(0x110, 'ph_getdnts', ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
-  try { fn.register(0x03,  'ph_read',    ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x05, 'ph_open', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x06, 'ph_close', ['bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x110, 'ph_getdnts', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x03, 'ph_read', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
 
   type FEntry = { name: string; path: string; ext: string }
   const fileList: FEntry[] = []
   const scanPaths = ['/download0/payloads']
   if (is_jailbroken) scanPaths.push('/data/payloads')
 
-  const paddr = mem.malloc(256), dbuf = mem.malloc(4096)
+  const paddr = mem.malloc(256); const dbuf = mem.malloc(4096)
   for (const sp of scanPaths) {
     for (let i = 0; i < sp.length; i++) mem.view(paddr).setUint8(i, sp.charCodeAt(i))
     mem.view(paddr).setUint8(sp.length, 0)
@@ -76,8 +76,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
           for (let i = 0; i < nl; i++) name += String.fromCharCode(mem.view(dbuf.add(new BigInt(0, off + 8 + i))).getUint8(0))
           if (dt === 8 && name !== '.' && name !== '..') {
             const low = name.toLowerCase()
-            if (low.endsWith('.elf') || low.endsWith('.bin') || low.endsWith('.js'))
-              fileList.push({ name, path: sp + '/' + name, ext: (name.split('.').pop() || '').toUpperCase() })
+            if (low.endsWith('.elf') || low.endsWith('.bin') || low.endsWith('.js')) { fileList.push({ name, path: sp + '/' + name, ext: (name.split('.').pop() || '').toUpperCase() }) }
           }
           off += rl
         }
@@ -90,20 +89,20 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   // ── Styles ────────────────────────────────────────────────────────────────
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'ptitle',   color: 'rgb(255,255,255)',           size: 30 })
-  new Style({ name: 'pcount',   color: 'rgba(200,150,255,0.70)',     size: 16 })
-  new Style({ name: 'pwhite',   color: 'rgb(255,255,255)',           size: 22 })
-  new Style({ name: 'pmuted',   color: 'rgba(220,210,255,0.65)',     size: 22 })
-  new Style({ name: 'pnum',     color: 'rgba(175,80,255,0.45)',      size: 15 })
-  new Style({ name: 'pnumsel',  color: 'rgb(215,170,255)',           size: 15 })
-  new Style({ name: 'pbadge',   color: 'rgba(175,80,255,0.80)',      size: 12 })
-  new Style({ name: 'pbsel',    color: 'rgb(215,175,255)',           size: 12 })
-  new Style({ name: 'ppath',    color: 'rgba(200,180,255,0.32)',     size: 13 })
-  new Style({ name: 'pscroll',  color: 'rgba(200,150,255,0.80)',     size: 16 })
-  new Style({ name: 'pback',    color: 'rgba(255,110,110,0.90)',     size: 20 })
-  new Style({ name: 'pfooter',  color: 'rgba(210,200,255,0.30)',     size: 16 })
-  new Style({ name: 'pempty',   color: 'rgba(220,210,255,0.70)',     size: 28 })
-  new Style({ name: 'pemptsb',  color: 'rgba(200,180,255,0.42)',     size: 18 })
+  new Style({ name: 'ptitle', color: 'rgb(255,255,255)', size: 30 })
+  new Style({ name: 'pcount', color: 'rgba(200,150,255,0.70)', size: 16 })
+  new Style({ name: 'pwhite', color: 'rgb(255,255,255)', size: 22 })
+  new Style({ name: 'pmuted', color: 'rgba(220,210,255,0.65)', size: 22 })
+  new Style({ name: 'pnum', color: 'rgba(175,80,255,0.45)', size: 15 })
+  new Style({ name: 'pnumsel', color: 'rgb(215,170,255)', size: 15 })
+  new Style({ name: 'pbadge', color: 'rgba(175,80,255,0.80)', size: 12 })
+  new Style({ name: 'pbsel', color: 'rgb(215,175,255)', size: 12 })
+  new Style({ name: 'ppath', color: 'rgba(200,180,255,0.32)', size: 13 })
+  new Style({ name: 'pscroll', color: 'rgba(200,150,255,0.80)', size: 16 })
+  new Style({ name: 'pback', color: 'rgba(255,110,110,0.90)', size: 20 })
+  new Style({ name: 'pfooter', color: 'rgba(210,200,255,0.30)', size: 16 })
+  new Style({ name: 'pempty', color: 'rgba(220,210,255,0.70)', size: 28 })
+  new Style({ name: 'pemptsb', color: 'rgba(200,180,255,0.42)', size: 18 })
 
   // ── Static scene elements ─────────────────────────────────────────────────
   // All elements pushed here persist across renderRows() calls.
@@ -138,7 +137,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   const TOTAL = fileList.length
   const cntT = new jsmaf.Text()
   cntT.style = 'pcount'
-  cntT.text  = TOTAL === 0
+  cntT.text = TOTAL === 0
     ? 'No payloads found'
     : TOTAL + ' file' + (TOTAL !== 1 ? 's' : '') + ' available'
   cntT.x = PAD; cntT.y = 90; cntT.alpha = 1.0
@@ -149,7 +148,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
 
   const backT = new jsmaf.Text()
   backT.style = 'pback'
-  backT.text  = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
+  backT.text = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
   backT.x = PAD; backT.y = navY + 10; backT.alpha = 1.0
   jsmaf.root.children.push(backT)
 
@@ -166,7 +165,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   const blbl = jsmaf.circleIsAdvanceButton ? 'X' : 'O'
   const fTxt = new jsmaf.Text()
   fTxt.style = 'pfooter'
-  fTxt.text  = '↑↓  Navigate    ' + clbl + '  Launch    ' + blbl + '  Back'
+  fTxt.text = '↑↓  Navigate    ' + clbl + '  Launch    ' + blbl + '  Back'
   fTxt.x = SW / 2 - 210; fTxt.y = SH - FTR + 17; fTxt.alpha = 1.0
   jsmaf.root.children.push(fTxt)
 
@@ -177,7 +176,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   const STATIC_IDX = jsmaf.root.children.length
 
   // ── State ─────────────────────────────────────────────────────────────────
-  let cur = 0, scrollOff = 0
+  let cur = 0; let scrollOff = 0
 
   function clamp () {
     if (cur < scrollOff) scrollOff = cur
@@ -228,9 +227,9 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       const idx = scrollOff + s
       if (idx >= TOTAL) break
 
-      const f   = fileList[idx]!
+      const f = fileList[idx]!
       const sel = idx === cur
-      const bY  = SY + s * (BH + GAP)
+      const bY = SY + s * (BH + GAP)
 
       let disp = f.name.replace(/\.(elf|bin|js)$/i, '')
       if (disp.length > 68) disp = disp.slice(0, 66) + '..'
@@ -238,7 +237,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
 
       // Row background — Image supports .visible and all properties
       const btn = new Image({ url: WHITE, x: PAD, y: bY, width: BW, height: BH })
-      btn.alpha       = sel ? 0.22 : 0.07
+      btn.alpha = sel ? 0.22 : 0.07
       btn.borderColor = sel ? 'rgba(175,80,255,0.92)' : 'rgba(120,60,200,0.20)'
       btn.borderWidth = sel ? 2 : 1
       jsmaf.root.children.push(btn)
@@ -258,21 +257,21 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       // Row number — style set BEFORE text
       const num = new jsmaf.Text()
       num.style = sel ? 'pnumsel' : 'pnum'
-      num.text  = String(idx + 1).padStart(2, '0')
+      num.text = String(idx + 1).padStart(2, '0')
       num.x = PAD + 16; num.y = bY + 34; num.alpha = 1.0
       jsmaf.root.children.push(num)
 
       // File name — primary content
       const lbl = new jsmaf.Text()
       lbl.style = sel ? 'pwhite' : 'pmuted'
-      lbl.text  = disp
+      lbl.text = disp
       lbl.x = PAD + 56; lbl.y = bY + 20; lbl.alpha = 1.0
       jsmaf.root.children.push(lbl)
 
       // Path — secondary info
       const pth = new jsmaf.Text()
       pth.style = 'ppath'
-      pth.text  = hint
+      pth.text = hint
       pth.x = PAD + 56; pth.y = bY + 58; pth.alpha = 1.0
       jsmaf.root.children.push(pth)
 
@@ -280,7 +279,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       const bdgX = PAD + BW - 120
       const bdg = new jsmaf.Text()
       bdg.style = sel ? 'pbsel' : 'pbadge'
-      bdg.text  = f.ext
+      bdg.text = f.ext
       bdg.x = bdgX; bdg.y = bY + 36; bdg.alpha = 1.0
       jsmaf.root.children.push(bdg)
     }
@@ -326,7 +325,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
 
   // ── Input ─────────────────────────────────────────────────────────────────
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
-  const backKey    = jsmaf.circleIsAdvanceButton ? 14 : 13
+  const backKey = jsmaf.circleIsAdvanceButton ? 14 : 13
 
   jsmaf.onKeyDown = function (kc: number) {
     if (kc === 6 || kc === 5) {
