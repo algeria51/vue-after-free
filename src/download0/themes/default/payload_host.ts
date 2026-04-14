@@ -10,59 +10,59 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
   // ── Pixels ────────────────────────────────────────────────────────────────
-  const DARK  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
+  const DARK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
   const WHITE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
-  const CYAN  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIOPEfAAODAhiMwlb1AAAAAElFTkSuQmCC'
-  const RED   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
+  const CYAN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIOPEfAAODAhiMwlb1AAAAAElFTkSuQmCC'
+  const RED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
 
   // ── Layout ────────────────────────────────────────────────────────────────
-  const SW = 1920, SH = 1080, PAD = 80
-  const HDR = 150, FTR = 50
-  const BW = SW - PAD * 2, BH = 84, GAP = 10
+  const SW = 1920; const SH = 1080; const PAD = 80
+  const HDR = 150; const FTR = 50
+  const BW = SW - PAD * 2; const BH = 84; const GAP = 10
   const AVAIL = SH - HDR - FTR - 24
-  const MAXR  = Math.min(9, Math.floor(AVAIL / (BH + GAP)))
-  const SY    = HDR + 12
+  const MAXR = Math.min(9, Math.floor(AVAIL / (BH + GAP)))
+  const SY = HDR + 12
 
-  const SFX_CUR  = 'file:///../download0/sfx/cursor.wav'
-  const SFX_OK   = 'file:///../download0/sfx/confirm.wav'
+  const SFX_CUR = 'file:///../download0/sfx/cursor.wav'
+  const SFX_OK = 'file:///../download0/sfx/confirm.wav'
   const SFX_BACK = 'file:///../download0/sfx/cancel.wav'
 
   // ── FIX: Pre-created audio pools ──────────────────────────────────────────
-  const poolCur  = [new jsmaf.AudioClip(), new jsmaf.AudioClip(), new jsmaf.AudioClip()]
-  const poolOk   = [new jsmaf.AudioClip(), new jsmaf.AudioClip()]
+  const poolCur = [new jsmaf.AudioClip(), new jsmaf.AudioClip(), new jsmaf.AudioClip()]
+  const poolOk = [new jsmaf.AudioClip(), new jsmaf.AudioClip()]
   const poolBack = [new jsmaf.AudioClip(), new jsmaf.AudioClip()]
-  poolCur.forEach(c  => { c.volume = 1.0 })
-  poolOk.forEach(c   => { c.volume = 1.0 })
+  poolCur.forEach(c => { c.volume = 1.0 })
+  poolOk.forEach(c => { c.volume = 1.0 })
   poolBack.forEach(c => { c.volume = 1.0 })
-  let idxCur = 0, idxOk = 0, idxBack = 0
+  let idxCur = 0; let idxOk = 0; let idxBack = 0
 
   function sfxCur () {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { poolCur[idxCur]!.open(SFX_CUR);   idxCur  = (idxCur  + 1) % poolCur.length  } catch (_e) {}
+    try { poolCur[idxCur]!.open(SFX_CUR); idxCur = (idxCur + 1) % poolCur.length } catch (_e) {}
   }
   function sfxOk () {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { poolOk[idxOk]!.open(SFX_OK);      idxOk   = (idxOk   + 1) % poolOk.length   } catch (_e) {}
+    try { poolOk[idxOk]!.open(SFX_OK); idxOk = (idxOk + 1) % poolOk.length } catch (_e) {}
   }
   function sfxBack () {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { poolBack[idxBack]!.open(SFX_BACK); idxBack = (idxBack + 1) % poolBack.length  } catch (_e) {}
+    try { poolBack[idxBack]!.open(SFX_BACK); idxBack = (idxBack + 1) % poolBack.length } catch (_e) {}
   }
 
   is_jailbroken = checkJailbroken()
 
   // ── Scan payloads ─────────────────────────────────────────────────────────
-  try { fn.register(0x05,  'ph_open',    ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
-  try { fn.register(0x06,  'ph_close',   ['bigint'],                   'bigint') } catch (_e) {}
-  try { fn.register(0x110, 'ph_getdnts', ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
-  try { fn.register(0x03,  'ph_read',    ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x05, 'ph_open', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x06, 'ph_close', ['bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x110, 'ph_getdnts', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x03, 'ph_read', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
 
   type FEntry = { name: string; path: string; ext: string }
   const fileList: FEntry[] = []
   const scanPaths = ['/download0/payloads']
   if (is_jailbroken) scanPaths.push('/data/payloads')
 
-  const paddr = mem.malloc(256), dbuf = mem.malloc(4096)
+  const paddr = mem.malloc(256); const dbuf = mem.malloc(4096)
   for (const sp of scanPaths) {
     for (let i = 0; i < sp.length; i++) mem.view(paddr).setUint8(i, sp.charCodeAt(i))
     mem.view(paddr).setUint8(sp.length, 0)
@@ -79,8 +79,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
           for (let i = 0; i < nl; i++) name += String.fromCharCode(mem.view(dbuf.add(new BigInt(0, off + 8 + i))).getUint8(0))
           if (dt === 8 && name !== '.' && name !== '..') {
             const low = name.toLowerCase()
-            if (low.endsWith('.elf') || low.endsWith('.bin') || low.endsWith('.js'))
-              fileList.push({ name, path: sp + '/' + name, ext: (name.split('.').pop() || '').toUpperCase() })
+            if (low.endsWith('.elf') || low.endsWith('.bin') || low.endsWith('.js')) { fileList.push({ name, path: sp + '/' + name, ext: (name.split('.').pop() || '').toUpperCase() }) }
           }
           off += rl
         }
@@ -93,20 +92,20 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   // ── Styles (simple names, no underscores) ─────────────────────────────────
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'ptitle',   color: 'rgb(255,255,255)',         size: 30 })
-  new Style({ name: 'pcount',   color: 'rgba(100,210,255,0.60)',   size: 16 })
-  new Style({ name: 'pwhite',   color: 'rgb(255,255,255)',         size: 22 })
-  new Style({ name: 'pmuted',   color: 'rgba(220,235,255,0.60)',   size: 22 })
-  new Style({ name: 'pnum',     color: 'rgba(80,200,255,0.40)',    size: 15 })
-  new Style({ name: 'pnumsel',  color: 'rgb(80,215,255)',          size: 15 })
-  new Style({ name: 'pbadge',   color: 'rgba(80,210,255,0.75)',    size: 13 })
-  new Style({ name: 'pbsel',    color: 'rgb(80,230,255)',          size: 13 })
-  new Style({ name: 'ppath',    color: 'rgba(180,210,255,0.25)',   size: 13 })
-  new Style({ name: 'pscroll',  color: 'rgba(100,210,255,0.70)',   size: 16 })
-  new Style({ name: 'pback',    color: 'rgba(255,110,110,0.90)',   size: 20 })
-  new Style({ name: 'pfooter',  color: 'rgba(200,220,255,0.28)',   size: 16 })
-  new Style({ name: 'pempty',   color: 'rgba(220,235,255,0.60)',   size: 28 })
-  new Style({ name: 'pemptsb',  color: 'rgba(180,210,255,0.35)',   size: 18 })
+  new Style({ name: 'ptitle', color: 'rgb(255,255,255)', size: 30 })
+  new Style({ name: 'pcount', color: 'rgba(100,210,255,0.60)', size: 16 })
+  new Style({ name: 'pwhite', color: 'rgb(255,255,255)', size: 22 })
+  new Style({ name: 'pmuted', color: 'rgba(220,235,255,0.60)', size: 22 })
+  new Style({ name: 'pnum', color: 'rgba(80,200,255,0.40)', size: 15 })
+  new Style({ name: 'pnumsel', color: 'rgb(80,215,255)', size: 15 })
+  new Style({ name: 'pbadge', color: 'rgba(80,210,255,0.75)', size: 13 })
+  new Style({ name: 'pbsel', color: 'rgb(80,230,255)', size: 13 })
+  new Style({ name: 'ppath', color: 'rgba(180,210,255,0.25)', size: 13 })
+  new Style({ name: 'pscroll', color: 'rgba(100,210,255,0.70)', size: 16 })
+  new Style({ name: 'pback', color: 'rgba(255,110,110,0.90)', size: 20 })
+  new Style({ name: 'pfooter', color: 'rgba(200,220,255,0.28)', size: 16 })
+  new Style({ name: 'pempty', color: 'rgba(220,235,255,0.60)', size: 28 })
+  new Style({ name: 'pemptsb', color: 'rgba(180,210,255,0.35)', size: 18 })
 
   // ── Background ────────────────────────────────────────────────────────────
   const bg = new Image({ url: DARK, x: 0, y: 0, width: SW, height: SH })
@@ -147,12 +146,12 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   // FIX: jsmaf.Text has NO .visible property — we use Image.visible for bg/bar
   //      and clear text content to '' for invisible rows.
   // FIX: Always set .alpha = 1.0 on every Text element so it renders.
-  const sBtns:   Image[]      = []
-  const sBars:   Image[]      = []
-  const sNums:   jsmaf.Text[] = []
-  const sBdgs:   jsmaf.Text[] = []
-  const sLbls:   jsmaf.Text[] = []
-  const sPths:   jsmaf.Text[] = []
+  const sBtns: Image[] = []
+  const sBars: Image[] = []
+  const sNums: jsmaf.Text[] = []
+  const sBdgs: jsmaf.Text[] = []
+  const sLbls: jsmaf.Text[] = []
+  const sPths: jsmaf.Text[] = []
 
   for (let s = 0; s < MAXR; s++) {
     const bY = SY + s * (BH + GAP)
@@ -245,7 +244,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   jsmaf.root.children.push(fTxt)
 
   // ── State ─────────────────────────────────────────────────────────────────
-  let cur = 0, scrollOff = 0
+  let cur = 0; let scrollOff = 0
   const TOTAL = fileList.length
 
   function clamp () {
@@ -269,30 +268,30 @@ import { checkJailbroken } from 'download0/check-jailbroken'
         continue
       }
 
-      const f   = fileList[idx]!
+      const f = fileList[idx]!
       const sel = idx === cur
-      let disp  = f.name.replace(/\.(elf|bin|js)$/i, '')
+      let disp = f.name.replace(/\.(elf|bin|js)$/i, '')
       if (disp.length > 62) disp = disp.slice(0, 60) + '..'
       const hint = f.path.startsWith('/data/') ? '/data/payloads' : '/download0/payloads'
 
-      sBtns[s]!.alpha       = sel ? 0.22 : 0.07
+      sBtns[s]!.alpha = sel ? 0.22 : 0.07
       sBtns[s]!.borderColor = sel ? 'rgba(80,215,255,0.90)' : 'rgba(80,180,255,0.14)'
       sBtns[s]!.borderWidth = sel ? 2 : 1
-      sBars[s]!.alpha       = sel ? 1.0 : 0.45
+      sBars[s]!.alpha = sel ? 1.0 : 0.45
 
-      sNums[s]!.text  = String(idx + 1).padStart(2, '0')
+      sNums[s]!.text = String(idx + 1).padStart(2, '0')
       sNums[s]!.style = sel ? 'pnumsel' : 'pnum'
-      sBdgs[s]!.text  = f.ext
+      sBdgs[s]!.text = f.ext
       sBdgs[s]!.style = sel ? 'pbsel' : 'pbadge'
-      sLbls[s]!.text  = disp
+      sLbls[s]!.text = disp
       sLbls[s]!.style = sel ? 'pwhite' : 'pmuted'
-      sPths[s]!.text  = hint
+      sPths[s]!.text = hint
 
       // Ensure alpha=1 each render pass to be safe
       sNums[s]!.alpha = 1.0; sBdgs[s]!.alpha = 1.0
       sLbls[s]!.alpha = 1.0; sPths[s]!.alpha = 1.0
     }
-    arrUp.text = scrollOff > 0 ? '▲  Scroll up'  : ''
+    arrUp.text = scrollOff > 0 ? '▲  Scroll up' : ''
     arrDn.text = TOTAL > 0 && (scrollOff + MAXR) < TOTAL ? '▼  More below' : ''
   }
 
@@ -328,7 +327,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
 
   // ── Input ─────────────────────────────────────────────────────────────────
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
-  const backKey    = jsmaf.circleIsAdvanceButton ? 14 : 13
+  const backKey = jsmaf.circleIsAdvanceButton ? 14 : 13
 
   jsmaf.onKeyDown = function (kc: number) {
     if (kc === 6 || kc === 5) {

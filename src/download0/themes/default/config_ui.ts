@@ -9,24 +9,38 @@ if (typeof lang === 'undefined') include('languages.js')
   log('Loading config UI...')
 
   // ── Pixels ────────────────────────────────────────────────────────────────
-  const DARK  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
+  const DARK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
   const WHITE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
-  const CYAN  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIOPEfAAODAhiMwlb1AAAAAElFTkSuQmCC'
+  const CYAN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIOPEfAAODAhiMwlb1AAAAAElFTkSuQmCC'
   const GREEN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIeDYNAANWAc20LRTOAAAAAElFTkSuQmCC'
-  const RED   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
+  const RED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
 
   // ── Config state ──────────────────────────────────────────────────────────
   interface Cfg {
-    autolapse: boolean; autopoop: boolean; autoclose: boolean
-    autoclose_delay: number; music: boolean; jb_behavior: number
-    theme: string; exp_core: number; exp_grooms: number
-    exp_races: number; exp_timeout: number
+    autolapse: boolean;
+    autopoop: boolean;
+    autoclose: boolean
+    autoclose_delay: number;
+    music: boolean;
+    jb_behavior: number
+    theme: string;
+    exp_core: number;
+    exp_grooms: number
+    exp_races: number;
+    exp_timeout: number
   }
   const C: Cfg = {
-    autolapse: false, autopoop: false, autoclose: false,
-    autoclose_delay: 0, music: true, jb_behavior: 0,
-    theme: 'default', exp_core: 4, exp_grooms: 512,
-    exp_races: 100, exp_timeout: 8
+    autolapse: false,
+    autopoop: false,
+    autoclose: false,
+    autoclose_delay: 0,
+    music: true,
+    jb_behavior: 0,
+    theme: 'default',
+    exp_core: 4,
+    exp_grooms: 512,
+    exp_races: 100,
+    exp_timeout: 8
   }
   let userPayloads: string[] = []
   let configLoaded = false
@@ -54,11 +68,11 @@ if (typeof lang === 'undefined') include('languages.js')
   function scanThemes (): string[] {
     const themes: string[] = []
     try {
-      try { fn.register(0x05,  'dcfg_open',     ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
-      try { fn.register(0x06,  'dcfg_close',    ['bigint'],                   'bigint') } catch (_e) {}
-      try { fn.register(0x110, 'dcfg_getdents', ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
+      try { fn.register(0x05, 'dcfg_open', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
+      try { fn.register(0x06, 'dcfg_close', ['bigint'], 'bigint') } catch (_e) {}
+      try { fn.register(0x110, 'dcfg_getdents', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
       const dir = '/download0/themes'
-      const pa = mem.malloc(256), buf = mem.malloc(4096)
+      const pa = mem.malloc(256); const buf = mem.malloc(4096)
       for (let i = 0; i < dir.length; i++) mem.view(pa).setUint8(i, dir.charCodeAt(i))
       mem.view(pa).setUint8(dir.length, 0)
       const fd = fn.dcfg_open(pa, new BigInt(0, 0), new BigInt(0, 0))
@@ -90,77 +104,77 @@ if (typeof lang === 'undefined') include('languages.js')
   type OptType = 'toggle' | 'cycle'
   interface Opt { key: string; label: string; type: OptType; section: string; hint: string }
   const opts: Opt[] = [
-    { key: 'music',       label: lang.music,             type: 'toggle', section: 'GENERAL', hint: 'Background music' },
-    { key: 'autolapse',   label: lang.autoLapse,         type: 'toggle', section: 'GENERAL', hint: 'Auto-run Lapse' },
-    { key: 'autopoop',    label: lang.autoPoop,          type: 'toggle', section: 'GENERAL', hint: 'Auto-deploy payload' },
-    { key: 'autoclose',   label: lang.autoClose,         type: 'toggle', section: 'GENERAL', hint: 'Close browser after JB' },
-    { key: 'jb_behavior', label: lang.jbBehavior,        type: 'cycle',  section: 'GENERAL', hint: 'Post-exploit mode' },
-    { key: 'theme',       label: lang.theme || 'Theme',  type: 'cycle',  section: 'GENERAL', hint: 'UI theme' },
-    { key: 'exp_core',    label: 'CPU Core',             type: 'cycle',  section: 'EXPLOIT', hint: 'Exploit CPU core (0-5)' },
-    { key: 'exp_grooms',  label: 'Heap Grooms',          type: 'cycle',  section: 'EXPLOIT', hint: 'Heap grooming count' },
-    { key: 'exp_races',   label: 'Race Attempts',        type: 'cycle',  section: 'EXPLOIT', hint: 'Race condition tries' },
-    { key: 'exp_timeout', label: 'Timeout',              type: 'cycle',  section: 'EXPLOIT', hint: 'Exploit timeout (s)' },
+    { key: 'music', label: lang.music, type: 'toggle', section: 'GENERAL', hint: 'Background music' },
+    { key: 'autolapse', label: lang.autoLapse, type: 'toggle', section: 'GENERAL', hint: 'Auto-run Lapse' },
+    { key: 'autopoop', label: lang.autoPoop, type: 'toggle', section: 'GENERAL', hint: 'Auto-deploy payload' },
+    { key: 'autoclose', label: lang.autoClose, type: 'toggle', section: 'GENERAL', hint: 'Close browser after JB' },
+    { key: 'jb_behavior', label: lang.jbBehavior, type: 'cycle', section: 'GENERAL', hint: 'Post-exploit mode' },
+    { key: 'theme', label: lang.theme || 'Theme', type: 'cycle', section: 'GENERAL', hint: 'UI theme' },
+    { key: 'exp_core', label: 'CPU Core', type: 'cycle', section: 'EXPLOIT', hint: 'Exploit CPU core (0-5)' },
+    { key: 'exp_grooms', label: 'Heap Grooms', type: 'cycle', section: 'EXPLOIT', hint: 'Heap grooming count' },
+    { key: 'exp_races', label: 'Race Attempts', type: 'cycle', section: 'EXPLOIT', hint: 'Race condition tries' },
+    { key: 'exp_timeout', label: 'Timeout', type: 'cycle', section: 'EXPLOIT', hint: 'Exploit timeout (s)' },
   ]
   const TOTAL = opts.length
 
   // ── Layout ────────────────────────────────────────────────────────────────
-  const SW = 1920, SH = 1080, PAD = 60
-  const HDR = 152, FTR = 50
+  const SW = 1920; const SH = 1080; const PAD = 60
+  const HDR = 152; const FTR = 50
   const AVAIL = SH - HDR - FTR - 20
-  const BH = 76, GAP = 8
-  const VIS  = Math.min(TOTAL, Math.floor(AVAIL / (BH + GAP)))
-  const RW   = SW - PAD * 2
-  const SY   = HDR + 10
+  const BH = 76; const GAP = 8
+  const VIS = Math.min(TOTAL, Math.floor(AVAIL / (BH + GAP)))
+  const RW = SW - PAD * 2
+  const SY = HDR + 10
   const VOFF = Math.floor(RW * 0.60)   // value column
   const HOFF = Math.floor(RW * 0.78)   // hint column
-  const VX   = PAD + VOFF
-  const HX   = PAD + HOFF
+  const VX = PAD + VOFF
+  const HX = PAD + HOFF
 
-  const SFX_CUR  = 'file:///../download0/sfx/cursor.wav'
-  const SFX_OK   = 'file:///../download0/sfx/confirm.wav'
-  const SFX_BCK  = 'file:///../download0/sfx/cancel.wav'
+  const SFX_CUR = 'file:///../download0/sfx/cursor.wav'
+  const SFX_OK = 'file:///../download0/sfx/confirm.wav'
+  const SFX_BCK = 'file:///../download0/sfx/cancel.wav'
 
   // ── FIX: Pre-created audio pools ──────────────────────────────────────────
-  const poolCur  = [new jsmaf.AudioClip(), new jsmaf.AudioClip(), new jsmaf.AudioClip()]
-  const poolOk   = [new jsmaf.AudioClip(), new jsmaf.AudioClip()]
+  const poolCur = [new jsmaf.AudioClip(), new jsmaf.AudioClip(), new jsmaf.AudioClip()]
+  const poolOk = [new jsmaf.AudioClip(), new jsmaf.AudioClip()]
   const poolBack = [new jsmaf.AudioClip(), new jsmaf.AudioClip()]
-  poolCur.forEach(c  => { c.volume = 1.0 })
-  poolOk.forEach(c   => { c.volume = 1.0 })
+  poolCur.forEach(c => { c.volume = 1.0 })
+  poolOk.forEach(c => { c.volume = 1.0 })
   poolBack.forEach(c => { c.volume = 1.0 })
-  let idxCur = 0, idxOk = 0, idxBack = 0
+  let idxCur = 0; let idxOk = 0; let idxBack = 0
 
   function sfxCur () {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { poolCur[idxCur]!.open(SFX_CUR);   idxCur  = (idxCur  + 1) % poolCur.length  } catch (_e) {}
+    try { poolCur[idxCur]!.open(SFX_CUR); idxCur = (idxCur + 1) % poolCur.length } catch (_e) {}
   }
   function sfxOk () {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { poolOk[idxOk]!.open(SFX_OK);      idxOk   = (idxOk   + 1) % poolOk.length   } catch (_e) {}
+    try { poolOk[idxOk]!.open(SFX_OK); idxOk = (idxOk + 1) % poolOk.length } catch (_e) {}
   }
   function sfxBack () {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { poolBack[idxBack]!.open(SFX_BCK); idxBack = (idxBack + 1) % poolBack.length  } catch (_e) {}
+    try { poolBack[idxBack]!.open(SFX_BCK); idxBack = (idxBack + 1) % poolBack.length } catch (_e) {}
   }
 
   // ── Styles (simple names, no underscores) ─────────────────────────────────
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'ctitle',   color: 'rgb(255,255,255)',          size: 30 })
-  new Style({ name: 'ccount',   color: 'rgba(100,210,255,0.60)',    size: 16 })
-  new Style({ name: 'ccolhdr',  color: 'rgba(100,210,255,0.45)',    size: 13 })
-  new Style({ name: 'cwhite',   color: 'rgb(255,255,255)',          size: 22 })
-  new Style({ name: 'cmuted',   color: 'rgba(220,235,255,0.60)',    size: 22 })
-  new Style({ name: 'csec',     color: 'rgba(80,210,255,0.65)',     size: 11 })
-  new Style({ name: 'cval',     color: 'rgb(80,215,255)',           size: 21 })
-  new Style({ name: 'cselval',  color: 'rgb(120,240,255)',          size: 21 })
-  new Style({ name: 'con',      color: 'rgb(70,230,140)',           size: 21 })
-  new Style({ name: 'coff',     color: 'rgba(255,100,100,0.85)',    size: 21 })
-  new Style({ name: 'carrow',   color: 'rgba(255,255,255,0.25)',    size: 21 })
-  new Style({ name: 'carrsel',  color: 'rgb(80,215,255)',           size: 21 })
-  new Style({ name: 'chint',    color: 'rgba(180,210,255,0.28)',    size: 14 })
-  new Style({ name: 'cscroll',  color: 'rgba(100,210,255,0.70)',    size: 16 })
-  new Style({ name: 'cback',    color: 'rgba(255,110,110,0.90)',    size: 20 })
-  new Style({ name: 'cfooter',  color: 'rgba(200,220,255,0.28)',    size: 16 })
+  new Style({ name: 'ctitle', color: 'rgb(255,255,255)', size: 30 })
+  new Style({ name: 'ccount', color: 'rgba(100,210,255,0.60)', size: 16 })
+  new Style({ name: 'ccolhdr', color: 'rgba(100,210,255,0.45)', size: 13 })
+  new Style({ name: 'cwhite', color: 'rgb(255,255,255)', size: 22 })
+  new Style({ name: 'cmuted', color: 'rgba(220,235,255,0.60)', size: 22 })
+  new Style({ name: 'csec', color: 'rgba(80,210,255,0.65)', size: 11 })
+  new Style({ name: 'cval', color: 'rgb(80,215,255)', size: 21 })
+  new Style({ name: 'cselval', color: 'rgb(120,240,255)', size: 21 })
+  new Style({ name: 'con', color: 'rgb(70,230,140)', size: 21 })
+  new Style({ name: 'coff', color: 'rgba(255,100,100,0.85)', size: 21 })
+  new Style({ name: 'carrow', color: 'rgba(255,255,255,0.25)', size: 21 })
+  new Style({ name: 'carrsel', color: 'rgb(80,215,255)', size: 21 })
+  new Style({ name: 'chint', color: 'rgba(180,210,255,0.28)', size: 14 })
+  new Style({ name: 'cscroll', color: 'rgba(100,210,255,0.70)', size: 16 })
+  new Style({ name: 'cback', color: 'rgba(255,110,110,0.90)', size: 20 })
+  new Style({ name: 'cfooter', color: 'rgba(200,220,255,0.28)', size: 16 })
 
   // ── Background ────────────────────────────────────────────────────────────
   const bg = new Image({ url: DARK, x: 0, y: 0, width: SW, height: SH })
@@ -217,13 +231,13 @@ if (typeof lang === 'undefined') include('languages.js')
   jsmaf.root.children.push(sep2)
 
   // ── Row slots ─────────────────────────────────────────────────────────────
-  const sBgs:   Image[]      = []
-  const sBars:  Image[]      = []
-  const sSecs:  jsmaf.Text[] = []
-  const sLbls:  jsmaf.Text[] = []
-  const sArrs:  jsmaf.Text[] = []
-  const sVals:  jsmaf.Text[] = []
-  const sHnts:  jsmaf.Text[] = []
+  const sBgs: Image[] = []
+  const sBars: Image[] = []
+  const sSecs: jsmaf.Text[] = []
+  const sLbls: jsmaf.Text[] = []
+  const sArrs: jsmaf.Text[] = []
+  const sVals: jsmaf.Text[] = []
+  const sHnts: jsmaf.Text[] = []
 
   for (let s = 0; s < VIS; s++) {
     const bY = SY + s * (BH + GAP)
@@ -237,7 +251,7 @@ if (typeof lang === 'undefined') include('languages.js')
     sBars.push(bar); jsmaf.root.children.push(bar)
 
     // FIX: alpha = 1.0 on every Text element
-    const sec = new jsmaf.Text(); sec.text = ''; sec.x = PAD + 12; sec.y = bY + 8;  sec.style = 'csec';    sec.alpha = 1.0
+    const sec = new jsmaf.Text(); sec.text = ''; sec.x = PAD + 12; sec.y = bY + 8; sec.style = 'csec'; sec.alpha = 1.0
     sSecs.push(sec); jsmaf.root.children.push(sec)
 
     const lbl = new jsmaf.Text(); lbl.text = ''; lbl.x = PAD + 12; lbl.y = bY + 28; lbl.style = 'cmuted'; lbl.alpha = 1.0
@@ -286,16 +300,16 @@ if (typeof lang === 'undefined') include('languages.js')
   jsmaf.root.children.push(fTxt)
 
   // ── State ─────────────────────────────────────────────────────────────────
-  let cur = 0, scrollOff = 0
+  let cur = 0; let scrollOff = 0
 
   function getVal (idx: number): string {
     const o = opts[idx]!; const k = o.key as keyof Cfg
     if (o.type === 'toggle') return C[k] ? 'ON' : 'OFF'
     if (k === 'jb_behavior') return jbLabels[C.jb_behavior] || jbLabels[0]!
-    if (k === 'theme')       { const ti = availableThemes.indexOf(C.theme); return themeLabels[ti >= 0 ? ti : 0]! }
-    if (k === 'exp_core')    return 'Core ' + C.exp_core
-    if (k === 'exp_grooms')  return '' + C.exp_grooms
-    if (k === 'exp_races')   return '' + C.exp_races
+    if (k === 'theme') { const ti = availableThemes.indexOf(C.theme); return themeLabels[ti >= 0 ? ti : 0]! }
+    if (k === 'exp_core') return 'Core ' + C.exp_core
+    if (k === 'exp_grooms') return '' + C.exp_grooms
+    if (k === 'exp_races') return '' + C.exp_races
     if (k === 'exp_timeout') return C.exp_timeout + 's'
     return ''
   }
@@ -305,7 +319,7 @@ if (typeof lang === 'undefined') include('languages.js')
       const idx = scrollOff + s
       const vis = idx < TOTAL
 
-      sBgs[s]!.visible  = vis
+      sBgs[s]!.visible = vis
       sBars[s]!.visible = vis
 
       if (!vis) {
@@ -314,28 +328,28 @@ if (typeof lang === 'undefined') include('languages.js')
         continue
       }
 
-      const o   = opts[idx]!
+      const o = opts[idx]!
       const sel = idx === cur
       const val = getVal(idx)
-      const isOn    = o.type === 'toggle' && val === 'ON'
+      const isOn = o.type === 'toggle' && val === 'ON'
       const isCycle = o.type === 'cycle'
 
-      sBgs[s]!.alpha       = sel ? 0.20 : 0.07
+      sBgs[s]!.alpha = sel ? 0.20 : 0.07
       sBgs[s]!.borderColor = sel ? 'rgba(80,215,255,0.85)' : 'rgba(80,180,255,0.14)'
       sBgs[s]!.borderWidth = sel ? 2 : 1
-      sBars[s]!.alpha      = sel ? 1.0 : 0.40
+      sBars[s]!.alpha = sel ? 1.0 : 0.40
 
       const prevSec = idx > 0 ? opts[idx - 1]!.section : ''
-      sSecs[s]!.text  = o.section !== prevSec ? '▸ ' + o.section : ''
-      sLbls[s]!.text  = o.label
+      sSecs[s]!.text = o.section !== prevSec ? '▸ ' + o.section : ''
+      sLbls[s]!.text = o.label
       sLbls[s]!.style = sel ? 'cwhite' : 'cmuted'
-      sArrs[s]!.text  = isCycle ? '›' : ''
+      sArrs[s]!.text = isCycle ? '›' : ''
       sArrs[s]!.style = sel ? 'carrsel' : 'carrow'
-      sVals[s]!.text  = val
+      sVals[s]!.text = val
       sVals[s]!.style = o.type === 'toggle'
         ? (isOn ? 'con' : 'coff')
         : (sel ? 'cselval' : 'cval')
-      sHnts[s]!.text  = o.hint
+      sHnts[s]!.text = o.hint
 
       // Re-affirm alpha each pass
       sSecs[s]!.alpha = 1.0; sLbls[s]!.alpha = 1.0
@@ -355,12 +369,21 @@ if (typeof lang === 'undefined') include('languages.js')
     if (!configLoaded) { if (done) done(); return }
     const out = {
       config: {
-        autolapse: C.autolapse, autopoop: C.autopoop, autoclose: C.autoclose,
-        autoclose_delay: C.autoclose_delay, music: C.music,
-        jb_behavior: C.jb_behavior, theme: C.theme,
+        autolapse: C.autolapse,
+        autopoop: C.autopoop,
+        autoclose: C.autoclose,
+        autoclose_delay: C.autoclose_delay,
+        music: C.music,
+        jb_behavior: C.jb_behavior,
+        theme: C.theme,
         exploit: {
-          core: C.exp_core, rtprio: 256, grooms: C.exp_grooms,
-          races: C.exp_races, alias: 100, sds: 64, workers: 2,
+          core: C.exp_core,
+          rtprio: 256,
+          grooms: C.exp_grooms,
+          races: C.exp_races,
+          alias: 100,
+          sds: 64,
+          workers: 2,
           timeout_s: C.exp_timeout
         }
       },
@@ -386,15 +409,14 @@ if (typeof lang === 'undefined') include('languages.js')
           if (d.payloads && Array.isArray(d.payloads)) userPayloads = d.payloads.slice()
           if (G.exploit) {
             const ex = G.exploit
-            if (ex.core      !== undefined) C.exp_core    = ex.core
-            if (ex.grooms    !== undefined) C.exp_grooms  = ex.grooms
-            if (ex.races     !== undefined) C.exp_races   = ex.races
+            if (ex.core !== undefined) C.exp_core = ex.core
+            if (ex.grooms !== undefined) C.exp_grooms = ex.grooms
+            if (ex.races !== undefined) C.exp_races = ex.races
             if (ex.timeout_s !== undefined) C.exp_timeout = ex.timeout_s
           }
         }
         configLoaded = true; renderRows()
-        if (C.music) { if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled() }
-        else         { if (typeof stopBgm === 'function') stopBgm() }
+        if (C.music) { if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled() } else { if (typeof stopBgm === 'function') stopBgm() }
       } catch (e) { log('Parse: ' + (e as Error).message); configLoaded = true; renderRows() }
     })
   }
@@ -405,21 +427,17 @@ if (typeof lang === 'undefined') include('languages.js')
     const k = o.key as keyof Cfg
     if (o.type === 'cycle') {
       if (k === 'jb_behavior') C.jb_behavior = (C.jb_behavior + 1) % jbLabels.length
-      else if (k === 'theme')       { const ti = availableThemes.indexOf(C.theme); C.theme = availableThemes[(ti + 1) % availableThemes.length]! }
-      else if (k === 'exp_core')    C.exp_core = (C.exp_core + 1) % 6
-      else if (k === 'exp_grooms')  { const v=[128,256,512,768,1024,1280]; const i=v.indexOf(C.exp_grooms);  C.exp_grooms  = v[(i+1)%v.length]! }
-      else if (k === 'exp_races')   { const v=[50,75,100,150,200,300];     const i=v.indexOf(C.exp_races);   C.exp_races   = v[(i+1)%v.length]! }
-      else if (k === 'exp_timeout') { const v=[5,8,10,15,20];              const i=v.indexOf(C.exp_timeout); C.exp_timeout = v[(i+1)%v.length]! }
+      else if (k === 'theme') { const ti = availableThemes.indexOf(C.theme); C.theme = availableThemes[(ti + 1) % availableThemes.length]! } else if (k === 'exp_core') C.exp_core = (C.exp_core + 1) % 6
+      else if (k === 'exp_grooms') { const v = [128, 256, 512, 768, 1024, 1280]; const i = v.indexOf(C.exp_grooms); C.exp_grooms = v[(i + 1) % v.length]! } else if (k === 'exp_races') { const v = [50, 75, 100, 150, 200, 300]; const i = v.indexOf(C.exp_races); C.exp_races = v[(i + 1) % v.length]! } else if (k === 'exp_timeout') { const v = [5, 8, 10, 15, 20]; const i = v.indexOf(C.exp_timeout); C.exp_timeout = v[(i + 1) % v.length]! }
     } else {
       if (k === 'autolapse' || k === 'autopoop' || k === 'autoclose' || k === 'music') {
         C[k] = !C[k]
         if (k === 'music') {
           if (typeof CONFIG !== 'undefined') CONFIG.music = C.music
-          if (C.music) { if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled() }
-          else         { if (typeof stopBgm === 'function') stopBgm() }
+          if (C.music) { if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled() } else { if (typeof stopBgm === 'function') stopBgm() }
         }
-        if (k === 'autolapse' && C.autolapse) C.autopoop  = false
-        if (k === 'autopoop'  && C.autopoop)  C.autolapse = false
+        if (k === 'autolapse' && C.autolapse) C.autopoop = false
+        if (k === 'autopoop' && C.autopoop) C.autolapse = false
       }
     }
     renderRows(); saveConfig()
@@ -427,7 +445,7 @@ if (typeof lang === 'undefined') include('languages.js')
 
   // ── Input ─────────────────────────────────────────────────────────────────
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
-  const backKey    = jsmaf.circleIsAdvanceButton ? 14 : 13
+  const backKey = jsmaf.circleIsAdvanceButton ? 14 : 13
 
   jsmaf.onKeyDown = function (kc: number) {
     if (kc === 6 || kc === 5) {

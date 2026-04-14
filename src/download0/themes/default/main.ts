@@ -7,60 +7,60 @@ import { libc_addr } from 'download0/userland'
   if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
   // ── Pixels ────────────────────────────────────────────────────────────────
-  const DARK  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
+  const DARK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
   const WHITE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
-  const CYAN  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIOPEfAAODAhiMwlb1AAAAAElFTkSuQmCC'
-  const RED   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
-  const BLUE  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYHj+nwoAA7QCCMmFsCAAAAAASUVORK5CYII='
+  const CYAN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIOPEfAAODAhiMwlb1AAAAAElFTkSuQmCC'
+  const RED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
+  const BLUE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYHj+nwoAA7QCCMmFsCAAAAAASUVORK5CYII='
 
   // ── Layout ────────────────────────────────────────────────────────────────
-  const SW = 1920, SH = 1080, CX = SW / 2
-  const HDR = 150, FTR = 50
-  const BW = 720, BH = 96, BL = CX - BW / 2
-  const SY = 260, GAP = 118
+  const SW = 1920; const SH = 1080; const CX = SW / 2
+  const HDR = 150; const FTR = 50
+  const BW = 720; const BH = 96; const BL = CX - BW / 2
+  const SY = 260; const GAP = 118
 
-  const SFX_CUR  = 'file:///../download0/sfx/cursor.wav'
-  const SFX_OK   = 'file:///../download0/sfx/confirm.wav'
+  const SFX_CUR = 'file:///../download0/sfx/cursor.wav'
+  const SFX_OK = 'file:///../download0/sfx/confirm.wav'
   const SFX_BACK = 'file:///../download0/sfx/cancel.wav'
 
   // ── FIX: Pre-created audio pools — GC cannot collect them ─────────────────
   // Using 3 clips per sound and cycling ensures continuous playback even when
   // pressing buttons rapidly, because references stay alive in the IIFE scope
-  const poolCur  = [new jsmaf.AudioClip(), new jsmaf.AudioClip(), new jsmaf.AudioClip()]
-  const poolOk   = [new jsmaf.AudioClip(), new jsmaf.AudioClip()]
+  const poolCur = [new jsmaf.AudioClip(), new jsmaf.AudioClip(), new jsmaf.AudioClip()]
+  const poolOk = [new jsmaf.AudioClip(), new jsmaf.AudioClip()]
   const poolBack = [new jsmaf.AudioClip(), new jsmaf.AudioClip()]
-  poolCur.forEach(c  => { c.volume = 1.0 })
-  poolOk.forEach(c   => { c.volume = 1.0 })
+  poolCur.forEach(c => { c.volume = 1.0 })
+  poolOk.forEach(c => { c.volume = 1.0 })
   poolBack.forEach(c => { c.volume = 1.0 })
-  let idxCur = 0, idxOk = 0, idxBack = 0
+  let idxCur = 0; let idxOk = 0; let idxBack = 0
 
   function sfxCur () {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { poolCur[idxCur]!.open(SFX_CUR);  idxCur  = (idxCur  + 1) % poolCur.length  } catch (_e) {}
+    try { poolCur[idxCur]!.open(SFX_CUR); idxCur = (idxCur + 1) % poolCur.length } catch (_e) {}
   }
   function sfxOk () {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { poolOk[idxOk]!.open(SFX_OK);     idxOk   = (idxOk   + 1) % poolOk.length   } catch (_e) {}
+    try { poolOk[idxOk]!.open(SFX_OK); idxOk = (idxOk + 1) % poolOk.length } catch (_e) {}
   }
   function sfxBack () {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try { poolBack[idxBack]!.open(SFX_BACK);idxBack = (idxBack + 1) % poolBack.length  } catch (_e) {}
+    try { poolBack[idxBack]!.open(SFX_BACK); idxBack = (idxBack + 1) % poolBack.length } catch (_e) {}
   }
 
   // ── Styles (simple names, no underscores) ─────────────────────────────────
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'logo',    color: 'rgb(80,215,255)',         size: 50 })
-  new Style({ name: 'sub',     color: 'rgba(150,215,255,0.55)',  size: 17 })
-  new Style({ name: 'label',   color: 'rgba(230,240,255,0.85)',  size: 28 })
-  new Style({ name: 'sel',     color: 'rgb(255,255,255)',        size: 28 })
-  new Style({ name: 'num',     color: 'rgba(80,210,255,0.40)',   size: 14 })
-  new Style({ name: 'numsel',  color: 'rgb(80,210,255)',         size: 14 })
-  new Style({ name: 'arrow',   color: 'rgba(255,255,255,0.18)', size: 24 })
-  new Style({ name: 'arrsel',  color: 'rgb(80,210,255)',         size: 24 })
-  new Style({ name: 'exit',    color: 'rgb(255,100,100)',        size: 28 })
-  new Style({ name: 'exitd',   color: 'rgba(255,100,100,0.45)', size: 28 })
-  new Style({ name: 'footer',  color: 'rgba(200,220,255,0.28)', size: 16 })
+  new Style({ name: 'logo', color: 'rgb(80,215,255)', size: 50 })
+  new Style({ name: 'sub', color: 'rgba(150,215,255,0.55)', size: 17 })
+  new Style({ name: 'label', color: 'rgba(230,240,255,0.85)', size: 28 })
+  new Style({ name: 'sel', color: 'rgb(255,255,255)', size: 28 })
+  new Style({ name: 'num', color: 'rgba(80,210,255,0.40)', size: 14 })
+  new Style({ name: 'numsel', color: 'rgb(80,210,255)', size: 14 })
+  new Style({ name: 'arrow', color: 'rgba(255,255,255,0.18)', size: 24 })
+  new Style({ name: 'arrsel', color: 'rgb(80,210,255)', size: 24 })
+  new Style({ name: 'exit', color: 'rgb(255,100,100)', size: 28 })
+  new Style({ name: 'exitd', color: 'rgba(255,100,100,0.45)', size: 28 })
+  new Style({ name: 'footer', color: 'rgba(200,220,255,0.28)', size: 16 })
 
   // ── Background ────────────────────────────────────────────────────────────
   const bg = new Image({ url: DARK, x: 0, y: 0, width: SW, height: SH })
@@ -109,19 +109,19 @@ import { libc_addr } from 'download0/userland'
   // ── Buttons ───────────────────────────────────────────────────────────────
   type MenuItem = { label: string; script: string; num: string; icon: string }
   const items: MenuItem[] = [
-    { label: lang.jailbreak,   script: 'loader.js',       num: '01', icon: '⚡' },
+    { label: lang.jailbreak, script: 'loader.js', num: '01', icon: '⚡' },
     { label: lang.payloadMenu, script: 'payload_host.js', num: '02', icon: '◈' },
-    { label: lang.config,      script: 'config_ui.js',    num: '03', icon: '⚙' },
+    { label: lang.config, script: 'config_ui.js', num: '03', icon: '⚙' },
   ]
 
-  const btns: Image[]      = []
-  const bars: Image[]      = []
-  const glws: Image[]      = []
+  const btns: Image[] = []
+  const bars: Image[] = []
+  const glws: Image[] = []
   const txts: jsmaf.Text[] = []
   const nums: jsmaf.Text[] = []
   const arrs: jsmaf.Text[] = []
-  const origB: {x:number;y:number}[] = []
-  const origT: {x:number;y:number}[] = []
+  const origB: { x: number;y: number }[] = []
+  const origT: { x: number;y: number }[] = []
 
   for (let i = 0; i < items.length; i++) {
     const o = items[i]!
@@ -208,21 +208,21 @@ import { libc_addr } from 'download0/userland'
   function highlight () {
     for (let i = 0; i < TOTAL; i++) {
       const isExit = i === TOTAL - 1
-      const sel    = i === cur
+      const sel = i === cur
 
-      btns[i]!.alpha       = sel ? 0.20 : (isExit ? 0.05 : 0.07)
+      btns[i]!.alpha = sel ? 0.20 : (isExit ? 0.05 : 0.07)
       btns[i]!.borderColor = sel
         ? (isExit ? 'rgba(255,100,100,0.85)' : 'rgba(80,210,255,0.85)')
-        : (isExit ? 'rgba(255,80,80,0.20)'   : 'rgba(80,180,255,0.15)')
+        : (isExit ? 'rgba(255,80,80,0.20)' : 'rgba(80,180,255,0.15)')
       btns[i]!.borderWidth = sel ? 2 : 1
-      glws[i]!.alpha       = sel ? 0.06 : 0
-      bars[i]!.alpha       = sel ? 1.0  : (isExit ? 0.70 : 0.45)
-      txts[i]!.style       = sel ? (isExit ? 'exit' : 'sel') : (isExit ? 'exitd' : 'label')
-      nums[i]!.style       = sel ? 'numsel' : 'num'
-      arrs[i]!.style       = sel ? 'arrsel' : 'arrow'
-      txts[i]!.alpha       = 1.0
-      nums[i]!.alpha       = 1.0
-      arrs[i]!.alpha       = 1.0
+      glws[i]!.alpha = sel ? 0.06 : 0
+      bars[i]!.alpha = sel ? 1.0 : (isExit ? 0.70 : 0.45)
+      txts[i]!.style = sel ? (isExit ? 'exit' : 'sel') : (isExit ? 'exitd' : 'label')
+      nums[i]!.style = sel ? 'numsel' : 'num'
+      arrs[i]!.style = sel ? 'arrsel' : 'arrow'
+      txts[i]!.alpha = 1.0
+      nums[i]!.alpha = 1.0
+      arrs[i]!.alpha = 1.0
 
       if (i !== prev || sel) {
         const sc = sel ? 1.022 : 1.0
