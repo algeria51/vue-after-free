@@ -9,11 +9,19 @@ if (typeof lang === 'undefined') include('languages.js')
   log('Loading config UI...')
 
   // ── Pixels ────────────────────────────────────────────────────────────────
+<<<<<<< HEAD
+  const DARK   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGPg4RMDAABaADEUPDZQAAAAAElFTkSuQmCC'
+  const WHITE  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
+  const CYAN   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNguPQMAAKOAbnVoJuKAAAAAElFTkSuQmCC'
+  const GREEN  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIeDYNAANWAc20LRTOAAAAAElFTkSuQmCC'
+  const RED    = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP47xYAAAPdAZZlZDzjAAAAAElFTkSuQmCC'
+=======
   const DARK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
   const WHITE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
   const PURPLE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNY7/YfAAOcAfXVA39DAAAAAElFTkSuQmCC'
   const GREEN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIeDYNAANWAc20LRTOAAAAAElFTkSuQmCC'
   const RED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
 
   // ── Config state ──────────────────────────────────────────────────────────
   interface Cfg {
@@ -118,6 +126,19 @@ if (typeof lang === 'undefined') include('languages.js')
   const TOTAL = opts.length
 
   // ── Layout ────────────────────────────────────────────────────────────────
+<<<<<<< HEAD
+  const SW = 1920, SH = 1080, PAD = 60
+  const HDR = 160, FTR = 50
+  const AVAIL = SH - HDR - FTR - 20
+  const BH = 74, GAP = 7
+  const VIS  = Math.min(TOTAL, Math.floor(AVAIL / (BH + GAP)))
+  const RW   = SW - PAD * 2
+  const SY   = HDR + 10
+  const VOFF = Math.floor(RW * 0.60)
+  const HOFF = Math.floor(RW * 0.78)
+  const VX   = PAD + VOFF
+  const HX   = PAD + HOFF
+=======
   const SW = 1920; const SH = 1080; const PAD = 60
   const HDR = 152; const FTR = 50
   const AVAIL = SH - HDR - FTR - 20
@@ -129,14 +150,20 @@ if (typeof lang === 'undefined') include('languages.js')
   const HOFF = Math.floor(RW * 0.78)   // hint column offset
   const VX = PAD + VOFF
   const HX = PAD + HOFF
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
 
   const SFX_CUR = 'file:///../download0/sfx/cursor.wav'
   const SFX_OK = 'file:///../download0/sfx/confirm.wav'
   const SFX_BCK = 'file:///../download0/sfx/cancel.wav'
 
+<<<<<<< HEAD
+  const poolCur  = Array.from({ length: 8 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
+  const poolOk   = Array.from({ length: 4 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
+=======
   // ── Audio pools ───────────────────────────────────────────────────────────
   const poolCur = Array.from({ length: 8 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
   const poolOk = Array.from({ length: 4 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
   const poolBack = Array.from({ length: 4 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
   let idxCur = 0; let idxOk = 0; let idxBack = 0
 
@@ -156,6 +183,24 @@ if (typeof lang === 'undefined') include('languages.js')
   // ── Styles ────────────────────────────────────────────────────────────────
   jsmaf.root.children.length = 0
 
+<<<<<<< HEAD
+  new Style({ name: 'ctitle',  color: 'rgb(255,255,255)',          size: 30 })
+  new Style({ name: 'ccount',  color: 'rgba(120,235,255,0.58)',    size: 16 })
+  new Style({ name: 'ccolhdr', color: 'rgba(0,200,230,0.48)',      size: 13 })
+  new Style({ name: 'cwhite',  color: 'rgb(255,255,255)',          size: 21 })
+  new Style({ name: 'cmuted',  color: 'rgba(195,240,255,0.62)',    size: 21 })
+  new Style({ name: 'csec',    color: 'rgba(0,200,230,0.70)',      size: 11 })
+  new Style({ name: 'cval',    color: 'rgb(0,210,235)',            size: 20 })
+  new Style({ name: 'cselval', color: 'rgb(120,245,255)',          size: 20 })
+  new Style({ name: 'con',     color: 'rgb(60,225,130)',           size: 20 })
+  new Style({ name: 'coff',    color: 'rgba(255,90,100,0.85)',     size: 20 })
+  new Style({ name: 'carrow',  color: 'rgba(255,255,255,0.22)',    size: 20 })
+  new Style({ name: 'carrsel', color: 'rgb(0,220,240)',            size: 20 })
+  new Style({ name: 'chint',   color: 'rgba(160,235,255,0.28)',    size: 14 })
+  new Style({ name: 'cscroll', color: 'rgba(0,220,240,0.75)',      size: 16 })
+  new Style({ name: 'cback',   color: 'rgba(255,100,110,0.90)',    size: 20 })
+  new Style({ name: 'cfooter', color: 'rgba(120,230,255,0.26)',    size: 15 })
+=======
   new Style({ name: 'ctitle', color: 'rgb(255,255,255)', size: 30 })
   new Style({ name: 'ccount', color: 'rgba(200,150,255,0.65)', size: 16 })
   new Style({ name: 'ccolhdr', color: 'rgba(190,130,255,0.50)', size: 13 })
@@ -172,42 +217,43 @@ if (typeof lang === 'undefined') include('languages.js')
   new Style({ name: 'cscroll', color: 'rgba(200,150,255,0.75)', size: 16 })
   new Style({ name: 'cback', color: 'rgba(255,110,110,0.90)', size: 20 })
   new Style({ name: 'cfooter', color: 'rgba(210,200,255,0.30)', size: 16 })
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
 
   // ── Static scene ──────────────────────────────────────────────────────────
-
-  // Background
   const bg = new Image({ url: DARK, x: 0, y: 0, width: SW, height: SH })
   bg.alpha = 1.0; bg.borderWidth = 0
   jsmaf.root.children.push(bg)
 
-  const glBg = new Image({ url: PURPLE, x: 0, y: 0, width: 700, height: 450 })
-  glBg.alpha = 0.04; glBg.borderWidth = 0
+  const topStrip = new Image({ url: CYAN, x: 0, y: 0, width: SW, height: 3 })
+  topStrip.alpha = 0.80; topStrip.borderWidth = 0
+  jsmaf.root.children.push(topStrip)
+
+  const glBg = new Image({ url: CYAN, x: 0, y: 0, width: 700, height: 450 })
+  glBg.alpha = 0.022; glBg.borderWidth = 0
   jsmaf.root.children.push(glBg)
 
-  // Header
   const hBg = new Image({ url: WHITE, x: 0, y: 0, width: SW, height: HDR })
-  hBg.alpha = 0.05; hBg.borderWidth = 0
+  hBg.alpha = 0.04; hBg.borderWidth = 0
   jsmaf.root.children.push(hBg)
 
-  const hBar = new Image({ url: PURPLE, x: 0, y: 0, width: 5, height: HDR })
+  const hBar = new Image({ url: CYAN, x: 0, y: 0, width: 4, height: HDR })
   hBar.alpha = 1.0; hBar.borderWidth = 0
   jsmaf.root.children.push(hBar)
 
-  const hDiv = new Image({ url: PURPLE, x: 0, y: HDR - 1, width: SW, height: 1 })
-  hDiv.alpha = 0.30; hDiv.borderWidth = 0
+  const hDiv = new Image({ url: CYAN, x: 0, y: HDR - 1, width: SW, height: 1 })
+  hDiv.alpha = 0.18; hDiv.borderWidth = 0
   jsmaf.root.children.push(hDiv)
 
   const ttl = new jsmaf.Text()
   ttl.style = 'ctitle'; ttl.text = (lang.config || 'SETTINGS').toUpperCase()
-  ttl.x = PAD; ttl.y = 38; ttl.alpha = 1.0
+  ttl.x = PAD; ttl.y = 36; ttl.alpha = 1.0
   jsmaf.root.children.push(ttl)
 
   const sub = new jsmaf.Text()
   sub.style = 'ccount'; sub.text = TOTAL + ' settings'
-  sub.x = PAD; sub.y = 92; sub.alpha = 1.0
+  sub.x = PAD; sub.y = 90; sub.alpha = 1.0
   jsmaf.root.children.push(sub)
 
-  // Column headers
   const hOpt = new jsmaf.Text()
   hOpt.style = 'ccolhdr'; hOpt.text = 'OPTION'
   hOpt.x = PAD + 18; hOpt.y = HDR + 2; hOpt.alpha = 1.0
@@ -223,7 +269,6 @@ if (typeof lang === 'undefined') include('languages.js')
   hHnt.x = HX; hHnt.y = HDR + 2; hHnt.alpha = 1.0
   jsmaf.root.children.push(hHnt)
 
-  // Column separators
   const sep1 = new Image({ url: WHITE, x: VX - 12, y: SY, width: 1, height: AVAIL })
   sep1.alpha = 0.10; sep1.borderWidth = 0
   jsmaf.root.children.push(sep1)
@@ -232,7 +277,6 @@ if (typeof lang === 'undefined') include('languages.js')
   sep2.alpha = 0.07; sep2.borderWidth = 0
   jsmaf.root.children.push(sep2)
 
-  // Back label
   const navY = SH - FTR - 54
   const backT = new jsmaf.Text()
   backT.style = 'cback'
@@ -240,25 +284,96 @@ if (typeof lang === 'undefined') include('languages.js')
   backT.x = PAD; backT.y = navY + 10; backT.alpha = 1.0
   jsmaf.root.children.push(backT)
 
-  // Footer
-  const fLine = new Image({ url: PURPLE, x: 0, y: SH - FTR, width: SW, height: 1 })
-  fLine.alpha = 0.22; fLine.borderWidth = 0
+  const fLine = new Image({ url: CYAN, x: 0, y: SH - FTR, width: SW, height: 1 })
+  fLine.alpha = 0.18; fLine.borderWidth = 0
   jsmaf.root.children.push(fLine)
 
-  const fBg = new Image({ url: WHITE, x: 0, y: SH - FTR + 1, width: SW, height: FTR - 1 })
-  fBg.alpha = 0.06; fBg.borderWidth = 0
-  jsmaf.root.children.push(fBg)
+  const fBg2 = new Image({ url: WHITE, x: 0, y: SH - FTR + 1, width: SW, height: FTR - 1 })
+  fBg2.alpha = 0.05; fBg2.borderWidth = 0
+  jsmaf.root.children.push(fBg2)
 
   const clbl = jsmaf.circleIsAdvanceButton ? 'O' : 'X'
   const blbl = jsmaf.circleIsAdvanceButton ? 'X' : 'O'
   const fTxt = new jsmaf.Text()
   fTxt.style = 'cfooter'
+<<<<<<< HEAD
+  fTxt.text  = '↑↓  Navigate    ' + clbl + '  Change value    ' + blbl + '  Save & back'
+  fTxt.x = SW / 2 - 260; fTxt.y = SH - FTR + 18; fTxt.alpha = 1.0
+=======
   fTxt.text = '↑↓  Navigate    ' + clbl + '  Change value    ' + blbl + '  Save & back'
   fTxt.x = SW / 2 - 270; fTxt.y = SH - FTR + 17; fTxt.alpha = 1.0
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
   jsmaf.root.children.push(fTxt)
 
-  // ── STATIC_IDX ────────────────────────────────────────────────────────────
-  const STATIC_IDX = jsmaf.root.children.length
+  // ── PRE-ALLOCATED SLOTS ───────────────────────────────────────────────────
+  // FIX: All row elements pre-created. renderRows() only updates properties.
+  // This avoids the invisible-text bug from children.length truncation.
+
+  const slotBg:    Image[]      = []
+  const slotGlw:   Image[]      = []
+  const slotBar:   Image[]      = []
+  const slotSecLn: Image[]      = []    // section divider line
+  const slotSec:   jsmaf.Text[] = []    // section label
+  const slotLbl:   jsmaf.Text[] = []    // option label
+  const slotArr:   jsmaf.Text[] = []    // cycle arrow
+  const slotVal:   jsmaf.Text[] = []    // value text
+  const slotHnt:   jsmaf.Text[] = []    // hint text
+
+  for (let s = 0; s < VIS; s++) {
+    const bY = SY + s * (BH + GAP)
+
+    const rowSecLn = new Image({ url: CYAN, x: PAD, y: bY - 4, width: RW, height: 1 })
+    rowSecLn.alpha = 0; rowSecLn.borderWidth = 0
+    slotSecLn.push(rowSecLn); jsmaf.root.children.push(rowSecLn)
+
+    const rowBg = new Image({ url: WHITE, x: PAD, y: bY, width: RW, height: BH })
+    rowBg.alpha = 0; rowBg.borderWidth = 1
+    slotBg.push(rowBg); jsmaf.root.children.push(rowBg)
+
+    const rowGlw = new Image({ url: CYAN, x: PAD, y: bY, width: RW, height: BH })
+    rowGlw.alpha = 0; rowGlw.borderWidth = 0
+    slotGlw.push(rowGlw); jsmaf.root.children.push(rowGlw)
+
+    const rowBar = new Image({ url: CYAN, x: PAD, y: bY, width: 4, height: BH })
+    rowBar.alpha = 0; rowBar.borderWidth = 0
+    slotBar.push(rowBar); jsmaf.root.children.push(rowBar)
+
+    const rowSec = new jsmaf.Text()
+    rowSec.style = 'csec'; rowSec.text = ' '
+    rowSec.x = PAD + 12; rowSec.y = bY + 6; rowSec.alpha = 0
+    slotSec.push(rowSec); jsmaf.root.children.push(rowSec)
+
+    const rowLbl = new jsmaf.Text()
+    rowLbl.style = 'cmuted'; rowLbl.text = ' '
+    rowLbl.x = PAD + 12; rowLbl.y = bY + 26; rowLbl.alpha = 0
+    slotLbl.push(rowLbl); jsmaf.root.children.push(rowLbl)
+
+    const rowArr = new jsmaf.Text()
+    rowArr.style = 'carrow'; rowArr.text = '›'
+    rowArr.x = VX - 24; rowArr.y = bY + 26; rowArr.alpha = 0
+    slotArr.push(rowArr); jsmaf.root.children.push(rowArr)
+
+    const rowVal = new jsmaf.Text()
+    rowVal.style = 'cval'; rowVal.text = ' '
+    rowVal.x = VX; rowVal.y = bY + 26; rowVal.alpha = 0
+    slotVal.push(rowVal); jsmaf.root.children.push(rowVal)
+
+    const rowHnt = new jsmaf.Text()
+    rowHnt.style = 'chint'; rowHnt.text = ' '
+    rowHnt.x = HX; rowHnt.y = bY + 28; rowHnt.alpha = 0
+    slotHnt.push(rowHnt); jsmaf.root.children.push(rowHnt)
+  }
+
+  // Scroll indicators
+  const upInd = new jsmaf.Text()
+  upInd.style = 'cscroll'; upInd.text = '▲  Scroll up'
+  upInd.x = SW / 2 - 70; upInd.y = HDR + 2; upInd.alpha = 0
+  jsmaf.root.children.push(upInd)
+
+  const dnInd = new jsmaf.Text()
+  dnInd.style = 'cscroll'; dnInd.text = '▼  More below'
+  dnInd.x = SW / 2 - 70; dnInd.y = SY + VIS * (BH + GAP) + 4; dnInd.alpha = 0
+  jsmaf.root.children.push(dnInd)
 
   // ── State ─────────────────────────────────────────────────────────────────
   let cur = 0; let scrollOff = 0
@@ -280,22 +395,27 @@ if (typeof lang === 'undefined') include('languages.js')
     else if (cur >= scrollOff + VIS) scrollOff = cur - VIS + 1
   }
 
-  // ── Full redraw ───────────────────────────────────────────────────────────
+  // ── Render — updates properties only, never adds/removes children ─────────
   function renderRows () {
-    jsmaf.root.children.length = STATIC_IDX
-
-    // Scroll up indicator
-    if (scrollOff > 0) {
-      const up = new jsmaf.Text()
-      up.style = 'cscroll'; up.text = '▲  Scroll up'
-      up.x = SW / 2 - 70; up.y = HDR + 2; up.alpha = 1.0
-      jsmaf.root.children.push(up)
-    }
+    upInd.alpha = scrollOff > 0 ? 1.0 : 0
+    dnInd.alpha = (scrollOff + VIS) < TOTAL ? 1.0 : 0
 
     for (let s = 0; s < VIS; s++) {
       const idx = scrollOff + s
-      if (idx >= TOTAL) break
+      if (idx >= TOTAL) {
+        slotSecLn[s]!.alpha = 0; slotBg[s]!.alpha  = 0; slotGlw[s]!.alpha = 0
+        slotBar[s]!.alpha   = 0; slotSec[s]!.alpha  = 0; slotLbl[s]!.alpha = 0
+        slotArr[s]!.alpha   = 0; slotVal[s]!.alpha  = 0; slotHnt[s]!.alpha = 0
+        continue
+      }
 
+<<<<<<< HEAD
+      const o      = opts[idx]!
+      const sel    = idx === cur
+      const val    = getVal(idx)
+      const isOn   = o.type === 'toggle' && val === 'ON'
+      const isCycle = o.type === 'cycle'
+=======
       const o = opts[idx]!
       const sel = idx === cur
       const val = getVal(idx)
@@ -304,25 +424,51 @@ if (typeof lang === 'undefined') include('languages.js')
       const bY = SY + s * (BH + GAP)
 
       // Section divider (shown only when section changes)
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
       const prevSec = idx > 0 ? opts[idx - 1]!.section : ''
-      if (o.section !== prevSec) {
-        const secLine = new Image({ url: PURPLE, x: PAD, y: bY - 4, width: RW, height: 1 })
-        secLine.alpha = 0.18; secLine.borderWidth = 0
-        jsmaf.root.children.push(secLine)
+      const showSec = o.section !== prevSec
+
+      slotSecLn[s]!.alpha = showSec ? 0.15 : 0
+
+      slotBg[s]!.alpha       = sel ? 0.18 : 0.06
+      slotBg[s]!.borderColor = sel ? 'rgba(0,200,230,0.86)' : 'rgba(0,160,180,0.15)'
+      slotBg[s]!.borderWidth = sel ? 2 : 1
+
+      slotGlw[s]!.alpha = sel ? 0.045 : 0
+      slotBar[s]!.alpha = sel ? 1.0   : 0.36
+
+      if (showSec) {
+        slotSec[s]!.text  = '▸ ' + o.section
+        slotSec[s]!.alpha = 1.0
+        slotLbl[s]!.y     = slotBg[s]!.y + 28
+      } else {
+        slotSec[s]!.alpha = 0
+        slotLbl[s]!.y     = slotBg[s]!.y + 26
       }
 
+<<<<<<< HEAD
+      slotLbl[s]!.style = sel ? 'cwhite' : 'cmuted'
+      slotLbl[s]!.text  = o.label
+      slotLbl[s]!.alpha = 1.0
+=======
       // Row background
       const rowBg = new Image({ url: WHITE, x: PAD, y: bY, width: RW, height: BH })
       rowBg.alpha = sel ? 0.20 : 0.07
       rowBg.borderColor = sel ? 'rgba(175,80,255,0.88)' : 'rgba(120,60,200,0.16)'
       rowBg.borderWidth = sel ? 2 : 1
       jsmaf.root.children.push(rowBg)
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
 
-      // Left accent bar
-      const rowBar = new Image({ url: PURPLE, x: PAD, y: bY, width: 4, height: BH })
-      rowBar.alpha = sel ? 1.0 : 0.40
-      jsmaf.root.children.push(rowBar)
+      slotArr[s]!.style = sel ? 'carrsel' : 'carrow'
+      slotArr[s]!.alpha = isCycle ? 1.0 : 0
 
+<<<<<<< HEAD
+      slotVal[s]!.style = o.type === 'toggle'
+        ? (isOn ? 'con' : 'coff')
+        : (sel  ? 'cselval' : 'cval')
+      slotVal[s]!.text  = val
+      slotVal[s]!.alpha = 1.0
+=======
       // Selection glow
       if (sel) {
         const glw = new Image({ url: PURPLE, x: PAD, y: bY, width: RW, height: BH })
@@ -362,20 +508,10 @@ if (typeof lang === 'undefined') include('languages.js')
       vt.text = val
       vt.x = VX; vt.y = bY + 26; vt.alpha = 1.0
       jsmaf.root.children.push(vt)
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
 
-      // Hint
-      const ht = new jsmaf.Text()
-      ht.style = 'chint'; ht.text = o.hint
-      ht.x = HX; ht.y = bY + 28; ht.alpha = 1.0
-      jsmaf.root.children.push(ht)
-    }
-
-    // Scroll down indicator
-    if ((scrollOff + VIS) < TOTAL) {
-      const dn = new jsmaf.Text()
-      dn.style = 'cscroll'; dn.text = '▼  More below'
-      dn.x = SW / 2 - 70; dn.y = SY + VIS * (BH + GAP) + 4; dn.alpha = 1.0
-      jsmaf.root.children.push(dn)
+      slotHnt[s]!.text  = o.hint
+      slotHnt[s]!.alpha = 1.0
     }
   }
 

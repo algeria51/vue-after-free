@@ -10,6 +10,17 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
   // ── Pixels ────────────────────────────────────────────────────────────────
+<<<<<<< HEAD
+  const DARK   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGPg4RMDAABaADEUPDZQAAAAAElFTkSuQmCC'
+  const WHITE  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
+  const CYAN   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNguPQMAAKOAbnVoJuKAAAAAElFTkSuQmCC'
+  const RED    = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP47xYAAAPdAZZlZDzjAAAAAElFTkSuQmCC'
+
+  // ── Layout ────────────────────────────────────────────────────────────────
+  const SW = 1920, SH = 1080, PAD = 80
+  const HDR = 160, FTR = 50
+  const BW = SW - PAD * 2, BH = 88, GAP = 6
+=======
   const DARK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
   const WHITE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
   const PURPLE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNY7/YfAAOcAfXVA39DAAAAAElFTkSuQmCC'
@@ -19,6 +30,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   const SW = 1920; const SH = 1080; const PAD = 80
   const HDR = 150; const FTR = 50
   const BW = SW - PAD * 2; const BH = 90; const GAP = 8
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
   const AVAIL = SH - HDR - FTR - 24
   const MAXR = Math.min(9, Math.floor(AVAIL / (BH + GAP)))
   const SY = HDR + 12
@@ -27,9 +39,14 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   const SFX_OK = 'file:///../download0/sfx/confirm.wav'
   const SFX_BACK = 'file:///../download0/sfx/cancel.wav'
 
+<<<<<<< HEAD
+  const poolCur  = Array.from({ length: 8 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
+  const poolOk   = Array.from({ length: 4 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
+=======
   // ── Audio pools — large pools prevent drop-outs on rapid navigation ───────
   const poolCur = Array.from({ length: 8 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
   const poolOk = Array.from({ length: 4 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
   const poolBack = Array.from({ length: 4 }, () => { const c = new jsmaf.AudioClip(); c.volume = 1.0; return c })
   let idxCur = 0; let idxOk = 0; let idxBack = 0
 
@@ -86,9 +103,27 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   }
   log('Payloads found: ' + fileList.length)
 
+  const TOTAL = fileList.length
+
   // ── Styles ────────────────────────────────────────────────────────────────
   jsmaf.root.children.length = 0
 
+<<<<<<< HEAD
+  new Style({ name: 'ptitle',  color: 'rgb(255,255,255)',          size: 30 })
+  new Style({ name: 'pcount',  color: 'rgba(120,235,255,0.60)',    size: 16 })
+  new Style({ name: 'pwhite',  color: 'rgb(255,255,255)',          size: 22 })
+  new Style({ name: 'pmuted',  color: 'rgba(195,240,255,0.62)',    size: 22 })
+  new Style({ name: 'pnum',    color: 'rgba(0,210,230,0.38)',      size: 15 })
+  new Style({ name: 'pnumsel', color: 'rgb(0,230,250)',            size: 15 })
+  new Style({ name: 'pbadge',  color: 'rgba(0,200,230,0.75)',      size: 12 })
+  new Style({ name: 'pbsel',   color: 'rgb(0,230,250)',            size: 12 })
+  new Style({ name: 'ppath',   color: 'rgba(160,235,255,0.28)',    size: 13 })
+  new Style({ name: 'pscroll', color: 'rgba(0,220,240,0.75)',      size: 16 })
+  new Style({ name: 'pback',   color: 'rgba(255,100,110,0.90)',    size: 20 })
+  new Style({ name: 'pfooter', color: 'rgba(120,230,255,0.26)',    size: 15 })
+  new Style({ name: 'pempty',  color: 'rgba(195,240,255,0.70)',    size: 28 })
+  new Style({ name: 'pemptsb', color: 'rgba(160,235,255,0.42)',    size: 18 })
+=======
   new Style({ name: 'ptitle', color: 'rgb(255,255,255)', size: 30 })
   new Style({ name: 'pcount', color: 'rgba(200,150,255,0.70)', size: 16 })
   new Style({ name: 'pwhite', color: 'rgb(255,255,255)', size: 22 })
@@ -106,35 +141,39 @@ import { checkJailbroken } from 'download0/check-jailbroken'
 
   // ── Static scene elements ─────────────────────────────────────────────────
   // All elements pushed here persist across renderRows() calls.
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
 
+  // ── Static scene ──────────────────────────────────────────────────────────
   const bg = new Image({ url: DARK, x: 0, y: 0, width: SW, height: SH })
   bg.alpha = 1.0; bg.borderWidth = 0
   jsmaf.root.children.push(bg)
 
-  const gl = new Image({ url: PURPLE, x: 0, y: 0, width: 750, height: 480 })
-  gl.alpha = 0.04; gl.borderWidth = 0
+  const topStrip = new Image({ url: CYAN, x: 0, y: 0, width: SW, height: 3 })
+  topStrip.alpha = 0.80; topStrip.borderWidth = 0
+  jsmaf.root.children.push(topStrip)
+
+  const gl = new Image({ url: CYAN, x: 0, y: 0, width: 700, height: 480 })
+  gl.alpha = 0.022; gl.borderWidth = 0
   jsmaf.root.children.push(gl)
 
   // Header
   const hBg = new Image({ url: WHITE, x: 0, y: 0, width: SW, height: HDR })
-  hBg.alpha = 0.05; hBg.borderWidth = 0
+  hBg.alpha = 0.04; hBg.borderWidth = 0
   jsmaf.root.children.push(hBg)
 
-  const hBar = new Image({ url: PURPLE, x: 0, y: 0, width: 5, height: HDR })
+  const hBar = new Image({ url: CYAN, x: 0, y: 0, width: 4, height: HDR })
   hBar.alpha = 1.0; hBar.borderWidth = 0
   jsmaf.root.children.push(hBar)
 
-  const hDiv = new Image({ url: PURPLE, x: 0, y: HDR - 1, width: SW, height: 1 })
-  hDiv.alpha = 0.30; hDiv.borderWidth = 0
+  const hDiv = new Image({ url: CYAN, x: 0, y: HDR - 1, width: SW, height: 1 })
+  hDiv.alpha = 0.18; hDiv.borderWidth = 0
   jsmaf.root.children.push(hDiv)
 
-  // Header title — style set BEFORE text to guarantee rendering
   const ttl = new jsmaf.Text()
   ttl.style = 'ptitle'; ttl.text = (lang.payloadMenu || 'PAYLOAD MENU').toUpperCase()
-  ttl.x = PAD; ttl.y = 38; ttl.alpha = 1.0
+  ttl.x = PAD; ttl.y = 36; ttl.alpha = 1.0
   jsmaf.root.children.push(ttl)
 
-  const TOTAL = fileList.length
   const cntT = new jsmaf.Text()
   cntT.style = 'pcount'
   cntT.text = TOTAL === 0
@@ -143,9 +182,8 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   cntT.x = PAD; cntT.y = 90; cntT.alpha = 1.0
   jsmaf.root.children.push(cntT)
 
-  // Navigation bar (always visible at bottom of list area)
-  const navY = SH - FTR - 58
-
+  // Back label
+  const navY = SH - FTR - 54
   const backT = new jsmaf.Text()
   backT.style = 'pback'
   backT.text = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
@@ -153,27 +191,108 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   jsmaf.root.children.push(backT)
 
   // Footer
-  const fLine = new Image({ url: PURPLE, x: 0, y: SH - FTR, width: SW, height: 1 })
-  fLine.alpha = 0.22; fLine.borderWidth = 0
+  const fLine = new Image({ url: CYAN, x: 0, y: SH - FTR, width: SW, height: 1 })
+  fLine.alpha = 0.18; fLine.borderWidth = 0
   jsmaf.root.children.push(fLine)
 
   const fBg = new Image({ url: WHITE, x: 0, y: SH - FTR + 1, width: SW, height: FTR - 1 })
-  fBg.alpha = 0.06; fBg.borderWidth = 0
+  fBg.alpha = 0.05; fBg.borderWidth = 0
   jsmaf.root.children.push(fBg)
 
   const clbl = jsmaf.circleIsAdvanceButton ? 'O' : 'X'
   const blbl = jsmaf.circleIsAdvanceButton ? 'X' : 'O'
   const fTxt = new jsmaf.Text()
   fTxt.style = 'pfooter'
+<<<<<<< HEAD
+  fTxt.text  = '↑↓  Navigate    ' + clbl + '  Launch    ' + blbl + '  Back'
+  fTxt.x = SW / 2 - 200; fTxt.y = SH - FTR + 18; fTxt.alpha = 1.0
+=======
   fTxt.text = '↑↓  Navigate    ' + clbl + '  Launch    ' + blbl + '  Back'
   fTxt.x = SW / 2 - 210; fTxt.y = SH - FTR + 17; fTxt.alpha = 1.0
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
   jsmaf.root.children.push(fTxt)
 
-  // ── STATIC_IDX: children up to here are always kept ──────────────────────
-  // renderRows() will truncate back to this index and re-push slot elements.
-  // This "full redraw" approach guarantees Text elements are created with
-  // content already set before push, which fixes the invisible-text bug.
-  const STATIC_IDX = jsmaf.root.children.length
+  // ── PRE-ALLOCATED SLOTS ───────────────────────────────────────────────────
+  // FIX: All dynamic elements are created ONCE here and stored in arrays.
+  // renderRows() only updates their properties (alpha, text, style).
+  // This avoids the invisible-text bug caused by children.length truncation.
+
+  const slotBg:  Image[]       = []
+  const slotGlw: Image[]       = []
+  const slotBar: Image[]       = []
+  const slotNum: jsmaf.Text[]  = []
+  const slotLbl: jsmaf.Text[]  = []
+  const slotPth: jsmaf.Text[]  = []
+  const slotBdg: jsmaf.Text[]  = []
+
+  for (let s = 0; s < MAXR; s++) {
+    const bY = SY + s * (BH + GAP)
+
+    const rowBg = new Image({ url: WHITE, x: PAD, y: bY, width: BW, height: BH })
+    rowBg.alpha = 0; rowBg.borderWidth = 1
+    slotBg.push(rowBg); jsmaf.root.children.push(rowBg)
+
+    const rowGlw = new Image({ url: CYAN, x: PAD, y: bY, width: BW, height: BH })
+    rowGlw.alpha = 0; rowGlw.borderWidth = 0
+    slotGlw.push(rowGlw); jsmaf.root.children.push(rowGlw)
+
+    const rowBar = new Image({ url: CYAN, x: PAD, y: bY, width: 4, height: BH })
+    rowBar.alpha = 0; rowBar.borderWidth = 0
+    slotBar.push(rowBar); jsmaf.root.children.push(rowBar)
+
+    // Create Text objects with a space to ensure they're registered by the engine
+    const rowNum = new jsmaf.Text()
+    rowNum.style = 'pnum'; rowNum.text = ' '
+    rowNum.x = PAD + 16; rowNum.y = bY + 32; rowNum.alpha = 0
+    slotNum.push(rowNum); jsmaf.root.children.push(rowNum)
+
+    const rowLbl = new jsmaf.Text()
+    rowLbl.style = 'pmuted'; rowLbl.text = ' '
+    rowLbl.x = PAD + 56; rowLbl.y = bY + 18; rowLbl.alpha = 0
+    slotLbl.push(rowLbl); jsmaf.root.children.push(rowLbl)
+
+    const rowPth = new jsmaf.Text()
+    rowPth.style = 'ppath'; rowPth.text = ' '
+    rowPth.x = PAD + 56; rowPth.y = bY + 56; rowPth.alpha = 0
+    slotPth.push(rowPth); jsmaf.root.children.push(rowPth)
+
+    const rowBdg = new jsmaf.Text()
+    rowBdg.style = 'pbadge'; rowBdg.text = ' '
+    rowBdg.x = PAD + BW - 120; rowBdg.y = bY + 34; rowBdg.alpha = 0
+    slotBdg.push(rowBdg); jsmaf.root.children.push(rowBdg)
+  }
+
+  // Scroll indicators (pre-allocated, hidden by default)
+  const upInd = new jsmaf.Text()
+  upInd.style = 'pscroll'; upInd.text = '▲  Scroll up'
+  upInd.x = SW / 2 - 70; upInd.y = HDR + 2; upInd.alpha = 0
+  jsmaf.root.children.push(upInd)
+
+  const dnInd = new jsmaf.Text()
+  dnInd.style = 'pscroll'; dnInd.text = '▼  More below'
+  dnInd.x = SW / 2 - 70; dnInd.y = SY + MAXR * (BH + GAP) + 4; dnInd.alpha = 0
+  jsmaf.root.children.push(dnInd)
+
+  // Empty state (pre-allocated, hidden by default)
+  const emTxt = new jsmaf.Text()
+  emTxt.style = 'pempty'; emTxt.text = '◈   No Payloads Found'
+  emTxt.x = SW / 2 - 190; emTxt.y = SH / 2 - 70; emTxt.alpha = 0
+  jsmaf.root.children.push(emTxt)
+
+  const emSub1 = new jsmaf.Text()
+  emSub1.style = 'pemptsb'; emSub1.text = 'Place  .elf  /  .bin  /  .js  files in:'
+  emSub1.x = SW / 2 - 225; emSub1.y = SH / 2 + 4; emSub1.alpha = 0
+  jsmaf.root.children.push(emSub1)
+
+  const emSub2 = new jsmaf.Text()
+  emSub2.style = 'pemptsb'; emSub2.text = '/download0/payloads/'
+  emSub2.x = SW / 2 - 128; emSub2.y = SH / 2 + 44; emSub2.alpha = 0
+  jsmaf.root.children.push(emSub2)
+
+  const emSub3 = new jsmaf.Text()
+  emSub3.style = 'pemptsb'; emSub3.text = '/data/payloads/   (also supported)'
+  emSub3.x = SW / 2 - 198; emSub3.y = SH / 2 + 84; emSub3.alpha = 0
+  jsmaf.root.children.push(emSub3)
 
   // ── State ─────────────────────────────────────────────────────────────────
   let cur = 0; let scrollOff = 0
@@ -183,77 +302,76 @@ import { checkJailbroken } from 'download0/check-jailbroken'
     else if (cur >= scrollOff + MAXR) scrollOff = cur - MAXR + 1
   }
 
-  // ── Full redraw — dynamic elements are rebuilt on every navigation ─────────
+  // ── Render — updates properties only, never adds/removes children ─────────
   function renderRows () {
-    // Remove all dynamic elements, keep static ones
-    jsmaf.root.children.length = STATIC_IDX
-
-    // Empty state
     if (TOTAL === 0) {
-      const em = new jsmaf.Text()
-      em.style = 'pempty'; em.text = '◈   No Payloads Found'
-      em.x = SW / 2 - 190; em.y = SH / 2 - 70; em.alpha = 1.0
-      jsmaf.root.children.push(em)
-
-      const eh1 = new jsmaf.Text()
-      eh1.style = 'pemptsb'; eh1.text = 'Place  .elf  /  .bin  /  .js  files in:'
-      eh1.x = SW / 2 - 225; eh1.y = SH / 2 + 4; eh1.alpha = 1.0
-      jsmaf.root.children.push(eh1)
-
-      const eh2 = new jsmaf.Text()
-      eh2.style = 'pemptsb'; eh2.text = '/download0/payloads/'
-      eh2.x = SW / 2 - 128; eh2.y = SH / 2 + 44; eh2.alpha = 1.0
-      jsmaf.root.children.push(eh2)
-
-      if (is_jailbroken) {
-        const eh3 = new jsmaf.Text()
-        eh3.style = 'pemptsb'; eh3.text = '/data/payloads/   (also supported)'
-        eh3.x = SW / 2 - 198; eh3.y = SH / 2 + 84; eh3.alpha = 1.0
-        jsmaf.root.children.push(eh3)
+      emTxt.alpha = 1.0; emSub1.alpha = 1.0; emSub2.alpha = 1.0
+      emSub3.alpha = is_jailbroken ? 1.0 : 0
+      upInd.alpha = 0; dnInd.alpha = 0
+      for (let s = 0; s < MAXR; s++) {
+        slotBg[s]!.alpha  = 0; slotGlw[s]!.alpha = 0; slotBar[s]!.alpha = 0
+        slotNum[s]!.alpha = 0; slotLbl[s]!.alpha  = 0
+        slotPth[s]!.alpha = 0; slotBdg[s]!.alpha  = 0
       }
       return
     }
 
-    // Scroll up indicator
-    if (scrollOff > 0) {
-      const up = new jsmaf.Text()
-      up.style = 'pscroll'; up.text = '▲  Scroll up'
-      up.x = SW / 2 - 70; up.y = HDR + 2; up.alpha = 1.0
-      jsmaf.root.children.push(up)
-    }
+    emTxt.alpha = 0; emSub1.alpha = 0; emSub2.alpha = 0; emSub3.alpha = 0
+    upInd.alpha = scrollOff > 0 ? 1.0 : 0
+    dnInd.alpha = (scrollOff + MAXR) < TOTAL ? 1.0 : 0
 
-    // Visible rows — created fresh with real data, then pushed
     for (let s = 0; s < MAXR; s++) {
       const idx = scrollOff + s
-      if (idx >= TOTAL) break
+      if (idx >= TOTAL) {
+        slotBg[s]!.alpha  = 0; slotGlw[s]!.alpha = 0; slotBar[s]!.alpha = 0
+        slotNum[s]!.alpha = 0; slotLbl[s]!.alpha  = 0
+        slotPth[s]!.alpha = 0; slotBdg[s]!.alpha  = 0
+        continue
+      }
 
       const f = fileList[idx]!
       const sel = idx === cur
+<<<<<<< HEAD
+=======
       const bY = SY + s * (BH + GAP)
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
 
       let disp = f.name.replace(/\.(elf|bin|js)$/i, '')
       if (disp.length > 68) disp = disp.slice(0, 66) + '..'
       const hint = f.path.startsWith('/data/') ? '/data/payloads' : '/download0/payloads'
 
+<<<<<<< HEAD
+      slotBg[s]!.alpha       = sel ? 0.20 : 0.06
+      slotBg[s]!.borderColor = sel ? 'rgba(0,200,230,0.90)' : 'rgba(0,160,180,0.18)'
+      slotBg[s]!.borderWidth = sel ? 2 : 1
+=======
       // Row background — Image supports .visible and all properties
       const btn = new Image({ url: WHITE, x: PAD, y: bY, width: BW, height: BH })
       btn.alpha = sel ? 0.22 : 0.07
       btn.borderColor = sel ? 'rgba(175,80,255,0.92)' : 'rgba(120,60,200,0.20)'
       btn.borderWidth = sel ? 2 : 1
       jsmaf.root.children.push(btn)
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
 
-      // Left accent bar
-      const bar = new Image({ url: PURPLE, x: PAD, y: bY, width: 5, height: BH })
-      bar.alpha = sel ? 1.0 : 0.45
-      jsmaf.root.children.push(bar)
+      slotGlw[s]!.alpha = sel ? 0.055 : 0
+      slotBar[s]!.alpha = sel ? 1.0   : 0.38
 
-      // Selection glow overlay
-      if (sel) {
-        const glw = new Image({ url: PURPLE, x: PAD, y: bY, width: BW, height: BH })
-        glw.alpha = 0.06; glw.borderWidth = 0
-        jsmaf.root.children.push(glw)
-      }
+      slotNum[s]!.style = sel ? 'pnumsel' : 'pnum'
+      slotNum[s]!.text  = String(idx + 1).padStart(2, '0')
+      slotNum[s]!.alpha = 1.0
 
+<<<<<<< HEAD
+      slotLbl[s]!.style = sel ? 'pwhite' : 'pmuted'
+      slotLbl[s]!.text  = disp
+      slotLbl[s]!.alpha = 1.0
+
+      slotPth[s]!.text  = hint
+      slotPth[s]!.alpha = 1.0
+
+      slotBdg[s]!.style = sel ? 'pbsel' : 'pbadge'
+      slotBdg[s]!.text  = f.ext
+      slotBdg[s]!.alpha = 1.0
+=======
       // Row number — style set BEFORE text
       const num = new jsmaf.Text()
       num.style = sel ? 'pnumsel' : 'pnum'
@@ -290,6 +408,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       dn.style = 'pscroll'; dn.text = '▼  More below'
       dn.x = SW / 2 - 70; dn.y = SY + MAXR * (BH + GAP) + 4; dn.alpha = 1.0
       jsmaf.root.children.push(dn)
+>>>>>>> 2007f94d1e913bb26f17c671f76df1d9ca9e0b9b
     }
   }
 
