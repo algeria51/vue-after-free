@@ -7,10 +7,10 @@ import { libc_addr } from 'download0/userland'
   if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
   // ─── Palette (1×1 PNG pixels) ──────────────────────────────────────────────
-  const DARK  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4+ADAAA0AB0VS5vvAAAAAElFTkSuQmCC'
+  const DARK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4+ADAAA0AB0VS5vvAAAAAElFTkSuQmCC'
   const WHITE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
   const AMBER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4v9MIAASlAeurtfG0AAAAAElFTkSuQmCC'
-  const RED   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP44BYAAAOwAYeW+1bOAAAAAElFTkSuQmCC'
+  const RED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP44BYAAAOwAYeW+1bOAAAAAElFTkSuQmCC'
 
   // ─── Layout ────────────────────────────────────────────────────────────────
   const SW = 1920; const SH = 1080; const CX = SW / 2
@@ -19,32 +19,32 @@ import { libc_addr } from 'download0/userland'
   const SY = 264; const GAP = 18
 
   // ─── Audio pool ────────────────────────────────────────────────────────────
-  const SFX_CUR  = 'file:///../download0/sfx/cursor.wav'
-  const SFX_OK   = 'file:///../download0/sfx/confirm.wav'
+  const SFX_CUR = 'file:///../download0/sfx/cursor.wav'
+  const SFX_OK = 'file:///../download0/sfx/confirm.wav'
   const SFX_BACK = 'file:///../download0/sfx/cancel.wav'
   const poolCur: jsmaf.AudioClip[] = []; const poolOk: jsmaf.AudioClip[] = []; const poolBck: jsmaf.AudioClip[] = []
   for (let _i = 0; _i < 8; _i++) { const c = new jsmaf.AudioClip(); c.volume = 1.0; poolCur.push(c) }
   for (let _i = 0; _i < 4; _i++) { const c = new jsmaf.AudioClip(); c.volume = 1.0; poolOk.push(c) }
   for (let _i = 0; _i < 4; _i++) { const c = new jsmaf.AudioClip(); c.volume = 1.0; poolBck.push(c) }
   let pCur = 0; let pOk = 0; let pBck = 0
-  function sfxCur  () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolCur[pCur]!.open(SFX_CUR);  pCur = (pCur+1)%poolCur.length  } catch (_e) {} }
-  function sfxOk   () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolOk[pOk]!.open(SFX_OK);    pOk  = (pOk+1)%poolOk.length   } catch (_e) {} }
-  function sfxBack () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolBck[pBck]!.open(SFX_BACK); pBck = (pBck+1)%poolBck.length } catch (_e) {} }
+  function sfxCur () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolCur[pCur]!.open(SFX_CUR); pCur = (pCur + 1) % poolCur.length } catch (_e) {} }
+  function sfxOk () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolOk[pOk]!.open(SFX_OK); pOk = (pOk + 1) % poolOk.length } catch (_e) {} }
+  function sfxBack () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolBck[pBck]!.open(SFX_BACK); pBck = (pBck + 1) % poolBck.length } catch (_e) {} }
 
   jsmaf.root.children.length = 0
 
   // ─── Styles ────────────────────────────────────────────────────────────────
-  new Style({ name: 'logo',   color: 'rgb(255,185,50)',         size: 54 })
-  new Style({ name: 'sub',    color: 'rgba(255,230,160,0.52)',  size: 17 })
-  new Style({ name: 'label',  color: 'rgba(235,228,212,0.88)', size: 28 })
-  new Style({ name: 'sel',    color: 'rgb(255,255,255)',        size: 28 })
-  new Style({ name: 'num',    color: 'rgba(255,185,50,0.38)',   size: 13 })
-  new Style({ name: 'numsel', color: 'rgb(255,200,80)',         size: 13 })
-  new Style({ name: 'arr',    color: 'rgba(255,255,255,0.22)',  size: 28 })
-  new Style({ name: 'arrsel', color: 'rgb(255,185,50)',         size: 28 })
-  new Style({ name: 'exit',   color: 'rgb(255,90,100)',         size: 28 })
-  new Style({ name: 'exitd',  color: 'rgba(255,90,100,0.58)',   size: 28 })
-  new Style({ name: 'ftr',    color: 'rgba(255,215,130,0.36)',  size: 15 })
+  new Style({ name: 'logo', color: 'rgb(255,185,50)', size: 54 })
+  new Style({ name: 'sub', color: 'rgba(255,230,160,0.52)', size: 17 })
+  new Style({ name: 'label', color: 'rgba(235,228,212,0.88)', size: 28 })
+  new Style({ name: 'sel', color: 'rgb(255,255,255)', size: 28 })
+  new Style({ name: 'num', color: 'rgba(255,185,50,0.38)', size: 13 })
+  new Style({ name: 'numsel', color: 'rgb(255,200,80)', size: 13 })
+  new Style({ name: 'arr', color: 'rgba(255,255,255,0.22)', size: 28 })
+  new Style({ name: 'arrsel', color: 'rgb(255,185,50)', size: 28 })
+  new Style({ name: 'exit', color: 'rgb(255,90,100)', size: 28 })
+  new Style({ name: 'exitd', color: 'rgba(255,90,100,0.58)', size: 28 })
+  new Style({ name: 'ftr', color: 'rgba(255,215,130,0.36)', size: 15 })
 
   // ─── Background ────────────────────────────────────────────────────────────
   const bg = new Image({ url: DARK, x: 0, y: 0, width: SW, height: SH })
@@ -73,9 +73,9 @@ import { libc_addr } from 'download0/userland'
   // ─── Menu buttons ──────────────────────────────────────────────────────────
   type Item = { label: string; script: string; num: string; ic: string }
   const items: Item[] = [
-    { label: lang.jailbreak,   script: 'loader.js',       num: '01', ic: '⚡' },
-    { label: lang.payloadMenu, script: 'payload_host.js', num: '02', ic: '◈'  },
-    { label: lang.config,      script: 'config_ui.js',    num: '03', ic: '⚙'  },
+    { label: lang.jailbreak, script: 'loader.js', num: '01', ic: '⚡' },
+    { label: lang.payloadMenu, script: 'payload_host.js', num: '02', ic: '◈' },
+    { label: lang.config, script: 'config_ui.js', num: '03', ic: '⚙' },
   ]
   const btns: Image[] = []; const glws: Image[] = []; const bars: Image[] = []
   const txts: jsmaf.Text[] = []; const nums: jsmaf.Text[] = []; const arrs: jsmaf.Text[] = []
@@ -145,16 +145,16 @@ import { libc_addr } from 'download0/userland'
   function highlight () {
     for (let i = 0; i < TOTAL; i++) {
       const isExit = i === TOTAL - 1; const sel = i === cur
-      btns[i]!.alpha       = sel ? 0.22 : isExit ? 0.05 : 0.08
+      btns[i]!.alpha = sel ? 0.22 : isExit ? 0.05 : 0.08
       btns[i]!.borderColor = sel
         ? (isExit ? 'rgba(240,70,80,0.92)' : 'rgba(255,185,50,0.92)')
         : (isExit ? 'rgba(240,70,80,0.24)' : 'rgba(255,185,50,0.20)')
       btns[i]!.borderWidth = sel ? 2 : 1
-      glws[i]!.alpha       = sel ? 0.07 : 0
-      bars[i]!.alpha       = sel ? 1.0  : isExit ? 0.72 : 0.52
-      txts[i]!.style       = sel ? (isExit ? 'exit' : 'sel') : (isExit ? 'exitd' : 'label')
-      nums[i]!.style       = sel ? 'numsel' : 'num'
-      arrs[i]!.style       = sel ? 'arrsel' : 'arr'
+      glws[i]!.alpha = sel ? 0.07 : 0
+      bars[i]!.alpha = sel ? 1.0 : isExit ? 0.72 : 0.52
+      txts[i]!.style = sel ? (isExit ? 'exit' : 'sel') : (isExit ? 'exitd' : 'label')
+      nums[i]!.style = sel ? 'numsel' : 'num'
+      arrs[i]!.style = sel ? 'arrsel' : 'arr'
       if (i !== prev || sel) {
         const sc = sel ? 1.016 : 1.0
         const dX = sel ? -Math.round(BW * 0.008) : 0
@@ -171,8 +171,10 @@ import { libc_addr } from 'download0/userland'
 
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
   jsmaf.onKeyDown = function (kc: number) {
-    if (kc === 6 || kc === 5) { cur = (cur + 1) % TOTAL; sfxCur(); highlight()
-    } else if (kc === 4 || kc === 7) { cur = (cur - 1 + TOTAL) % TOTAL; sfxCur(); highlight()
+    if (kc === 6 || kc === 5) {
+      cur = (cur + 1) % TOTAL; sfxCur(); highlight()
+    } else if (kc === 4 || kc === 7) {
+      cur = (cur - 1 + TOTAL) % TOTAL; sfxCur(); highlight()
     } else if (kc === confirmKey) {
       sfxOk()
       if (cur === TOTAL - 1) { try { include('includes/kill_vue.js') } catch (_e) {} } else {

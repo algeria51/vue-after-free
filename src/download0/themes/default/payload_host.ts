@@ -10,10 +10,10 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
   // ─── Palette ───────────────────────────────────────────────────────────────
-  const DARK  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4+ADAAA0AB0VS5vvAAAAAElFTkSuQmCC'
+  const DARK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4+ADAAA0AB0VS5vvAAAAAElFTkSuQmCC'
   const WHITE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
   const AMBER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4v9MIAASlAeurtfG0AAAAAElFTkSuQmCC'
-  const RED   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP44BYAAAOwAYeW+1bOAAAAAElFTkSuQmCC'
+  const RED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP44BYAAAOwAYeW+1bOAAAAAElFTkSuQmCC'
 
   // ─── Layout ────────────────────────────────────────────────────────────────
   const SW = 1920; const SH = 1080; const PAD = 80
@@ -23,29 +23,29 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   // Available height for rows (leave 70px above footer for back-button strip)
   const BACK_STRIP = 70
   const AVAIL = SH - HDR - FTR - BACK_STRIP - 16
-  const MAXR  = Math.min(9, Math.floor(AVAIL / (BH + GAP)))
-  const SY    = HDR + 14
+  const MAXR = Math.min(9, Math.floor(AVAIL / (BH + GAP)))
+  const SY = HDR + 14
 
   // ─── Audio ─────────────────────────────────────────────────────────────────
-  const SFX_CUR  = 'file:///../download0/sfx/cursor.wav'
-  const SFX_OK   = 'file:///../download0/sfx/confirm.wav'
+  const SFX_CUR = 'file:///../download0/sfx/cursor.wav'
+  const SFX_OK = 'file:///../download0/sfx/confirm.wav'
   const SFX_BACK = 'file:///../download0/sfx/cancel.wav'
   const poolCur: jsmaf.AudioClip[] = []; const poolOk: jsmaf.AudioClip[] = []; const poolBack: jsmaf.AudioClip[] = []
   for (let _i = 0; _i < 8; _i++) { const c = new jsmaf.AudioClip(); c.volume = 1.0; poolCur.push(c) }
   for (let _i = 0; _i < 4; _i++) { const c = new jsmaf.AudioClip(); c.volume = 1.0; poolOk.push(c) }
   for (let _i = 0; _i < 4; _i++) { const c = new jsmaf.AudioClip(); c.volume = 1.0; poolBack.push(c) }
   let pCur = 0; let pOk = 0; let pBack = 0
-  function sfxCur  () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolCur[pCur]!.open(SFX_CUR);  pCur  = (pCur+1)%poolCur.length  } catch (_e) {} }
-  function sfxOk   () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolOk[pOk]!.open(SFX_OK);    pOk   = (pOk+1)%poolOk.length   } catch (_e) {} }
-  function sfxBack () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolBack[pBack]!.open(SFX_BACK); pBack = (pBack+1)%poolBack.length } catch (_e) {} }
+  function sfxCur () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolCur[pCur]!.open(SFX_CUR); pCur = (pCur + 1) % poolCur.length } catch (_e) {} }
+  function sfxOk () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolOk[pOk]!.open(SFX_OK); pOk = (pOk + 1) % poolOk.length } catch (_e) {} }
+  function sfxBack () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolBack[pBack]!.open(SFX_BACK); pBack = (pBack + 1) % poolBack.length } catch (_e) {} }
 
   is_jailbroken = checkJailbroken()
 
   // ─── Payload scan ──────────────────────────────────────────────────────────
-  try { fn.register(0x05, 'ph_open',    ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
-  try { fn.register(0x06, 'ph_close',   ['bigint'],                  'bigint') } catch (_e) {}
-  try { fn.register(0x110,'ph_getdnts', ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
-  try { fn.register(0x03, 'ph_read',    ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x05, 'ph_open', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x06, 'ph_close', ['bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x110, 'ph_getdnts', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x03, 'ph_read', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
 
   type FE = { name: string; path: string; ext: string }
   const fileList: FE[] = []
@@ -63,15 +63,14 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       if (!cnt.eq(new BigInt(0xffffffff, 0xffffffff)) && cnt.lo > 0) {
         let off = 0
         while (off < cnt.lo) {
-          const rl = mem.view(dbuf.add(new BigInt(0, off+4))).getUint16(0, true)
-          const dt = mem.view(dbuf.add(new BigInt(0, off+6))).getUint8(0)
-          const nl = mem.view(dbuf.add(new BigInt(0, off+7))).getUint8(0)
+          const rl = mem.view(dbuf.add(new BigInt(0, off + 4))).getUint16(0, true)
+          const dt = mem.view(dbuf.add(new BigInt(0, off + 6))).getUint8(0)
+          const nl = mem.view(dbuf.add(new BigInt(0, off + 7))).getUint8(0)
           let name = ''
-          for (let i = 0; i < nl; i++) name += String.fromCharCode(mem.view(dbuf.add(new BigInt(0, off+8+i))).getUint8(0))
+          for (let i = 0; i < nl; i++) name += String.fromCharCode(mem.view(dbuf.add(new BigInt(0, off + 8 + i))).getUint8(0))
           if (dt === 8 && name !== '.' && name !== '..') {
             const low = name.toLowerCase()
-            if (low.endsWith('.elf') || low.endsWith('.bin') || low.endsWith('.js'))
-              fileList.push({ name, path: sp + '/' + name, ext: (name.split('.').pop() || '').toUpperCase() })
+            if (low.endsWith('.elf') || low.endsWith('.bin') || low.endsWith('.js')) { fileList.push({ name, path: sp + '/' + name, ext: (name.split('.').pop() || '').toUpperCase() }) }
           }
           off += rl
         }
@@ -85,20 +84,20 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   jsmaf.root.children.length = 0
 
   // ─── Styles ────────────────────────────────────────────────────────────────
-  new Style({ name: 'ptitle',  color: 'rgb(255,255,255)',          size: 30 })
-  new Style({ name: 'pcount',  color: 'rgba(255,210,120,0.65)',    size: 16 })
-  new Style({ name: 'pwhite',  color: 'rgb(255,255,255)',          size: 23 })
-  new Style({ name: 'pmuted',  color: 'rgba(235,228,212,0.88)',    size: 23 })
-  new Style({ name: 'pnum',    color: 'rgba(255,185,50,0.45)',     size: 15 })
-  new Style({ name: 'pnumsel', color: 'rgb(255,210,80)',           size: 15 })
-  new Style({ name: 'pbadge',  color: 'rgba(255,185,50,0.80)',     size: 12 })
-  new Style({ name: 'pbsel',   color: 'rgb(255,215,100)',          size: 12 })
-  new Style({ name: 'ppath',   color: 'rgba(200,190,160,0.42)',    size: 13 })
-  new Style({ name: 'pscroll', color: 'rgba(255,200,80,0.80)',     size: 16 })
-  new Style({ name: 'pback',   color: 'rgba(240,80,90,0.92)',      size: 20 })
-  new Style({ name: 'pftr',    color: 'rgba(255,215,130,0.36)',    size: 15 })
-  new Style({ name: 'pempty',  color: 'rgba(235,228,212,0.88)',    size: 28 })
-  new Style({ name: 'pemsub',  color: 'rgba(200,190,160,0.58)',    size: 18 })
+  new Style({ name: 'ptitle', color: 'rgb(255,255,255)', size: 30 })
+  new Style({ name: 'pcount', color: 'rgba(255,210,120,0.65)', size: 16 })
+  new Style({ name: 'pwhite', color: 'rgb(255,255,255)', size: 23 })
+  new Style({ name: 'pmuted', color: 'rgba(235,228,212,0.88)', size: 23 })
+  new Style({ name: 'pnum', color: 'rgba(255,185,50,0.45)', size: 15 })
+  new Style({ name: 'pnumsel', color: 'rgb(255,210,80)', size: 15 })
+  new Style({ name: 'pbadge', color: 'rgba(255,185,50,0.80)', size: 12 })
+  new Style({ name: 'pbsel', color: 'rgb(255,215,100)', size: 12 })
+  new Style({ name: 'ppath', color: 'rgba(200,190,160,0.42)', size: 13 })
+  new Style({ name: 'pscroll', color: 'rgba(255,200,80,0.80)', size: 16 })
+  new Style({ name: 'pback', color: 'rgba(240,80,90,0.92)', size: 20 })
+  new Style({ name: 'pftr', color: 'rgba(255,215,130,0.36)', size: 15 })
+  new Style({ name: 'pempty', color: 'rgba(235,228,212,0.88)', size: 28 })
+  new Style({ name: 'pemsub', color: 'rgba(200,190,160,0.58)', size: 18 })
 
   // ─── Background ────────────────────────────────────────────────────────────
   const bg = new Image({ url: DARK, x: 0, y: 0, width: SW, height: SH })
@@ -147,10 +146,10 @@ import { checkJailbroken } from 'download0/check-jailbroken'
 
   // ─── Pre-allocated row slots ───────────────────────────────────────────────
   // Image.visible controls bg/bar; Text.text='' hides text (safer than alpha)
-  const sBg:  Image[]        = []; const sGlw: Image[]        = []
-  const sBar: Image[]        = []; const sNum: jsmaf.Text[]   = []
-  const sLbl: jsmaf.Text[]   = []; const sPth: jsmaf.Text[]   = []
-  const sBdg: jsmaf.Text[]   = []
+  const sBg: Image[] = []; const sGlw: Image[] = []
+  const sBar: Image[] = []; const sNum: jsmaf.Text[] = []
+  const sLbl: jsmaf.Text[] = []; const sPth: jsmaf.Text[] = []
+  const sBdg: jsmaf.Text[] = []
 
   for (let s = 0; s < MAXR; s++) {
     const bY = SY + s * (BH + GAP)
@@ -216,9 +215,9 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   function renderRows () {
     if (TOTAL === 0) {
       emTxt.text = '◈   No Payloads Found'
-      emS1.text  = 'Place  .elf  /  .bin  /  .js  files in:'
-      emS2.text  = '/download0/payloads/'
-      emS3.text  = is_jailbroken ? '/data/payloads/   (also supported)' : ''
+      emS1.text = 'Place  .elf  /  .bin  /  .js  files in:'
+      emS2.text = '/download0/payloads/'
+      emS3.text = is_jailbroken ? '/data/payloads/   (also supported)' : ''
       upInd.text = ''; dnInd.text = ''
       for (let s = 0; s < MAXR; s++) {
         sBg[s]!.visible = false; sGlw[s]!.visible = false; sBar[s]!.visible = false
@@ -227,8 +226,8 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       return
     }
     emTxt.text = ''; emS1.text = ''; emS2.text = ''; emS3.text = ''
-    upInd.text = scrollOff > 0                   ? '▲  Scroll up'   : ''
-    dnInd.text = (scrollOff + MAXR) < TOTAL      ? '▼  More below'  : ''
+    upInd.text = scrollOff > 0 ? '▲  Scroll up' : ''
+    dnInd.text = (scrollOff + MAXR) < TOTAL ? '▼  More below' : ''
 
     for (let s = 0; s < MAXR; s++) {
       const idx = scrollOff + s
@@ -242,21 +241,21 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       if (disp.length > 68) disp = disp.slice(0, 66) + '..'
       const hint = f.path.startsWith('/data/') ? '/data/payloads' : '/download0/payloads'
 
-      sBg[s]!.visible     = true
-      sBg[s]!.alpha       = sel ? 0.22 : 0.10
+      sBg[s]!.visible = true
+      sBg[s]!.alpha = sel ? 0.22 : 0.10
       sBg[s]!.borderColor = sel ? 'rgba(255,185,50,0.92)' : 'rgba(255,185,50,0.20)'
       sBg[s]!.borderWidth = sel ? 2 : 1
-      sGlw[s]!.visible    = sel
-      sBar[s]!.visible    = true
-      sBar[s]!.alpha      = sel ? 1.0 : 0.50
+      sGlw[s]!.visible = sel
+      sBar[s]!.visible = true
+      sBar[s]!.alpha = sel ? 1.0 : 0.50
 
       sNum[s]!.style = sel ? 'pnumsel' : 'pnum'
-      sNum[s]!.text  = String(idx + 1).padStart(2, '0')
+      sNum[s]!.text = String(idx + 1).padStart(2, '0')
       sLbl[s]!.style = sel ? 'pwhite' : 'pmuted'
-      sLbl[s]!.text  = disp
-      sPth[s]!.text  = hint
+      sLbl[s]!.text = disp
+      sPth[s]!.text = hint
       sBdg[s]!.style = sel ? 'pbsel' : 'pbadge'
-      sBdg[s]!.text  = f.ext
+      sBdg[s]!.text = f.ext
     }
   }
 
@@ -288,13 +287,14 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   }
 
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
-  const backKey    = jsmaf.circleIsAdvanceButton ? 14 : 13
+  const backKey = jsmaf.circleIsAdvanceButton ? 14 : 13
   jsmaf.onKeyDown = function (kc: number) {
     if (kc === 6 || kc === 5) {
       if (TOTAL > 0) { cur = (cur + 1) % TOTAL; sfxCur(); clamp(); renderRows() }
     } else if (kc === 4 || kc === 7) {
       if (TOTAL > 0) { cur = (cur - 1 + TOTAL) % TOTAL; sfxCur(); clamp(); renderRows() }
-    } else if (kc === confirmKey) { sfxOk(); launchPayload()
+    } else if (kc === confirmKey) {
+      sfxOk(); launchPayload()
     } else if (kc === backKey) {
       sfxBack()
       try { include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'default') + '/main.js') } catch (e) { log('Back: ' + (e as Error).message) }
