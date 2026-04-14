@@ -10,26 +10,26 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
   // ── Inline pixels ─────────────────────────────────────────────────────────
-  const DARK_PX  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
+  const DARK_PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
   const WHITE_PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
-  const CYAN_PX  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIOPEfAAODAhiMwlb1AAAAAElFTkSuQmCC'
-  const RED_PX   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
+  const CYAN_PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIOPEfAAODAhiMwlb1AAAAAElFTkSuQmCC'
+  const RED_PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
 
   // ── Layout constants ──────────────────────────────────────────────────────
-  const SW       = 1920
-  const SH       = 1080
-  const PAD_X    = 80
+  const SW = 1920
+  const SH = 1080
+  const PAD_X = 80
   const HEADER_H = 138
   const FOOTER_H = 46
-  const AVAIL_H  = SH - HEADER_H - FOOTER_H - 24
-  const BTN_W    = SW - PAD_X * 2
-  const BTN_H    = 82
-  const BTN_GAP  = 8
+  const AVAIL_H = SH - HEADER_H - FOOTER_H - 24
+  const BTN_W = SW - PAD_X * 2
+  const BTN_H = 82
+  const BTN_GAP = 8
   const MAX_ROWS = Math.min(9, Math.floor(AVAIL_H / (BTN_H + BTN_GAP)))
-  const START_Y  = HEADER_H + 12
+  const START_Y = HEADER_H + 12
 
-  const SFX_CUR  = 'file:///../download0/sfx/cursor.wav'
-  const SFX_OK   = 'file:///../download0/sfx/confirm.wav'
+  const SFX_CUR = 'file:///../download0/sfx/cursor.wav'
+  const SFX_OK = 'file:///../download0/sfx/confirm.wav'
   const SFX_BACK = 'file:///../download0/sfx/cancel.wav'
 
   // ── FIX: Audio pool — prevents GC from destroying clips mid-play ──────────
@@ -48,10 +48,10 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   is_jailbroken = checkJailbroken()
 
   // ── Scan payloads ─────────────────────────────────────────────────────────
-  try { fn.register(0x05, 'ph_open',    ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
-  try { fn.register(0x06, 'ph_close',   ['bigint'],                     'bigint') } catch (_e) {}
-  try { fn.register(0x110,'ph_getdnts', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
-  try { fn.register(0x03, 'ph_read',    ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x05, 'ph_open', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x06, 'ph_close', ['bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x110, 'ph_getdnts', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x03, 'ph_read', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
 
   type FEntry = { name: string; path: string; ext: string }
   const fileList: FEntry[] = []
@@ -60,7 +60,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   if (is_jailbroken) scanPaths.push('/data/payloads')
 
   const paddr = mem.malloc(256)
-  const dbuf  = mem.malloc(4096)
+  const dbuf = mem.malloc(4096)
 
   for (const sp of scanPaths) {
     for (let i = 0; i < sp.length; i++) mem.view(paddr).setUint8(i, sp.charCodeAt(i))
@@ -93,20 +93,20 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   // ── Styles — 'ph_' prefix prevents collision with other screens ───────────
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'ph_title',   color: 'rgb(255,255,255)',          size: 30 })
-  new Style({ name: 'ph_count',   color: 'rgba(120,210,255,0.55)',    size: 16 })
-  new Style({ name: 'ph_white',   color: 'rgb(255,255,255)',          size: 21 })
-  new Style({ name: 'ph_muted',   color: 'rgba(255,255,255,0.55)',    size: 21 })
-  new Style({ name: 'ph_lnum',    color: 'rgba(120,200,255,0.35)',    size: 14 })
-  new Style({ name: 'ph_lnumsel', color: 'rgba(80,210,255,0.95)',     size: 14 })
-  new Style({ name: 'ph_badge',   color: 'rgba(80,210,255,0.80)',     size: 13 })
-  new Style({ name: 'ph_bsel',    color: 'rgb(80,230,255)',           size: 13 })
-  new Style({ name: 'ph_path',    color: 'rgba(255,255,255,0.22)',    size: 14 })
-  new Style({ name: 'ph_scroll',  color: 'rgba(120,200,255,0.65)',    size: 16 })
-  new Style({ name: 'ph_back',    color: 'rgba(255,120,120,0.85)',    size: 20 })
-  new Style({ name: 'ph_footer',  color: 'rgba(255,255,255,0.30)',    size: 16 })
-  new Style({ name: 'ph_empty',   color: 'rgba(255,255,255,0.55)',    size: 26 })
-  new Style({ name: 'ph_emptysb', color: 'rgba(255,255,255,0.28)',    size: 17 })
+  new Style({ name: 'ph_title', color: 'rgb(255,255,255)', size: 30 })
+  new Style({ name: 'ph_count', color: 'rgba(120,210,255,0.55)', size: 16 })
+  new Style({ name: 'ph_white', color: 'rgb(255,255,255)', size: 21 })
+  new Style({ name: 'ph_muted', color: 'rgba(255,255,255,0.55)', size: 21 })
+  new Style({ name: 'ph_lnum', color: 'rgba(120,200,255,0.35)', size: 14 })
+  new Style({ name: 'ph_lnumsel', color: 'rgba(80,210,255,0.95)', size: 14 })
+  new Style({ name: 'ph_badge', color: 'rgba(80,210,255,0.80)', size: 13 })
+  new Style({ name: 'ph_bsel', color: 'rgb(80,230,255)', size: 13 })
+  new Style({ name: 'ph_path', color: 'rgba(255,255,255,0.22)', size: 14 })
+  new Style({ name: 'ph_scroll', color: 'rgba(120,200,255,0.65)', size: 16 })
+  new Style({ name: 'ph_back', color: 'rgba(255,120,120,0.85)', size: 20 })
+  new Style({ name: 'ph_footer', color: 'rgba(255,255,255,0.30)', size: 16 })
+  new Style({ name: 'ph_empty', color: 'rgba(255,255,255,0.55)', size: 26 })
+  new Style({ name: 'ph_emptysb', color: 'rgba(255,255,255,0.28)', size: 17 })
 
   // ── Background ────────────────────────────────────────────────────────────
   const bgBase = new Image({ url: DARK_PX, x: 0, y: 0, width: SW, height: SH })
@@ -144,12 +144,12 @@ import { checkJailbroken } from 'download0/check-jailbroken'
 
   // ── Slot widgets (single-column, full-width) ───────────────────────────────
   // Created first so empty-state text renders on top
-  const slotBtns:   Image[]      = []
-  const slotBars:   Image[]      = []
-  const slotNums:   jsmaf.Text[] = []
+  const slotBtns: Image[] = []
+  const slotBars: Image[] = []
+  const slotNums: jsmaf.Text[] = []
   const slotBadges: jsmaf.Text[] = []
   const slotLabels: jsmaf.Text[] = []
-  const slotPaths:  jsmaf.Text[] = []
+  const slotPaths: jsmaf.Text[] = []
 
   for (let s = 0; s < MAX_ROWS; s++) {
     const bY = START_Y + s * (BTN_H + BTN_GAP)
@@ -234,7 +234,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   jsmaf.root.children.push(footBg)
 
   const confirmLabel = jsmaf.circleIsAdvanceButton ? 'O' : 'X'
-  const backLabel    = jsmaf.circleIsAdvanceButton ? 'X' : 'O'
+  const backLabel = jsmaf.circleIsAdvanceButton ? 'X' : 'O'
   const fh = new jsmaf.Text()
   fh.text = '↑↓  Navigate    ' + confirmLabel + '  Launch    ' + backLabel + '  Back'
   fh.x = SW / 2 - 210; fh.y = SH - FOOTER_H + 15; fh.style = 'ph_footer'
@@ -260,35 +260,35 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       slotBars[s]!.visible = vis
 
       if (!vis) {
-        slotNums[s]!.text   = ''
+        slotNums[s]!.text = ''
         slotBadges[s]!.text = ''
         slotLabels[s]!.text = ''
-        slotPaths[s]!.text  = ''
+        slotPaths[s]!.text = ''
         continue
       }
 
-      const f    = fileList[idx]!
-      const sel  = idx === cur
-      let disp   = f.name.replace(/\.(elf|bin|js)$/i, '')
+      const f = fileList[idx]!
+      const sel = idx === cur
+      let disp = f.name.replace(/\.(elf|bin|js)$/i, '')
       if (disp.length > 60) disp = disp.slice(0, 58) + '..'
       const pathHint = f.path.startsWith('/data/') ? '/data/payloads' : '/download0/payloads'
 
-      slotBtns[s]!.alpha       = sel ? 0.22 : 0.07
+      slotBtns[s]!.alpha = sel ? 0.22 : 0.07
       slotBtns[s]!.borderColor = sel ? 'rgba(80,210,255,0.85)' : 'rgba(120,200,255,0.18)'
       slotBtns[s]!.borderWidth = sel ? 2 : 1
-      slotBars[s]!.alpha       = sel ? 1.0 : 0.50
+      slotBars[s]!.alpha = sel ? 1.0 : 0.50
 
-      slotNums[s]!.text   = String(idx + 1).padStart(2, '0')
-      slotNums[s]!.style  = sel ? 'ph_lnumsel' : 'ph_lnum'
+      slotNums[s]!.text = String(idx + 1).padStart(2, '0')
+      slotNums[s]!.style = sel ? 'ph_lnumsel' : 'ph_lnum'
       slotBadges[s]!.text = f.ext
       slotBadges[s]!.style = sel ? 'ph_bsel' : 'ph_badge'
       slotLabels[s]!.text = disp
       slotLabels[s]!.style = sel ? 'ph_white' : 'ph_muted'
-      slotPaths[s]!.text  = pathHint
+      slotPaths[s]!.text = pathHint
     }
     // Use alpha trick for scroll arrows since jsmaf.Text has no .visible
-    arrowUp.text  = scrollOff > 0 ? '▲  Scroll up'  : ''
-    arrowDn.text  = TOTAL > 0 && (scrollOff + MAX_ROWS) < TOTAL ? '▼  More below' : ''
+    arrowUp.text = scrollOff > 0 ? '▲  Scroll up' : ''
+    arrowDn.text = TOTAL > 0 && (scrollOff + MAX_ROWS) < TOTAL ? '▼  More below' : ''
   }
 
   // ── Launch ────────────────────────────────────────────────────────────────
@@ -324,7 +324,7 @@ import { checkJailbroken } from 'download0/check-jailbroken'
 
   // ── Input ─────────────────────────────────────────────────────────────────
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
-  const backKey    = jsmaf.circleIsAdvanceButton ? 14 : 13
+  const backKey = jsmaf.circleIsAdvanceButton ? 14 : 13
 
   jsmaf.onKeyDown = function (kc: number) {
     if (kc === 6 || kc === 5) {
