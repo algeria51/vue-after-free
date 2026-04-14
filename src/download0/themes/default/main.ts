@@ -8,18 +8,18 @@ import { libc_addr } from 'download0/userland'
   if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
   // ── Constants ─────────────────────────────────────────────────────────────
-  const SW      = 1920
-  const SH      = 1080
-  const CX      = SW / 2
-  const BTN_W   = 600
-  const BTN_H   = 88
-  const BTN_L   = CX - BTN_W / 2
+  const SW = 1920
+  const SH = 1080
+  const CX = SW / 2
+  const BTN_W = 600
+  const BTN_H = 88
+  const BTN_L = CX - BTN_W / 2
   const START_Y = 340
-  const GAP     = 108
-  const BG_URL  = 'file:///../download0/img/multiview_bg_VAF.png'
+  const GAP = 108
+  const BG_URL = 'file:///../download0/img/multiview_bg_VAF.png'
   const BTN_URL = 'file:///../download0/img/NeonBtn.png'
   const SFX_CUR = 'file:///../download0/sfx/cursor.wav'
-  const SFX_OK  = 'file:///../download0/sfx/confirm.wav'
+  const SFX_OK = 'file:///../download0/sfx/confirm.wav'
   const SFX_BCK = 'file:///../download0/sfx/cancel.wav'
 
   function sfx (url: string) {
@@ -30,15 +30,15 @@ import { libc_addr } from 'download0/userland'
   // ── Styles ────────────────────────────────────────────────────────────────
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'label',  color: 'rgb(255,255,255)',        size: 26 })
-  new Style({ name: 'sel',    color: 'rgb(255,255,255)',        size: 26 })
-  new Style({ name: 'num',    color: 'rgba(255,255,255,0.28)',  size: 15 })
+  new Style({ name: 'label', color: 'rgb(255,255,255)', size: 26 })
+  new Style({ name: 'sel', color: 'rgb(255,255,255)', size: 26 })
+  new Style({ name: 'num', color: 'rgba(255,255,255,0.28)', size: 15 })
   new Style({ name: 'numsel', color: 'rgba(120,210,255,0.90)', size: 15 })
-  new Style({ name: 'arrow',  color: 'rgba(255,255,255,0.25)', size: 20 })
+  new Style({ name: 'arrow', color: 'rgba(255,255,255,0.25)', size: 20 })
   new Style({ name: 'arrsel', color: 'rgba(120,200,255,0.80)', size: 20 })
   new Style({ name: 'footer', color: 'rgba(255,255,255,0.28)', size: 16 })
-  new Style({ name: 'exit',   color: 'rgb(255,100,100)',        size: 26 })
-  new Style({ name: 'exitd',  color: 'rgba(255,100,100,0.45)', size: 26 })
+  new Style({ name: 'exit', color: 'rgb(255,100,100)', size: 26 })
+  new Style({ name: 'exitd', color: 'rgba(255,100,100,0.45)', size: 26 })
 
   // ── Background ────────────────────────────────────────────────────────────
   jsmaf.root.children.push(new Image({ url: BG_URL, x: 0, y: 0, width: SW, height: SH }))
@@ -55,7 +55,10 @@ import { libc_addr } from 'download0/userland'
   // Logo — centered
   jsmaf.root.children.push(new Image({
     url: 'file:///../download0/img/logo.png',
-    x: CX - 180, y: 36, width: 360, height: 204
+    x: CX - 180,
+    y: 36,
+    width: 360,
+    height: 204
   }))
 
   // Divider below logo area
@@ -66,21 +69,21 @@ import { libc_addr } from 'download0/userland'
   // ── Menu options ──────────────────────────────────────────────────────────
   type MenuItem = { label: string; script: string; num: string }
   const menuOptions: MenuItem[] = [
-    { label: lang.jailbreak,   script: 'loader.js',       num: '01' },
+    { label: lang.jailbreak, script: 'loader.js', num: '01' },
     { label: lang.payloadMenu, script: 'payload_host.js', num: '02' },
-    { label: lang.config,      script: 'config_ui.js',    num: '03' },
+    { label: lang.config, script: 'config_ui.js', num: '03' },
   ]
 
-  const btns:  Image[]      = []
-  const bars:  Image[]      = []
+  const btns: Image[] = []
+  const bars: Image[] = []
   const texts: jsmaf.Text[] = []
-  const nums:  jsmaf.Text[] = []
-  const arrs:  jsmaf.Text[] = []
+  const nums: jsmaf.Text[] = []
+  const arrs: jsmaf.Text[] = []
   const origB: { x: number; y: number }[] = []
   const origT: { x: number; y: number }[] = []
 
   for (let i = 0; i < menuOptions.length; i++) {
-    const o  = menuOptions[i]!
+    const o = menuOptions[i]!
     const bY = START_Y + i * GAP
 
     const btn = new Image({ url: BTN_URL, x: BTN_L, y: bY, width: BTN_W, height: BTN_H, alpha: 0.10 })
@@ -108,7 +111,7 @@ import { libc_addr } from 'download0/userland'
   }
 
   // ── Exit button ───────────────────────────────────────────────────────────
-  const exitY   = START_Y + menuOptions.length * GAP + 18
+  const exitY = START_Y + menuOptions.length * GAP + 18
   const exitBtn = new Image({ url: BTN_URL, x: BTN_L, y: exitY, width: BTN_W, height: BTN_H, alpha: 0.08 })
   exitBtn.borderColor = 'rgba(255,80,80,0.16)'; exitBtn.borderWidth = 1
   btns.push(exitBtn); jsmaf.root.children.push(exitBtn)
@@ -151,21 +154,21 @@ import { libc_addr } from 'download0/userland'
   function highlight () {
     for (let i = 0; i < TOTAL; i++) {
       const isExit = i === TOTAL - 1
-      const sel    = i === cur
+      const sel = i === cur
 
-      btns[i]!.alpha       = sel ? 0.24 : (isExit ? 0.08 : 0.10)
+      btns[i]!.alpha = sel ? 0.24 : (isExit ? 0.08 : 0.10)
       btns[i]!.borderColor = sel
         ? (isExit ? 'rgba(255,80,80,0.70)' : 'rgba(120,200,255,0.70)')
         : (isExit ? 'rgba(255,80,80,0.16)' : 'rgba(255,255,255,0.14)')
       btns[i]!.borderWidth = sel ? 2 : 1
-      bars[i]!.alpha       = sel ? 1.0 : 0.28
+      bars[i]!.alpha = sel ? 1.0 : 0.28
       bars[i]!.borderColor = sel
         ? (isExit ? 'rgb(255,100,100)' : 'rgb(80,220,255)')
         : (isExit ? 'rgb(255,100,100)' : 'rgb(120,200,255)')
 
       texts[i]!.style = sel ? (isExit ? 'exit' : 'sel') : (isExit ? 'exitd' : 'label')
-      nums[i]!.style  = sel ? 'numsel' : 'num'
-      arrs[i]!.style  = sel ? 'arrsel' : 'arrow'
+      nums[i]!.style = sel ? 'numsel' : 'num'
+      arrs[i]!.style = sel ? 'arrsel' : 'arrow'
 
       if (i !== prev || sel) {
         const sc = sel ? 1.03 : 1.0
