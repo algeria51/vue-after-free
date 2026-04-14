@@ -4,206 +4,235 @@ import { libc_addr } from 'download0/userland'
 ;(function () {
   include('languages.js')
   log('Loading main menu...')
-
   if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
-  // ── Inline pixels ─────────────────────────────────────────────────────────
-  const DARK_PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
-  const WHITE_PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
-  const CYAN_PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIOPEfAAODAhiMwlb1AAAAAElFTkSuQmCC'
-  const RED_PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
+  // ── Pixels ────────────────────────────────────────────────────────────────
+  const DARK  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
+  const WHITE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
+  const CYAN  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIOPEfAAODAhiMwlb1AAAAAElFTkSuQmCC'
+  const RED   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
+  const BLUE  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYHj+nwoAA7QCCMmFsCAAAAAASUVORK5CYII='
 
-  // ── Layout constants ──────────────────────────────────────────────────────
-  const SW = 1920
-  const SH = 1080
-  const CX = SW / 2
-  const HEADER_H = 138
-  const FOOTER_H = 46
-  const BTN_W = 700
-  const BTN_H = 92
-  const BTN_L = CX - BTN_W / 2
-  const START_Y = 290
-  const GAP = 114
+  // ── Layout ────────────────────────────────────────────────────────────────
+  const SW = 1920, SH = 1080, CX = SW / 2
+  const HDR = 150, FTR = 50
+  const BW = 720, BH = 96, BL = CX - BW / 2
+  const SY = 260, GAP = 118
 
-  const SFX_CUR = 'file:///../download0/sfx/cursor.wav'
-  const SFX_OK = 'file:///../download0/sfx/confirm.wav'
-  const SFX_BCK = 'file:///../download0/sfx/cancel.wav'
+  const SFX_CUR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_OK   = 'file:///../download0/sfx/confirm.wav'
+  const SFX_BACK = 'file:///../download0/sfx/cancel.wav'
 
-  // ── FIX: Audio pool — prevents GC from destroying clips mid-play ──────────
-  const _sfxPool: jsmaf.AudioClip[] = []
-  function sfx (url: string) {
+  // ── FIX: Pre-created audio pools — GC cannot collect them ─────────────────
+  // Using 3 clips per sound and cycling ensures continuous playback even when
+  // pressing buttons rapidly, because references stay alive in the IIFE scope
+  const poolCur  = [new jsmaf.AudioClip(), new jsmaf.AudioClip(), new jsmaf.AudioClip()]
+  const poolOk   = [new jsmaf.AudioClip(), new jsmaf.AudioClip()]
+  const poolBack = [new jsmaf.AudioClip(), new jsmaf.AudioClip()]
+  poolCur.forEach(c  => { c.volume = 1.0 })
+  poolOk.forEach(c   => { c.volume = 1.0 })
+  poolBack.forEach(c => { c.volume = 1.0 })
+  let idxCur = 0, idxOk = 0, idxBack = 0
+
+  function sfxCur () {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try {
-      const c = new jsmaf.AudioClip()
-      _sfxPool.push(c)
-      if (_sfxPool.length > 8) _sfxPool.splice(0, _sfxPool.length - 8)
-      c.volume = 1.0
-      c.open(url)
-    } catch (_e) {}
+    try { poolCur[idxCur]!.open(SFX_CUR);  idxCur  = (idxCur  + 1) % poolCur.length  } catch (_e) {}
+  }
+  function sfxOk () {
+    if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
+    try { poolOk[idxOk]!.open(SFX_OK);     idxOk   = (idxOk   + 1) % poolOk.length   } catch (_e) {}
+  }
+  function sfxBack () {
+    if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
+    try { poolBack[idxBack]!.open(SFX_BACK);idxBack = (idxBack + 1) % poolBack.length  } catch (_e) {}
   }
 
-  // ── Styles — 'm_' prefix prevents collision with other screens ────────────
+  // ── Styles (simple names, no underscores) ─────────────────────────────────
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'm_logo', color: 'rgb(80,210,255)', size: 46 })
-  new Style({ name: 'm_logosub', color: 'rgba(160,220,255,0.55)', size: 17 })
-  new Style({ name: 'm_label', color: 'rgba(255,255,255,0.88)', size: 26 })
-  new Style({ name: 'm_sel', color: 'rgb(120,225,255)', size: 26 })
-  new Style({ name: 'm_num', color: 'rgba(120,200,255,0.36)', size: 14 })
-  new Style({ name: 'm_numsel', color: 'rgba(80,210,255,1.00)', size: 14 })
-  new Style({ name: 'm_arrow', color: 'rgba(255,255,255,0.22)', size: 22 })
-  new Style({ name: 'm_arrsel', color: 'rgba(80,210,255,0.95)', size: 22 })
-  new Style({ name: 'm_exit', color: 'rgb(255,110,110)', size: 26 })
-  new Style({ name: 'm_exitd', color: 'rgba(255,110,110,0.48)', size: 26 })
-  new Style({ name: 'm_footer', color: 'rgba(255,255,255,0.30)', size: 16 })
+  new Style({ name: 'logo',    color: 'rgb(80,215,255)',         size: 50 })
+  new Style({ name: 'sub',     color: 'rgba(150,215,255,0.55)',  size: 17 })
+  new Style({ name: 'label',   color: 'rgba(230,240,255,0.85)',  size: 28 })
+  new Style({ name: 'sel',     color: 'rgb(255,255,255)',        size: 28 })
+  new Style({ name: 'num',     color: 'rgba(80,210,255,0.40)',   size: 14 })
+  new Style({ name: 'numsel',  color: 'rgb(80,210,255)',         size: 14 })
+  new Style({ name: 'arrow',   color: 'rgba(255,255,255,0.18)', size: 24 })
+  new Style({ name: 'arrsel',  color: 'rgb(80,210,255)',         size: 24 })
+  new Style({ name: 'exit',    color: 'rgb(255,100,100)',        size: 28 })
+  new Style({ name: 'exitd',   color: 'rgba(255,100,100,0.45)', size: 28 })
+  new Style({ name: 'footer',  color: 'rgba(200,220,255,0.28)', size: 16 })
 
   // ── Background ────────────────────────────────────────────────────────────
-  const bgBase = new Image({ url: DARK_PX, x: 0, y: 0, width: SW, height: SH })
-  bgBase.alpha = 1.0; bgBase.borderWidth = 0
-  jsmaf.root.children.push(bgBase)
+  const bg = new Image({ url: DARK, x: 0, y: 0, width: SW, height: SH })
+  bg.alpha = 1.0; bg.borderWidth = 0
+  jsmaf.root.children.push(bg)
 
-  const glow1 = new Image({ url: CYAN_PX, x: 0, y: 0, width: 700, height: 380 })
-  glow1.alpha = 0.04; glow1.borderWidth = 0
-  jsmaf.root.children.push(glow1)
+  // Ambient corner glows
+  const gl1 = new Image({ url: CYAN, x: -80, y: -80, width: 800, height: 500 })
+  gl1.alpha = 0.05; gl1.borderWidth = 0
+  jsmaf.root.children.push(gl1)
 
-  const glow2 = new Image({ url: CYAN_PX, x: SW - 480, y: SH - 280, width: 480, height: 280 })
-  glow2.alpha = 0.025; glow2.borderWidth = 0
-  jsmaf.root.children.push(glow2)
+  const gl2 = new Image({ url: BLUE, x: SW - 600, y: SH - 400, width: 700, height: 500 })
+  gl2.alpha = 0.04; gl2.borderWidth = 0
+  jsmaf.root.children.push(gl2)
 
   // ── Header ────────────────────────────────────────────────────────────────
-  const hdrBg = new Image({ url: WHITE_PX, x: 0, y: 0, width: SW, height: HEADER_H })
-  hdrBg.alpha = 0.055; hdrBg.borderWidth = 0
-  jsmaf.root.children.push(hdrBg)
+  const hBg = new Image({ url: WHITE, x: 0, y: 0, width: SW, height: HDR })
+  hBg.alpha = 0.05; hBg.borderWidth = 0
+  jsmaf.root.children.push(hBg)
 
-  const hdrStripe = new Image({ url: CYAN_PX, x: 0, y: 0, width: 5, height: HEADER_H })
-  hdrStripe.alpha = 0.90; hdrStripe.borderWidth = 0
-  jsmaf.root.children.push(hdrStripe)
+  // Accent stripe left
+  const hBar = new Image({ url: CYAN, x: 0, y: 0, width: 5, height: HDR })
+  hBar.alpha = 1.0; hBar.borderWidth = 0
+  jsmaf.root.children.push(hBar)
 
-  const hdrDiv = new Image({ url: CYAN_PX, x: 0, y: HEADER_H - 1, width: SW, height: 1 })
-  hdrDiv.alpha = 0.20; hdrDiv.borderWidth = 0
-  jsmaf.root.children.push(hdrDiv)
+  // Header bottom divider
+  const hDiv = new Image({ url: CYAN, x: 0, y: HDR - 1, width: SW, height: 1 })
+  hDiv.alpha = 0.25; hDiv.borderWidth = 0
+  jsmaf.root.children.push(hDiv)
 
-  const logoTxt = new jsmaf.Text()
-  logoTxt.text = 'VAF-FREE'
-  logoTxt.x = CX - 110; logoTxt.y = 30; logoTxt.style = 'm_logo'
-  jsmaf.root.children.push(logoTxt)
+  // Glow accent behind title
+  const hGlow = new Image({ url: CYAN, x: CX - 220, y: 18, width: 440, height: 80 })
+  hGlow.alpha = 0.06; hGlow.borderWidth = 0
+  jsmaf.root.children.push(hGlow)
 
-  const logoSub = new jsmaf.Text()
-  logoSub.text = 'PlayStation 4  ·  Jailbreak & Payload Tool'
-  logoSub.x = CX - 196; logoSub.y = 92; logoSub.style = 'm_logosub'
-  jsmaf.root.children.push(logoSub)
+  const logoT = new jsmaf.Text()
+  logoT.text = 'VAF-FREE'; logoT.x = CX - 118; logoT.y = 34
+  logoT.style = 'logo'; logoT.alpha = 1.0
+  jsmaf.root.children.push(logoT)
 
-  // ── Menu items ────────────────────────────────────────────────────────────
-  type MenuItem = { label: string; script: string; num: string }
-  const menuOptions: MenuItem[] = [
-    { label: lang.jailbreak, script: 'loader.js', num: '01' },
-    { label: lang.payloadMenu, script: 'payload_host.js', num: '02' },
-    { label: lang.config, script: 'config_ui.js', num: '03' },
+  const subT = new jsmaf.Text()
+  subT.text = 'PlayStation 4  ·  Jailbreak & Payload Manager'
+  subT.x = CX - 210; subT.y = 96; subT.style = 'sub'; subT.alpha = 1.0
+  jsmaf.root.children.push(subT)
+
+  // ── Buttons ───────────────────────────────────────────────────────────────
+  type MenuItem = { label: string; script: string; num: string; icon: string }
+  const items: MenuItem[] = [
+    { label: lang.jailbreak,   script: 'loader.js',       num: '01', icon: '⚡' },
+    { label: lang.payloadMenu, script: 'payload_host.js', num: '02', icon: '◈' },
+    { label: lang.config,      script: 'config_ui.js',    num: '03', icon: '⚙' },
   ]
 
-  const btns: Image[] = []
-  const bars: Image[] = []
-  const texts: jsmaf.Text[] = []
+  const btns: Image[]      = []
+  const bars: Image[]      = []
+  const glws: Image[]      = []
+  const txts: jsmaf.Text[] = []
   const nums: jsmaf.Text[] = []
   const arrs: jsmaf.Text[] = []
-  const origB: { x: number; y: number }[] = []
-  const origT: { x: number; y: number }[] = []
+  const origB: {x:number;y:number}[] = []
+  const origT: {x:number;y:number}[] = []
 
-  for (let i = 0; i < menuOptions.length; i++) {
-    const o = menuOptions[i]!
-    const bY = START_Y + i * GAP
+  for (let i = 0; i < items.length; i++) {
+    const o = items[i]!
+    const bY = SY + i * GAP
 
-    const btn = new Image({ url: WHITE_PX, x: BTN_L, y: bY, width: BTN_W, height: BTN_H })
-    btn.alpha = 0.07; btn.borderColor = 'rgba(120,200,255,0.18)'; btn.borderWidth = 1
+    const btn = new Image({ url: WHITE, x: BL, y: bY, width: BW, height: BH })
+    btn.alpha = 0.07; btn.borderColor = 'rgba(80,180,255,0.15)'; btn.borderWidth = 1
     btns.push(btn); jsmaf.root.children.push(btn)
 
-    const bar = new Image({ url: CYAN_PX, x: BTN_L, y: bY, width: 4, height: BTN_H })
-    bar.alpha = 0.55; bar.borderWidth = 0
+    // Selection glow (behind bar)
+    const glw = new Image({ url: CYAN, x: BL, y: bY, width: BW, height: BH })
+    glw.alpha = 0; glw.borderWidth = 0
+    glws.push(glw); jsmaf.root.children.push(glw)
+
+    const bar = new Image({ url: CYAN, x: BL, y: bY, width: 4, height: BH })
+    bar.alpha = 0.45; bar.borderWidth = 0
     bars.push(bar); jsmaf.root.children.push(bar)
 
     const num = new jsmaf.Text(); num.text = o.num
-    num.x = BTN_L + 18; num.y = bY + 42; num.style = 'm_num'
+    num.x = BL + 18; num.y = bY + 44; num.style = 'num'; num.alpha = 1.0
     nums.push(num); jsmaf.root.children.push(num)
 
-    const txt = new jsmaf.Text(); txt.text = o.label.toUpperCase()
-    txt.x = BTN_L + 58; txt.y = bY + 34; txt.style = 'm_label'
-    texts.push(txt); jsmaf.root.children.push(txt)
+    // icon + label
+    const txt = new jsmaf.Text(); txt.text = o.icon + '  ' + o.label.toUpperCase()
+    txt.x = BL + 54; txt.y = bY + 35; txt.style = 'label'; txt.alpha = 1.0
+    txts.push(txt); jsmaf.root.children.push(txt)
 
     const arr = new jsmaf.Text(); arr.text = '›'
-    arr.x = BTN_L + BTN_W - 42; arr.y = bY + 30; arr.style = 'm_arrow'
+    arr.x = BL + BW - 44; arr.y = bY + 32; arr.style = 'arrow'; arr.alpha = 1.0
     arrs.push(arr); jsmaf.root.children.push(arr)
 
-    origB.push({ x: BTN_L, y: bY })
+    origB.push({ x: BL, y: bY })
     origT.push({ x: txt.x, y: txt.y })
   }
 
   // Exit button
-  const exitY = START_Y + menuOptions.length * GAP + 22
-  const exitBtn = new Image({ url: WHITE_PX, x: BTN_L, y: exitY, width: BTN_W, height: BTN_H })
-  exitBtn.alpha = 0.055; exitBtn.borderColor = 'rgba(255,80,80,0.22)'; exitBtn.borderWidth = 1
-  btns.push(exitBtn); jsmaf.root.children.push(exitBtn)
+  const eY = SY + items.length * GAP + 24
+  const eBt = new Image({ url: WHITE, x: BL, y: eY, width: BW, height: BH })
+  eBt.alpha = 0.05; eBt.borderColor = 'rgba(255,80,80,0.20)'; eBt.borderWidth = 1
+  btns.push(eBt); jsmaf.root.children.push(eBt)
 
-  const exitBar = new Image({ url: RED_PX, x: BTN_L, y: exitY, width: 4, height: BTN_H })
-  exitBar.alpha = 0.75; exitBar.borderWidth = 0
-  bars.push(exitBar); jsmaf.root.children.push(exitBar)
+  const eGlw = new Image({ url: RED, x: BL, y: eY, width: BW, height: BH })
+  eGlw.alpha = 0; eGlw.borderWidth = 0
+  glws.push(eGlw); jsmaf.root.children.push(eGlw)
 
-  const exitNum = new jsmaf.Text(); exitNum.text = '04'
-  exitNum.x = BTN_L + 18; exitNum.y = exitY + 42; exitNum.style = 'm_num'
-  nums.push(exitNum); jsmaf.root.children.push(exitNum)
+  const eBar = new Image({ url: RED, x: BL, y: eY, width: 4, height: BH })
+  eBar.alpha = 0.70; eBar.borderWidth = 0
+  bars.push(eBar); jsmaf.root.children.push(eBar)
 
-  const exitTxt = new jsmaf.Text(); exitTxt.text = lang.exit.toUpperCase()
-  exitTxt.x = BTN_L + 58; exitTxt.y = exitY + 34; exitTxt.style = 'm_exitd'
-  texts.push(exitTxt); jsmaf.root.children.push(exitTxt)
+  const eNum = new jsmaf.Text(); eNum.text = '04'
+  eNum.x = BL + 18; eNum.y = eY + 44; eNum.style = 'num'; eNum.alpha = 1.0
+  nums.push(eNum); jsmaf.root.children.push(eNum)
 
-  const exitArr = new jsmaf.Text(); exitArr.text = '›'
-  exitArr.x = BTN_L + BTN_W - 42; exitArr.y = exitY + 30; exitArr.style = 'm_arrow'
-  arrs.push(exitArr); jsmaf.root.children.push(exitArr)
+  const eTxt = new jsmaf.Text(); eTxt.text = '✕  ' + lang.exit.toUpperCase()
+  eTxt.x = BL + 54; eTxt.y = eY + 35; eTxt.style = 'exitd'; eTxt.alpha = 1.0
+  txts.push(eTxt); jsmaf.root.children.push(eTxt)
 
-  origB.push({ x: BTN_L, y: exitY })
-  origT.push({ x: exitTxt.x, y: exitTxt.y })
+  const eArr = new jsmaf.Text(); eArr.text = '›'
+  eArr.x = BL + BW - 44; eArr.y = eY + 32; eArr.style = 'arrow'; eArr.alpha = 1.0
+  arrs.push(eArr); jsmaf.root.children.push(eArr)
+
+  origB.push({ x: BL, y: eY })
+  origT.push({ x: eTxt.x, y: eTxt.y })
 
   // ── Footer ────────────────────────────────────────────────────────────────
-  const footLine = new Image({ url: CYAN_PX, x: 0, y: SH - FOOTER_H, width: SW, height: 1 })
-  footLine.alpha = 0.18; footLine.borderWidth = 0
-  jsmaf.root.children.push(footLine)
+  const fLine = new Image({ url: CYAN, x: 0, y: SH - FTR, width: SW, height: 1 })
+  fLine.alpha = 0.18; fLine.borderWidth = 0
+  jsmaf.root.children.push(fLine)
 
-  const footBg = new Image({ url: WHITE_PX, x: 0, y: SH - FOOTER_H + 1, width: SW, height: FOOTER_H - 1 })
-  footBg.alpha = 0.09; footBg.borderWidth = 0
-  jsmaf.root.children.push(footBg)
+  const fBg = new Image({ url: WHITE, x: 0, y: SH - FTR + 1, width: SW, height: FTR - 1 })
+  fBg.alpha = 0.07; fBg.borderWidth = 0
+  jsmaf.root.children.push(fBg)
 
-  const confirmLabel = jsmaf.circleIsAdvanceButton ? 'O' : 'X'
-  const fh = new jsmaf.Text()
-  fh.text = '↑↓  Navigate    ' + confirmLabel + '  Select'
-  fh.x = CX - 130; fh.y = SH - FOOTER_H + 15; fh.style = 'm_footer'
-  jsmaf.root.children.push(fh)
+  const clbl = jsmaf.circleIsAdvanceButton ? 'O' : 'X'
+  const fTxt = new jsmaf.Text()
+  fTxt.text = '↑↓  Navigate    ' + clbl + '  Select'
+  fTxt.x = CX - 130; fTxt.y = SH - FTR + 17; fTxt.style = 'footer'; fTxt.alpha = 1.0
+  jsmaf.root.children.push(fTxt)
 
-  // ── Highlight ─────────────────────────────────────────────────────────────
+  // ── Selection logic ───────────────────────────────────────────────────────
   let cur = 0; let prev = -1
   const TOTAL = btns.length
 
   function highlight () {
     for (let i = 0; i < TOTAL; i++) {
       const isExit = i === TOTAL - 1
-      const sel = i === cur
+      const sel    = i === cur
 
-      btns[i]!.alpha = sel ? 0.22 : (isExit ? 0.055 : 0.07)
+      btns[i]!.alpha       = sel ? 0.20 : (isExit ? 0.05 : 0.07)
       btns[i]!.borderColor = sel
-        ? (isExit ? 'rgba(255,110,110,0.85)' : 'rgba(80,210,255,0.85)')
-        : (isExit ? 'rgba(255,80,80,0.22)' : 'rgba(120,200,255,0.18)')
+        ? (isExit ? 'rgba(255,100,100,0.85)' : 'rgba(80,210,255,0.85)')
+        : (isExit ? 'rgba(255,80,80,0.20)'   : 'rgba(80,180,255,0.15)')
       btns[i]!.borderWidth = sel ? 2 : 1
-      bars[i]!.alpha = sel ? 1.0 : (isExit ? 0.75 : 0.55)
-      texts[i]!.style = sel ? (isExit ? 'm_exit' : 'm_sel') : (isExit ? 'm_exitd' : 'm_label')
-      nums[i]!.style = sel ? 'm_numsel' : 'm_num'
-      arrs[i]!.style = sel ? 'm_arrsel' : 'm_arrow'
+      glws[i]!.alpha       = sel ? 0.06 : 0
+      bars[i]!.alpha       = sel ? 1.0  : (isExit ? 0.70 : 0.45)
+      txts[i]!.style       = sel ? (isExit ? 'exit' : 'sel') : (isExit ? 'exitd' : 'label')
+      nums[i]!.style       = sel ? 'numsel' : 'num'
+      arrs[i]!.style       = sel ? 'arrsel' : 'arrow'
+      txts[i]!.alpha       = 1.0
+      nums[i]!.alpha       = 1.0
+      arrs[i]!.alpha       = 1.0
 
       if (i !== prev || sel) {
-        const sc = sel ? 1.020 : 1.0
-        const dX = sel ? -Math.round(BTN_W * 0.010) : 0
-        const dY = sel ? -Math.round(BTN_H * 0.010) : 0
+        const sc = sel ? 1.022 : 1.0
+        const dX = sel ? -Math.round(BW * 0.011) : 0
+        const dY = sel ? -Math.round(BH * 0.011) : 0
         btns[i]!.scaleX = sc; btns[i]!.scaleY = sc
         btns[i]!.x = origB[i]!.x + dX; btns[i]!.y = origB[i]!.y + dY
-        texts[i]!.scaleX = sc; texts[i]!.scaleY = sc
-        texts[i]!.x = origT[i]!.x + dX
+        glws[i]!.x = origB[i]!.x + dX; glws[i]!.y = origB[i]!.y + dY
+        txts[i]!.scaleX = sc; txts[i]!.scaleY = sc
+        txts[i]!.x = origT[i]!.x + dX
       }
     }
     prev = cur
@@ -214,15 +243,15 @@ import { libc_addr } from 'download0/userland'
 
   jsmaf.onKeyDown = function (kc: number) {
     if (kc === 6 || kc === 5) {
-      cur = (cur + 1) % TOTAL; sfx(SFX_CUR); highlight()
+      cur = (cur + 1) % TOTAL; sfxCur(); highlight()
     } else if (kc === 4 || kc === 7) {
-      cur = (cur - 1 + TOTAL) % TOTAL; sfx(SFX_CUR); highlight()
+      cur = (cur - 1 + TOTAL) % TOTAL; sfxCur(); highlight()
     } else if (kc === confirmKey) {
-      sfx(SFX_OK)
+      sfxOk()
       if (cur === TOTAL - 1) {
         try { include('includes/kill_vue.js') } catch (_e) {}
       } else {
-        const o = menuOptions[cur]; if (!o) return
+        const o = items[cur]; if (!o) return
         if (o.script === 'loader.js') jsmaf.onKeyDown = function () {}
         try {
           if (o.script === 'loader.js') {
@@ -237,5 +266,5 @@ import { libc_addr } from 'download0/userland'
 
   highlight()
   log('Main menu loaded.')
-  ;((_a, _b) => {})(libc_addr, SFX_BCK)
+  ;((_a, _b, _c) => {})(libc_addr, sfxBack, BLUE)
 })()
