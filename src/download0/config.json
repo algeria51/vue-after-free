@@ -4,9 +4,19 @@
         "autopoop": false,
         "autoclose": true,
         "autoclose_delay": 3000,
-        "music": false,
+        "music": true,
         "jb_behavior": 0,
-        "theme": "neon"
+        "theme": "default",
+        "exploit": {
+            "core": 4,
+            "rtprio": 256,
+            "grooms": 512,
+            "races": 100,
+            "alias": 100,
+            "sds": 64,
+            "workers": 2,
+            "timeout_s": 8
+        }
     },
     "payloads": []
 }

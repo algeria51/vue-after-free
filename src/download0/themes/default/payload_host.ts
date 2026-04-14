@@ -1,473 +1,323 @@
 import { fn, mem, BigInt } from 'download0/types'
 import { binloader_init } from 'download0/binloader'
 import { libc_addr } from 'download0/userland'
-import { lang, useImageText, textImageBase } from 'download0/languages'
+import { lang } from 'download0/languages'
 import { checkJailbroken } from 'download0/check-jailbroken'
 
-(function () {
-  if (typeof libc_addr === 'undefined') {
-    log('Loading userland.js...')
-    include('userland.js')
-    log('userland.js loaded')
-  } else {
-    log('userland.js already loaded (libc_addr defined)')
-  }
-
-  log('Loading check-jailbroken.js...')
+;(function () {
+  if (typeof libc_addr === 'undefined') include('userland.js')
   include('check-jailbroken.js')
+  if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
-  if (typeof startBgmIfEnabled === 'function') {
-    startBgmIfEnabled()
-  }
+  // ── Constants ─────────────────────────────────────────────────────────────
+  const SW       = 1920
+  const SH       = 1080
+  const PAD_X    = 60
+  const COL_GAP  = 28
+  const COL_W    = (SW - PAD_X * 2 - COL_GAP) / 2
+  const COL_R    = PAD_X + COL_W + COL_GAP
+  const HEADER_H = 152
+  const FOOTER_H = 44
+  const AVAIL_H  = SH - HEADER_H - FOOTER_H - 16
+  const BTN_H    = 86
+  const BTN_GAP  = 10
+  const MAX_ROWS = Math.floor(AVAIL_H / (BTN_H + BTN_GAP))
+  const MAX_PL   = MAX_ROWS * 2
+  const START_Y  = HEADER_H + 8
 
-  // ── Sound effects (controlled by music setting) ───────────────────────────
-  const SFX_CURSOR = 'file:///../download0/sfx/cursor.wav'
-  const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
-  const SFX_CANCEL = 'file:///../download0/sfx/cancel.wav'
+  const BG_URL   = 'file:///../download0/img/multiview_bg_VAF.png'
+  const BTN_URL  = 'file:///../download0/img/NeonBtn.png'
+  const SFX_CUR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_OK   = 'file:///../download0/sfx/confirm.wav'
+  const SFX_BACK = 'file:///../download0/sfx/cancel.wav'
 
-  function playSound (url: string) {
+  function sfx (url: string) {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try {
-      const clip = new jsmaf.AudioClip()
-      clip.volume = 1.0
-      clip.open(url)
-    } catch (e) {
-      log('SFX error: ' + (e as Error).message)
-    }
+    try { const c = new jsmaf.AudioClip(); c.volume = 1.0; c.open(url) } catch (_e) { /* no audio */ }
   }
 
   is_jailbroken = checkJailbroken()
 
-  jsmaf.root.children.length = 0
+  // ── Scan payloads ─────────────────────────────────────────────────────────
+  try { fn.register(0x05,  'ph_open',    ['bigint','bigint','bigint'], 'bigint') } catch (_e) { /* registered */ }
+  try { fn.register(0x06,  'ph_close',   ['bigint'],                   'bigint') } catch (_e) { /* registered */ }
+  try { fn.register(0x110, 'ph_getdnts', ['bigint','bigint','bigint'], 'bigint') } catch (_e) { /* registered */ }
+  try { fn.register(0x03,  'ph_read',    ['bigint','bigint','bigint'], 'bigint') } catch (_e) { /* registered */ }
 
-  new Style({ name: 'white', color: 'white', size: 24 })
-  new Style({ name: 'title', color: 'white', size: 32 })
-
-  let currentButton = 0
-  const buttons: Image[] = []
-  const buttonTexts: jsmaf.Text[] = []
-  const buttonMarkers: Image[] = []
-  const buttonOrigPos: { x: number, y: number }[] = []
-  const textOrigPos: { x: number, y: number }[] = []
-
-  type FileEntry = { name: string, path: string }
-  const fileList: FileEntry[] = []
-
-  const normalButtonImg = 'file:///assets/img/button_over_9.png'
-  const selectedButtonImg = 'file:///assets/img/button_over_9.png'
-
-  const background = new Image({
-    url: 'file:///../download0/img/multiview_bg_VAF.png',
-    x: 0,
-    y: 0,
-    width: 1920,
-    height: 1080
-  })
-  jsmaf.root.children.push(background)
-
-  const logo = new Image({
-    url: 'file:///../download0/img/logo.png',
-    x: 1620,
-    y: 0,
-    width: 300,
-    height: 169
-  })
-  jsmaf.root.children.push(logo)
-
-  if (useImageText) {
-    const title = new Image({
-      url: textImageBase + 'payloadMenu.png',
-      x: 830,
-      y: 100,
-      width: 250,
-      height: 60
-    })
-    jsmaf.root.children.push(title)
-  } else {
-    const title = new jsmaf.Text()
-    title.text = lang.payloadMenu
-    title.x = 880
-    title.y = 120
-    title.style = 'title'
-    jsmaf.root.children.push(title)
-  }
-
-  fn.register(0x05, 'open_sys', ['bigint', 'bigint', 'bigint'], 'bigint')
-  fn.register(0x06, 'close_sys', ['bigint'], 'bigint')
-  fn.register(0x110, 'getdents', ['bigint', 'bigint', 'bigint'], 'bigint')
-  fn.register(0x03, 'read_sys', ['bigint', 'bigint', 'bigint'], 'bigint')
+  type FEntry = { name: string; path: string }
+  const fileList: FEntry[] = []
 
   const scanPaths = ['/download0/payloads']
+  if (is_jailbroken) scanPaths.push('/data/payloads')
 
-  if (is_jailbroken) {
-    scanPaths.push('/data/payloads')
-    // this need sandbox escape to work
-    // for (let i = 0; i <= 7; i++) {
-    //   scanPaths.push('/mnt/usb' + i + '/payloads')
-    // }
-  }
-
-  log('Scanning paths: ' + scanPaths.join(', '))
-
-  const path_addr = mem.malloc(256)
-  const buf = mem.malloc(4096)
-
-  for (const currentPath of scanPaths) {
-    log('Scanning ' + currentPath + ' for files...')
-
-    for (let i = 0; i < currentPath.length; i++) {
-      mem.view(path_addr).setUint8(i, currentPath.charCodeAt(i))
-    }
-    mem.view(path_addr).setUint8(currentPath.length, 0)
-
-    const fd = fn.open_sys(path_addr, new BigInt(0, 0), new BigInt(0, 0))
-    // log('open_sys (' + currentPath + ') returned: ' + fd.toString())
-
+  const paddr = mem.malloc(256); const dbuf = mem.malloc(4096)
+  for (const sp of scanPaths) {
+    for (let i = 0; i < sp.length; i++) mem.view(paddr).setUint8(i, sp.charCodeAt(i))
+    mem.view(paddr).setUint8(sp.length, 0)
+    const fd = fn.ph_open(paddr, new BigInt(0, 0), new BigInt(0, 0))
     if (!fd.eq(new BigInt(0xffffffff, 0xffffffff))) {
-      const count = fn.getdents(fd, buf, new BigInt(0, 4096))
-      // log('getdents returned: ' + count.toString() + ' bytes')
-
-      if (!count.eq(new BigInt(0xffffffff, 0xffffffff)) && count.lo > 0) {
-        let offset = 0
-        while (offset < count.lo) {
-          const d_reclen = mem.view(buf.add(new BigInt(0, offset + 4))).getUint16(0, true)
-          const d_type = mem.view(buf.add(new BigInt(0, offset + 6))).getUint8(0)
-          const d_namlen = mem.view(buf.add(new BigInt(0, offset + 7))).getUint8(0)
-
+      const cnt = fn.ph_getdnts(fd, dbuf, new BigInt(0, 4096))
+      if (!cnt.eq(new BigInt(0xffffffff, 0xffffffff)) && cnt.lo > 0) {
+        let off = 0
+        while (off < cnt.lo) {
+          const rl = mem.view(dbuf.add(new BigInt(0, off + 4))).getUint16(0, true)
+          const dt = mem.view(dbuf.add(new BigInt(0, off + 6))).getUint8(0)
+          const nl = mem.view(dbuf.add(new BigInt(0, off + 7))).getUint8(0)
           let name = ''
-          for (let i = 0; i < d_namlen; i++) {
-            name += String.fromCharCode(mem.view(buf.add(new BigInt(0, offset + 8 + i))).getUint8(0))
+          for (let i = 0; i < nl; i++) name += String.fromCharCode(mem.view(dbuf.add(new BigInt(0, off + 8 + i))).getUint8(0))
+          if (dt === 8 && name !== '.' && name !== '..') {
+            const low = name.toLowerCase()
+            if (low.endsWith('.elf') || low.endsWith('.bin') || low.endsWith('.js'))
+              fileList.push({ name, path: sp + '/' + name })
           }
-
-          // log('Entry: ' + name + ' type=' + d_type)
-
-          if (d_type === 8 && name !== '.' && name !== '..') {
-            const lowerName = name.toLowerCase()
-            if (lowerName.endsWith('.elf') || lowerName.endsWith('.bin') || lowerName.endsWith('.js')) {
-              fileList.push({ name, path: currentPath + '/' + name })
-              log('Added file: ' + name + ' from ' + currentPath)
-            }
-          }
-
-          offset += d_reclen
+          off += rl
         }
       }
-      fn.close_sys(fd)
-    } else {
-      log('Failed to open ' + currentPath)
+      fn.ph_close(fd)
+    }
+  }
+  log('Payloads found: ' + fileList.length)
+
+  // ── Styles ────────────────────────────────────────────────────────────────
+  jsmaf.root.children.length = 0
+
+  new Style({ name: 'white',    color: 'rgb(255,255,255)',        size: 22 })
+  new Style({ name: 'title',    color: 'rgb(255,255,255)',        size: 30 })
+  new Style({ name: 'muted',    color: 'rgba(255,255,255,0.50)', size: 20 })
+  new Style({ name: 'dim',      color: 'rgba(255,255,255,0.26)', size: 15 })
+  new Style({ name: 'badge',    color: 'rgba(120,210,255,0.85)', size: 13 })
+  new Style({ name: 'bsel',     color: 'rgb(80,220,255)',         size: 13 })
+  new Style({ name: 'back',     color: 'rgba(255,120,120,0.85)', size: 20 })
+  new Style({ name: 'scroll',   color: 'rgba(120,200,255,0.70)', size: 17 })
+  new Style({ name: 'footer',   color: 'rgba(255,255,255,0.28)', size: 16 })
+  new Style({ name: 'count',    color: 'rgba(120,210,255,0.55)', size: 16 })
+  new Style({ name: 'empty',    color: 'rgba(255,255,255,0.45)', size: 24 })
+  new Style({ name: 'emptysub', color: 'rgba(255,255,255,0.24)', size: 17 })
+  new Style({ name: 'lnum',     color: 'rgba(255,255,255,0.22)', size: 14 })
+  new Style({ name: 'lnumsel', color: 'rgba(120,210,255,0.80)',  size: 14 })
+
+  // ── Background ────────────────────────────────────────────────────────────
+  jsmaf.root.children.push(new Image({ url: BG_URL, x: 0, y: 0, width: SW, height: SH }))
+
+  // ── Header ────────────────────────────────────────────────────────────────
+  const hdr = new Image({ url: BTN_URL, x: 0, y: 0, width: SW, height: HEADER_H, alpha: 0.18 })
+  hdr.borderColor = 'rgba(120,200,255,0.12)'; hdr.borderWidth = 0
+  jsmaf.root.children.push(hdr)
+
+  const hdrAccent = new Image({ url: BTN_URL, x: 0, y: 0, width: 5, height: HEADER_H, alpha: 1.0 })
+  hdrAccent.borderColor = 'rgb(80,200,255)'; hdrAccent.borderWidth = 0
+  jsmaf.root.children.push(hdrAccent)
+
+  jsmaf.root.children.push(new Image({
+    url: 'file:///../download0/img/logo.png',
+    x: SW - 210, y: 14, width: 185, height: 104
+  }))
+
+  const ttl = new jsmaf.Text()
+  ttl.text = (lang.payloadMenu || 'PAYLOADS').toUpperCase()
+  ttl.x = PAD_X; ttl.y = 46; ttl.style = 'title'
+  jsmaf.root.children.push(ttl)
+
+  const countTxt = new jsmaf.Text()
+  countTxt.text = fileList.length + ' file' + (fileList.length !== 1 ? 's' : '') + ' found'
+  countTxt.x = PAD_X; countTxt.y = 100; countTxt.style = 'count'
+  jsmaf.root.children.push(countTxt)
+
+  const divH = new Image({ url: BTN_URL, x: PAD_X, y: HEADER_H - 2, width: SW - PAD_X * 2, height: 2, alpha: 0.32 })
+  divH.borderColor = 'rgba(120,200,255,0.45)'; divH.borderWidth = 0
+  jsmaf.root.children.push(divH)
+
+  // Column separator
+  const colDiv = new Image({
+    url: BTN_URL,
+    x: PAD_X + COL_W + COL_GAP / 2 - 1, y: HEADER_H + 4,
+    width: 1, height: AVAIL_H, alpha: 0.16
+  })
+  colDiv.borderColor = 'rgba(255,255,255,0.25)'; colDiv.borderWidth = 0
+  jsmaf.root.children.push(colDiv)
+
+  // ── Empty state ───────────────────────────────────────────────────────────
+  if (fileList.length === 0) {
+    const em = new jsmaf.Text()
+    em.text = 'No payloads found'
+    em.x = SW / 2 - 150; em.y = SH / 2 - 64; em.style = 'empty'
+    jsmaf.root.children.push(em)
+
+    const eh = new jsmaf.Text()
+    eh.text = 'Place  .elf / .bin / .js  files in  /download0/payloads/'
+    eh.x = SW / 2 - 310; eh.y = SH / 2; eh.style = 'emptysub'
+    jsmaf.root.children.push(eh)
+
+    if (is_jailbroken) {
+      const eh2 = new jsmaf.Text()
+      eh2.text = 'or in  /data/payloads/'
+      eh2.x = SW / 2 - 130; eh2.y = SH / 2 + 38; eh2.style = 'emptysub'
+      jsmaf.root.children.push(eh2)
     }
   }
 
-  log('Total files found: ' + fileList.length)
+  // ── Slot widgets ──────────────────────────────────────────────────────────
+  const slotBtns:   Image[]      = []
+  const slotBars:   Image[]      = []
+  const slotNums:   jsmaf.Text[] = []
+  const slotBadges: jsmaf.Text[] = []
+  const slotLabels: jsmaf.Text[] = []
+  const slotPaths:  jsmaf.Text[] = []
 
-  const startY = 200
-  const buttonSpacing = 90
-  const buttonsPerRow = 5
-  const buttonWidth = 300
-  const buttonHeight = 80
-  const startX = 130
-  const xSpacing = 340
+  for (let s = 0; s < MAX_PL; s++) {
+    const col = s % 2
+    const row = Math.floor(s / 2)
+    const bX  = col === 0 ? PAD_X : COL_R
+    const bY  = START_Y + row * (BTN_H + BTN_GAP)
 
-  for (let i = 0; i < fileList.length; i++) {
-    const row = Math.floor(i / buttonsPerRow)
-    const col = i % buttonsPerRow
+    const btn = new Image({ url: BTN_URL, x: bX, y: bY, width: COL_W, height: BTN_H, alpha: 0.10 })
+    btn.borderColor = 'rgba(255,255,255,0.13)'; btn.borderWidth = 1
+    slotBtns.push(btn); jsmaf.root.children.push(btn)
 
-    let displayName = fileList[i]!.name
+    const bar = new Image({ url: BTN_URL, x: bX, y: bY, width: 5, height: BTN_H, alpha: 0.28 })
+    bar.borderColor = 'rgb(120,200,255)'; bar.borderWidth = 0
+    slotBars.push(bar); jsmaf.root.children.push(bar)
 
-    const btnX = startX + col * xSpacing
-    const btnY = startY + row * buttonSpacing
+    const num = new jsmaf.Text()
+    num.text = '--'; num.x = bX + 14; num.y = bY + 38; num.style = 'lnum'
+    slotNums.push(num); jsmaf.root.children.push(num)
 
-    const button = new Image({
-      url: normalButtonImg,
-      x: btnX,
-      y: btnY,
-      width: buttonWidth,
-      height: buttonHeight
-    })
-    buttons.push(button)
-    jsmaf.root.children.push(button)
+    const bdg = new jsmaf.Text()
+    bdg.text = '---'; bdg.x = bX + 50; bdg.y = bY + 14; bdg.style = 'badge'
+    slotBadges.push(bdg); jsmaf.root.children.push(bdg)
 
-    const marker = new Image({
-      url: 'file:///assets/img/ad_pod_marker.png',
-      x: btnX + buttonWidth - 50,
-      y: btnY + 35,
-      width: 12,
-      height: 12,
-      visible: false
-    })
-    buttonMarkers.push(marker)
-    jsmaf.root.children.push(marker)
+    const lbl = new jsmaf.Text()
+    lbl.text = ''; lbl.x = bX + 50; lbl.y = bY + 36; lbl.style = 'muted'
+    slotLabels.push(lbl); jsmaf.root.children.push(lbl)
 
-    if (displayName.length > 30) {
-      displayName = displayName.substring(0, 27) + '...'
+    const pth = new jsmaf.Text()
+    pth.text = ''; pth.x = bX + 50; pth.y = bY + 62; pth.style = 'dim'
+    slotPaths.push(pth); jsmaf.root.children.push(pth)
+  }
+
+  // ── Back + scroll ─────────────────────────────────────────────────────────
+  const navY = SH - FOOTER_H - 52
+
+  const arrowUp = new jsmaf.Text(); arrowUp.text = '▲  Scroll up'
+  arrowUp.x = SW / 2 - 70; arrowUp.y = navY; arrowUp.style = 'scroll'; arrowUp.visible = false
+  jsmaf.root.children.push(arrowUp)
+
+  const arrowDn = new jsmaf.Text(); arrowDn.text = '▼  More below'
+  arrowDn.x = SW / 2 - 70; arrowDn.y = navY + 24; arrowDn.style = 'scroll'; arrowDn.visible = false
+  jsmaf.root.children.push(arrowDn)
+
+  const bt = new jsmaf.Text()
+  bt.text = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
+  bt.x = PAD_X; bt.y = navY + 10; bt.style = 'back'
+  jsmaf.root.children.push(bt)
+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  const footBg = new Image({ url: BTN_URL, x: 0, y: SH - FOOTER_H, width: SW, height: FOOTER_H, alpha: 0.40 })
+  footBg.borderColor = 'transparent'; footBg.borderWidth = 0
+  jsmaf.root.children.push(footBg)
+
+  const confirmLabel = jsmaf.circleIsAdvanceButton ? 'O' : 'X'
+  const backLabel    = jsmaf.circleIsAdvanceButton ? 'X' : 'O'
+  const fh = new jsmaf.Text()
+  fh.text = '↑↓ ←→  Navigate    ' + confirmLabel + '  Launch    ' + backLabel + '  Back'
+  fh.x = SW / 2 - 240; fh.y = SH - FOOTER_H + 14; fh.style = 'footer'
+  jsmaf.root.children.push(fh)
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  let cur = 0; let scrollOff = 0
+  const TOTAL = fileList.length
+
+  function renderRows () {
+    for (let s = 0; s < MAX_PL; s++) {
+      const idx = scrollOff + s
+      const vis = idx < TOTAL
+      slotBtns[s]!.visible   = vis
+      slotBars[s]!.visible   = vis
+      slotNums[s]!.visible   = vis
+      slotBadges[s]!.visible = vis
+      slotLabels[s]!.visible = vis
+      slotPaths[s]!.visible  = vis
+      if (!vis) continue
+
+      const f   = fileList[idx]!
+      const sel = idx === cur
+      const ext = f.name.split('.').pop()!.toUpperCase()
+      let   disp = f.name.replace(/\.(elf|bin|js)$/i, '')
+      if (disp.length > 36) disp = disp.slice(0, 34) + '..'
+      const pathHint = f.path.startsWith('/data/') ? '/data/payloads' : '/download0/payloads'
+
+      slotBtns[s]!.alpha       = sel ? 0.26 : 0.10
+      slotBtns[s]!.borderColor = sel ? 'rgba(80,200,255,0.85)' : 'rgba(255,255,255,0.13)'
+      slotBtns[s]!.borderWidth = sel ? 2 : 1
+      slotBars[s]!.alpha       = sel ? 1.0 : 0.28
+      slotBars[s]!.borderColor = sel ? 'rgb(80,220,255)' : 'rgb(120,200,255)'
+
+      slotNums[s]!.text    = String(idx + 1).padStart(2, '0')
+      slotNums[s]!.style   = sel ? 'lnumsel' : 'lnum'
+      slotBadges[s]!.text  = ext
+      slotBadges[s]!.style = sel ? 'bsel' : 'badge'
+      slotLabels[s]!.text  = disp
+      slotLabels[s]!.style = sel ? 'white' : 'muted'
+      slotPaths[s]!.text   = pathHint
     }
-
-    const text = new jsmaf.Text()
-    text.text = displayName
-    text.x = btnX + 20
-    text.y = btnY + 30
-    text.style = 'white'
-    buttonTexts.push(text)
-    jsmaf.root.children.push(text)
-
-    buttonOrigPos.push({ x: btnX, y: btnY })
-    textOrigPos.push({ x: text.x, y: text.y })
+    arrowUp.visible = scrollOff > 0
+    arrowDn.visible = TOTAL > 0 && (scrollOff + MAX_PL) < TOTAL
   }
 
-  let backHint: Image | jsmaf.Text
-  if (useImageText) {
-    backHint = new Image({
-      url: textImageBase + (jsmaf.circleIsAdvanceButton ? 'xToGoBack.png' : 'oToGoBack.png'),
-      x: 890,
-      y: 1000,
-      width: 150,
-      height: 40
-    })
-  } else {
-    backHint = new jsmaf.Text()
-    backHint.text = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
-    backHint.x = 890
-    backHint.y = 1000
-    backHint.style = 'white'
-  }
-  jsmaf.root.children.push(backHint)
-
-  let zoomInInterval: number | null = null
-  let zoomOutInterval: number | null = null
-  let prevButton = -1
-
-  function easeInOut (t: number) {
-    return (1 - Math.cos(t * Math.PI)) / 2
+  function clamp () {
+    if (cur < scrollOff) scrollOff = cur
+    else if (cur >= scrollOff + MAX_PL) scrollOff = cur - MAX_PL + 1
   }
 
-  function animateZoomIn (btn: Image, text: jsmaf.Text, btnOrigX: number, btnOrigY: number, textOrigX: number, textOrigY: number) {
-    if (zoomInInterval) jsmaf.clearInterval(zoomInInterval)
-    const btnW = buttonWidth
-    const btnH = buttonHeight
-    const startScale = btn.scaleX || 1.0
-    const endScale = 1.1
-    const duration = 175
-    let elapsed = 0
-    const step = 16
-
-    zoomInInterval = jsmaf.setInterval(function () {
-      elapsed += step
-      const t = Math.min(elapsed / duration, 1)
-      const eased = easeInOut(t)
-      const scale = startScale + (endScale - startScale) * eased
-
-      btn.scaleX = scale
-      btn.scaleY = scale
-      btn.x = btnOrigX - (btnW * (scale - 1)) / 2
-      btn.y = btnOrigY - (btnH * (scale - 1)) / 2
-      text.scaleX = scale
-      text.scaleY = scale
-      text.x = textOrigX - (btnW * (scale - 1)) / 2
-      text.y = textOrigY - (btnH * (scale - 1)) / 2
-
-      if (t >= 1) {
-        jsmaf.clearInterval(zoomInInterval ?? -1)
-        zoomInInterval = null
-      }
-    }, step)
-  }
-
-  function animateZoomOut (btn: Image, text: jsmaf.Text, btnOrigX: number, btnOrigY: number, textOrigX: number, textOrigY: number) {
-    if (zoomOutInterval) jsmaf.clearInterval(zoomOutInterval)
-    const btnW = buttonWidth
-    const btnH = buttonHeight
-    const startScale = btn.scaleX || 1.1
-    const endScale = 1.0
-    const duration = 175
-    let elapsed = 0
-    const step = 16
-
-    zoomOutInterval = jsmaf.setInterval(function () {
-      elapsed += step
-      const t = Math.min(elapsed / duration, 1)
-      const eased = easeInOut(t)
-      const scale = startScale + (endScale - startScale) * eased
-
-      btn.scaleX = scale
-      btn.scaleY = scale
-      btn.x = btnOrigX - (btnW * (scale - 1)) / 2
-      btn.y = btnOrigY - (btnH * (scale - 1)) / 2
-      text.scaleX = scale
-      text.scaleY = scale
-      text.x = textOrigX - (btnW * (scale - 1)) / 2
-      text.y = textOrigY - (btnH * (scale - 1)) / 2
-
-      if (t >= 1) {
-        jsmaf.clearInterval(zoomOutInterval ?? -1)
-        zoomOutInterval = null
-      }
-    }, step)
-  }
-
-  function updateHighlight () {
-    // Animate out the previous button
-    const prevButtonObj = buttons[prevButton]
-    const buttonMarker = buttonMarkers[prevButton]
-    if (prevButton >= 0 && prevButton !== currentButton && prevButtonObj) {
-      prevButtonObj.url = normalButtonImg
-      prevButtonObj.alpha = 0.7
-      prevButtonObj.borderColor = 'transparent'
-      prevButtonObj.borderWidth = 0
-      if (buttonMarker) buttonMarker.visible = false
-      animateZoomOut(prevButtonObj, buttonTexts[prevButton]!, buttonOrigPos[prevButton]!.x, buttonOrigPos[prevButton]!.y, textOrigPos[prevButton]!.x, textOrigPos[prevButton]!.y)
-    }
-
-    // Set styles for all buttons
-    for (let i = 0; i < buttons.length; i++) {
-      const button = buttons[i]
-      const buttonMarker = buttonMarkers[i]
-      const buttonText = buttonTexts[i]
-      const buttonOrigPos_ = buttonOrigPos[i]
-      const textOrigPos_ = textOrigPos[i]
-      if (button === undefined || buttonText === undefined || buttonOrigPos_ === undefined || textOrigPos_ === undefined) continue
-      if (i === currentButton) {
-        button.url = selectedButtonImg
-        button.alpha = 1.0
-        button.borderColor = 'rgb(100,180,255)'
-        button.borderWidth = 3
-        if (buttonMarker) buttonMarker.visible = true
-        animateZoomIn(button, buttonText, buttonOrigPos_.x, buttonOrigPos_.y, textOrigPos_.x, textOrigPos_.y)
-      } else if (i !== prevButton) {
-        button.url = normalButtonImg
-        button.alpha = 0.7
-        button.borderColor = 'transparent'
-        button.borderWidth = 0
-        button.scaleX = 1.0
-        button.scaleY = 1.0
-        button.x = buttonOrigPos_.x
-        button.y = buttonOrigPos_.y
-        buttonText.scaleX = 1.0
-        buttonText.scaleY = 1.0
-        buttonText.x = textOrigPos_.x
-        buttonText.y = textOrigPos_.y
-        if (buttonMarker) buttonMarker.visible = false
-      }
-    }
-
-    prevButton = currentButton
-  }
-
+  // ── Input ─────────────────────────────────────────────────────────────────
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
-  const backKey = jsmaf.circleIsAdvanceButton ? 14 : 13
+  const backKey    = jsmaf.circleIsAdvanceButton ? 14 : 13
 
-  jsmaf.onKeyDown = function (keyCode) {
-    const fileButtonCount = fileList.length
-
-    if (keyCode === 6) {
-      const nextButton = currentButton + buttonsPerRow
-      if (nextButton < fileButtonCount) { currentButton = nextButton }
-      playSound(SFX_CURSOR); updateHighlight()
-    } else if (keyCode === 4) {
-      const nextButton = currentButton - buttonsPerRow
-      if (nextButton >= 0) { currentButton = nextButton }
-      playSound(SFX_CURSOR); updateHighlight()
-    } else if (keyCode === 5) {
-      const nextButton = currentButton + 1
-      const row = Math.floor(currentButton / buttonsPerRow)
-      const nextRow = Math.floor(nextButton / buttonsPerRow)
-      if (nextButton < fileButtonCount && nextRow === row) { currentButton = nextButton }
-      playSound(SFX_CURSOR); updateHighlight()
-    } else if (keyCode === 7) {
-      const col = currentButton % buttonsPerRow
-      if (col > 0) { currentButton = currentButton - 1 }
-      playSound(SFX_CURSOR); updateHighlight()
-    } else if (keyCode === confirmKey) {
-      playSound(SFX_CONFIRM); handleButtonPress()
-    } else if (keyCode === backKey) {
-      playSound(SFX_CANCEL)
-      log('Going back to main menu...')
+  jsmaf.onKeyDown = function (kc: number) {
+    if (kc === 6 || kc === 5) {
+      if (TOTAL > 0) { cur = (cur + 1) % TOTAL; sfx(SFX_CUR); clamp(); renderRows() }
+    } else if (kc === 4 || kc === 7) {
+      if (TOTAL > 0) { cur = (cur - 1 + TOTAL) % TOTAL; sfx(SFX_CUR); clamp(); renderRows() }
+    } else if (kc === confirmKey) {
+      sfx(SFX_OK); launchPayload()
+    } else if (kc === backKey) {
+      sfx(SFX_BACK)
       try {
         include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'default') + '/main.js')
-      } catch (e) {
-        const err = e as Error
-        log('ERROR loading main.js: ' + err.message)
-        if (err.stack) log(err.stack)
-      }
+      } catch (e) { log('Back error: ' + (e as Error).message) }
     }
   }
 
-  function handleButtonPress () {
-    if (currentButton < fileList.length) {
-      const selectedEntry = fileList[currentButton]
-      if (!selectedEntry) {
-        log('No file selected!')
-        return
-      }
-
-      const filePath = selectedEntry.path
-      const fileName = selectedEntry.name
-
-      log('Selected: ' + fileName + ' from ' + filePath)
-
-      try {
-        if (fileName.toLowerCase().endsWith('.js')) {
-          // Local JavaScript file case (from "/download0/payloads")
-          if (filePath.startsWith('/download0/')) {
-            log('Including JavaScript file: ' + fileName)
-            include('payloads/' + fileName)
-          } else {
-            // External JavaScript file case (from "/data/payloads")
-            log('Reading external JavaScript file: ' + filePath)
-            const p_addr = mem.malloc(256)
-            for (let i = 0; i < filePath.length; i++) {
-              mem.view(p_addr).setUint8(i, filePath.charCodeAt(i))
-            }
-            mem.view(p_addr).setUint8(filePath.length, 0)
-
-            const fd = fn.open_sys(p_addr, new BigInt(0, 0), new BigInt(0, 0))
-
-            if (!fd.eq(new BigInt(0xffffffff, 0xffffffff))) {
-              const buf_size = 1024 * 1024 * 1  // 1 MiB
-              const buf = mem.malloc(buf_size)
-              const read_len = fn.read_sys(fd, buf, new BigInt(0, buf_size))
-
-              fn.close_sys(fd)
-
-              let scriptContent = ''
-              const len = (read_len instanceof BigInt) ? read_len.lo : read_len
-
-              log('File read size: ' + len + ' bytes')
-
-              for (let i = 0; i < len; i++) {
-                scriptContent += String.fromCharCode(mem.view(buf).getUint8(i))
-              }
-
-              log('Executing via eval()...')
-              // eslint-disable-next-line no-eval
-              eval(scriptContent)
-            } else {
-              log('ERROR: Could not open file for reading!')
-            }
-          }
+  function launchPayload () {
+    if (TOTAL === 0) return
+    const entry = fileList[cur]; if (!entry) return
+    log('Launching: ' + entry.name)
+    try {
+      if (entry.name.toLowerCase().endsWith('.js')) {
+        if (entry.path.startsWith('/download0/')) {
+          include('payloads/' + entry.name)
         } else {
-          log('Loading binloader.js...')
-          include('binloader.js')
-          log('binloader.js loaded successfully')
-
-          log('Initializing binloader...')
-          const { bl_load_from_file } = binloader_init()
-
-          log('Loading payload from: ' + filePath)
-
-          bl_load_from_file(filePath)
+          const pa = mem.malloc(256)
+          for (let i = 0; i < entry.path.length; i++) mem.view(pa).setUint8(i, entry.path.charCodeAt(i))
+          mem.view(pa).setUint8(entry.path.length, 0)
+          const fd = fn.ph_open(pa, new BigInt(0, 0), new BigInt(0, 0))
+          if (!fd.eq(new BigInt(0xffffffff, 0xffffffff))) {
+            const b = mem.malloc(0x100000)
+            const rlen = fn.ph_read(fd, b, new BigInt(0, 0x100000)); fn.ph_close(fd)
+            let code = ''
+            const len = (rlen instanceof BigInt) ? rlen.lo : rlen
+            for (let i = 0; i < len; i++) code += String.fromCharCode(mem.view(b).getUint8(i))
+            jsmaf.eval(code)
+          }
         }
-      } catch (e) {
-        const err = e as Error
-        log('ERROR: ' + err.message)
-        if (err.stack) log(err.stack)
+      } else {
+        include('binloader.js')
+        const { bl_load_from_file } = binloader_init()
+        bl_load_from_file(entry.path)
       }
-    }
+    } catch (e) { log('Launch error: ' + (e as Error).message) }
   }
 
-  updateHighlight()
-
-  log('Interactive UI loaded!')
-  log('Total elements: ' + jsmaf.root.children.length)
-  log('Buttons: ' + buttons.length)
-  log('Use arrow keys to navigate, Enter/X to select')
+  renderRows()
+  log('Payload host loaded. Files: ' + fileList.length + ' | slots: ' + MAX_PL)
 })()

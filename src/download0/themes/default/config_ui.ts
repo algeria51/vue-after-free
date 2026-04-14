@@ -1,618 +1,431 @@
 import { libc_addr } from 'download0/userland'
-import { lang, useImageText, textImageBase } from 'download0/languages'
+import { lang } from 'download0/languages'
 import { fn, mem, BigInt } from 'download0/types'
 
-if (typeof libc_addr === 'undefined') {
-  include('userland.js')
-}
+if (typeof libc_addr === 'undefined') include('userland.js')
+if (typeof lang === 'undefined') include('languages.js')
 
-if (typeof lang === 'undefined') {
-  include('languages.js')
-}
-
-(function () {
+;(function () {
   log('Loading config UI...')
 
-  const fs = {
-    write: function (filename: string, content: string, callback: (error: Error | null) => void) {
-      const xhr = new jsmaf.XMLHttpRequest()
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && callback) {
-          callback(xhr.status === 0 || xhr.status === 200 ? null : new Error('failed'))
-        }
-      }
-      xhr.open('POST', 'file://../download0/' + filename, true)
-      xhr.send(content)
-    },
-
-    read: function (filename: string, callback: (error: Error | null, data?: string) => void) {
-      const xhr = new jsmaf.XMLHttpRequest()
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && callback) {
-          callback(xhr.status === 0 || xhr.status === 200 ? null : new Error('failed'), xhr.responseText)
-        }
-      }
-      xhr.open('GET', 'file://../download0/' + filename, true)
-      xhr.send()
-    }
+  // ── Config state ──────────────────────────────────────────────────────────
+  interface Cfg {
+    autolapse: boolean; autopoop: boolean; autoclose: boolean
+    autoclose_delay: number; music: boolean; jb_behavior: number; theme: string
+    exp_core: number; exp_grooms: number; exp_races: number; exp_timeout: number
   }
-
-  const currentConfig: {
-    autolapse: boolean
-    autopoop: boolean
-    autoclose: boolean
-    autoclose_delay: number
-    music: boolean
-    jb_behavior: number
-    theme: string
-  } = {
-    autolapse: false,
-    autopoop: false,
-    autoclose: false,
-    autoclose_delay: 0,
-    music: true,
-    jb_behavior: 0,
-    theme: 'default'
+  const C: Cfg = {
+    autolapse: false, autopoop: false, autoclose: false, autoclose_delay: 0,
+    music: true, jb_behavior: 0, theme: 'default',
+    exp_core: 4, exp_grooms: 512, exp_races: 100, exp_timeout: 8
   }
-
-  // Store user's payloads so we don't overwrite them
   let userPayloads: string[] = []
   let configLoaded = false
 
-  const jbBehaviorLabels = [lang.jbBehaviorAuto, lang.jbBehaviorNetctrl, lang.jbBehaviorLapse]
-  const jbBehaviorImgKeys = ['jbBehaviorAuto', 'jbBehaviorNetctrl', 'jbBehaviorLapse']
+  const jbLabels = [lang.jbBehaviorAuto, lang.jbBehaviorNetctrl, lang.jbBehaviorLapse]
 
+  // ── File I/O ──────────────────────────────────────────────────────────────
+  const fs = {
+    write (f: string, d: string, cb: (e: Error | null) => void) {
+      const x = new jsmaf.XMLHttpRequest()
+      x.onreadystatechange = function () {
+        if (x.readyState === 4 && cb) cb(x.status === 0 || x.status === 200 ? null : new Error('xhr'))
+      }
+      x.open('POST', 'file://../download0/' + f, true); x.send(d)
+    },
+    read (f: string, cb: (e: Error | null, d?: string) => void) {
+      const x = new jsmaf.XMLHttpRequest()
+      x.onreadystatechange = function () {
+        if (x.readyState === 4 && cb) cb(x.status === 0 || x.status === 200 ? null : new Error('xhr'), x.responseText)
+      }
+      x.open('GET', 'file://../download0/' + f, true); x.send()
+    }
+  }
+
+  // ── Theme scan ────────────────────────────────────────────────────────────
   function scanThemes (): string[] {
     const themes: string[] = []
     try {
-      fn.register(0x05, 'open_sys', ['bigint', 'bigint', 'bigint'], 'bigint')
-      fn.register(0x06, 'close_sys', ['bigint'], 'bigint')
-      fn.register(0x110, 'getdents', ['bigint', 'bigint', 'bigint'], 'bigint')
-
-      const themesDir = '/download0/themes'
-      const path_addr = mem.malloc(256)
-      const buf = mem.malloc(4096)
-
-      for (let i = 0; i < themesDir.length; i++) {
-        mem.view(path_addr).setUint8(i, themesDir.charCodeAt(i))
-      }
-      mem.view(path_addr).setUint8(themesDir.length, 0)
-
-      const fd = fn.open_sys(path_addr, new BigInt(0, 0), new BigInt(0, 0))
+      try { fn.register(0x05,  'dcfg_open',     ['bigint','bigint','bigint'], 'bigint') } catch (_e) { /* registered */ }
+      try { fn.register(0x06,  'dcfg_close',    ['bigint'],                   'bigint') } catch (_e) { /* registered */ }
+      try { fn.register(0x110, 'dcfg_getdents', ['bigint','bigint','bigint'], 'bigint') } catch (_e) { /* registered */ }
+      const dir = '/download0/themes'
+      const pa = mem.malloc(256); const buf = mem.malloc(4096)
+      for (let i = 0; i < dir.length; i++) mem.view(pa).setUint8(i, dir.charCodeAt(i))
+      mem.view(pa).setUint8(dir.length, 0)
+      const fd = fn.dcfg_open(pa, new BigInt(0, 0), new BigInt(0, 0))
       if (!fd.eq(new BigInt(0xffffffff, 0xffffffff))) {
-        const count = fn.getdents(fd, buf, new BigInt(0, 4096))
-        if (!count.eq(new BigInt(0xffffffff, 0xffffffff)) && count.lo > 0) {
-          let offset = 0
-          while (offset < count.lo) {
-            const d_reclen = mem.view(buf.add(new BigInt(0, offset + 4))).getUint16(0, true)
-            const d_type = mem.view(buf.add(new BigInt(0, offset + 6))).getUint8(0)
-            const d_namlen = mem.view(buf.add(new BigInt(0, offset + 7))).getUint8(0)
-            let name = ''
-            for (let i = 0; i < d_namlen; i++) {
-              name += String.fromCharCode(mem.view(buf.add(new BigInt(0, offset + 8 + i))).getUint8(0))
-            }
-            if (d_type === 4 && name !== '.' && name !== '..') {
-              themes.push(name)
-            }
-            offset += d_reclen
+        const cnt = fn.dcfg_getdents(fd, buf, new BigInt(0, 4096))
+        if (!cnt.eq(new BigInt(0xffffffff, 0xffffffff)) && cnt.lo > 0) {
+          let off = 0
+          while (off < cnt.lo) {
+            const rl  = mem.view(buf.add(new BigInt(0, off + 4))).getUint16(0, true)
+            const dt  = mem.view(buf.add(new BigInt(0, off + 6))).getUint8(0)
+            const nl  = mem.view(buf.add(new BigInt(0, off + 7))).getUint8(0)
+            let name  = ''
+            for (let i = 0; i < nl; i++) name += String.fromCharCode(mem.view(buf.add(new BigInt(0, off + 8 + i))).getUint8(0))
+            if (dt === 4 && name !== '.' && name !== '..') themes.push(name)
+            off += rl
           }
         }
-        fn.close_sys(fd)
+        fn.dcfg_close(fd)
       }
-    } catch (e) {
-      log('Theme scan failed: ' + (e as Error).message)
-    }
-
-    const idx = themes.indexOf('default')
-    if (idx > 0) {
-      themes.splice(idx, 1)
-      themes.unshift('default')
-    } else if (idx < 0) {
-      themes.unshift('default')
-    }
-
+    } catch (e) { log('Theme scan: ' + (e as Error).message) }
+    if (!themes.includes('default')) themes.unshift('default')
     return themes
   }
 
   const availableThemes = scanThemes()
-  log('Discovered themes: ' + availableThemes.join(', '))
-  const themeLabels: string[] = availableThemes.map((theme: string) => theme.charAt(0).toUpperCase() + theme.slice(1))
-  const themeImgKeys: string[] = availableThemes.map((theme: string) => 'theme' + theme.charAt(0).toUpperCase() + theme.slice(1))
+  const themeLabels = availableThemes.map((t: string) => t.charAt(0).toUpperCase() + t.slice(1))
 
-  let currentButton = 0
-  const buttons: Image[] = []
-  const buttonTexts: jsmaf.Text[] = []
-  const buttonMarkers: (Image | null)[] = []
-  const buttonOrigPos: { x: number; y: number }[] = []
-  const textOrigPos: { x: number; y: number }[] = []
-  const valueTexts: Image[] = []
+  // ── Option definitions ────────────────────────────────────────────────────
+  type OptType = 'toggle' | 'cycle'
+  interface Opt { key: string; label: string; type: OptType; section: string; hint: string }
+  const opts: Opt[] = [
+    { key: 'music',       label: lang.music,            type: 'toggle', section: 'GENERAL', hint: 'Background music on / off' },
+    { key: 'autolapse',   label: lang.autoLapse,         type: 'toggle', section: 'GENERAL', hint: 'Auto-run Lapse after exploit' },
+    { key: 'autopoop',    label: lang.autoPoop,          type: 'toggle', section: 'GENERAL', hint: 'Auto-deploy payload on success' },
+    { key: 'autoclose',   label: lang.autoClose,         type: 'toggle', section: 'GENERAL', hint: 'Close browser after jailbreak' },
+    { key: 'jb_behavior', label: lang.jbBehavior,        type: 'cycle',  section: 'GENERAL', hint: 'Post-exploit behavior mode' },
+    { key: 'theme',       label: lang.theme || 'Theme',  type: 'cycle',  section: 'GENERAL', hint: 'UI theme selection' },
+    { key: 'exp_core',    label: 'CPU Core',             type: 'cycle',  section: 'EXPLOIT', hint: 'CPU core used for exploit (0–5)' },
+    { key: 'exp_grooms',  label: 'Heap Grooms',          type: 'cycle',  section: 'EXPLOIT', hint: 'Heap grooming iterations' },
+    { key: 'exp_races',   label: 'Race Attempts',        type: 'cycle',  section: 'EXPLOIT', hint: 'Race condition attempt count' },
+    { key: 'exp_timeout', label: 'Timeout',              type: 'cycle',  section: 'EXPLOIT', hint: 'Exploit timeout in seconds' },
+  ]
+  const TOTAL = opts.length
 
-  const normalButtonImg = 'file:///assets/img/button_over_9.png'
-  const selectedButtonImg = 'file:///assets/img/button_over_9.png'
+  // ── Layout ────────────────────────────────────────────────────────────────
+  const SW       = 1920
+  const SH       = 1080
+  const PAD_X    = 60
+  const HEADER_H = 152
+  const FOOTER_H = 44
+  const AVAIL_H  = SH - HEADER_H - FOOTER_H - 16
+  const BTN_H    = 76
+  const BTN_GAP  = 8
+  const VISIBLE  = Math.min(TOTAL, Math.floor(AVAIL_H / (BTN_H + BTN_GAP)))
+  const ROW_W    = SW - PAD_X * 2
+  const START_Y  = HEADER_H + 8
+  // Value column at 58% of row
+  const VAL_OFF  = Math.floor(ROW_W * 0.58)
+  const VAL_X    = PAD_X + VAL_OFF
+  // Hint column at 78%
+  const HINT_OFF = Math.floor(ROW_W * 0.78)
+  const HINT_X   = PAD_X + HINT_OFF
 
-  // ── Sound effects (controlled by music setting) ───────────────────────────
-  const SFX_CURSOR = 'file:///../download0/sfx/cursor.wav'
-  const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
-  const SFX_CANCEL = 'file:///../download0/sfx/cancel.wav'
+  const BG_URL   = 'file:///../download0/img/multiview_bg_VAF.png'
+  const BTN_URL  = 'file:///../download0/img/NeonBtn.png'
+  const SFX_CUR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_OK   = 'file:///../download0/sfx/confirm.wav'
+  const SFX_BCK  = 'file:///../download0/sfx/cancel.wav'
 
-  function playSound (url: string) {
+  function sfx (url: string) {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try {
-      const clip = new jsmaf.AudioClip()
-      clip.volume = 1.0
-      clip.open(url)
-    } catch (e) {
-      log('SFX error: ' + (e as Error).message)
-    }
+    try { const cl = new jsmaf.AudioClip(); cl.volume = 1.0; cl.open(url) } catch (_e) { /* no audio */ }
   }
 
+  // ── Styles ────────────────────────────────────────────────────────────────
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'white', color: 'white', size: 24 })
-  new Style({ name: 'title', color: 'white', size: 32 })
+  new Style({ name: 'white',      color: 'rgb(255,255,255)',        size: 22 })
+  new Style({ name: 'title',      color: 'rgb(255,255,255)',        size: 30 })
+  new Style({ name: 'muted',      color: 'rgba(255,255,255,0.50)', size: 20 })
+  new Style({ name: 'dim',        color: 'rgba(255,255,255,0.26)', size: 15 })
+  new Style({ name: 'secbadge',   color: 'rgba(120,210,255,0.45)', size: 12 })
+  new Style({ name: 'val',        color: 'rgb(120,210,255)',        size: 20 })
+  new Style({ name: 'selval',     color: 'rgb(80,230,255)',         size: 20 })
+  new Style({ name: 'toggle_on',  color: 'rgb(80,230,150)',         size: 20 })
+  new Style({ name: 'toggle_off', color: 'rgba(255,100,100,0.80)', size: 20 })
+  new Style({ name: 'scroll',     color: 'rgba(120,200,255,0.70)', size: 17 })
+  new Style({ name: 'footer',     color: 'rgba(255,255,255,0.28)', size: 16 })
+  new Style({ name: 'hint',       color: 'rgba(255,255,255,0.22)', size: 15 })
+  new Style({ name: 'colhdr',     color: 'rgba(120,210,255,0.38)', size: 13 })
+  new Style({ name: 'back',       color: 'rgba(255,120,120,0.85)', size: 20 })
+  new Style({ name: 'count',      color: 'rgba(120,210,255,0.55)', size: 16 })
 
-  const background = new Image({
-    url: 'file:///../download0/img/multiview_bg_VAF.png',
-    x: 0,
-    y: 0,
-    width: 1920,
-    height: 1080
-  })
-  jsmaf.root.children.push(background)
+  // ── Background ────────────────────────────────────────────────────────────
+  jsmaf.root.children.push(new Image({ url: BG_URL, x: 0, y: 0, width: SW, height: SH }))
 
-  const logo = new Image({
+  // ── Header ────────────────────────────────────────────────────────────────
+  const hdr = new Image({ url: BTN_URL, x: 0, y: 0, width: SW, height: HEADER_H, alpha: 0.18 })
+  hdr.borderColor = 'rgba(120,200,255,0.12)'; hdr.borderWidth = 0
+  jsmaf.root.children.push(hdr)
+
+  const hdrAccent = new Image({ url: BTN_URL, x: 0, y: 0, width: 5, height: HEADER_H, alpha: 1.0 })
+  hdrAccent.borderColor = 'rgb(80,200,255)'; hdrAccent.borderWidth = 0
+  jsmaf.root.children.push(hdrAccent)
+
+  jsmaf.root.children.push(new Image({
     url: 'file:///../download0/img/logo.png',
-    x: 1620,
-    y: 0,
-    width: 300,
-    height: 169
-  })
-  jsmaf.root.children.push(logo)
+    x: SW - 210, y: 14, width: 185, height: 104
+  }))
 
-  if (useImageText) {
-    const title = new Image({
-      url: textImageBase + 'config.png',
-      x: 860,
-      y: 100,
-      width: 200,
-      height: 60
-    })
-    jsmaf.root.children.push(title)
-  } else {
-    const title = new jsmaf.Text()
-    title.text = lang.config
-    title.x = 910
-    title.y = 120
-    title.style = 'title'
-    jsmaf.root.children.push(title)
+  const ttl = new jsmaf.Text()
+  ttl.text = (lang.config || 'SETTINGS').toUpperCase()
+  ttl.x = PAD_X; ttl.y = 46; ttl.style = 'title'
+  jsmaf.root.children.push(ttl)
+
+  const subTxt = new jsmaf.Text()
+  subTxt.text = TOTAL + ' settings'
+  subTxt.x = PAD_X; subTxt.y = 100; subTxt.style = 'count'
+  jsmaf.root.children.push(subTxt)
+
+  const divH = new Image({ url: BTN_URL, x: PAD_X, y: HEADER_H - 2, width: ROW_W, height: 2, alpha: 0.32 })
+  divH.borderColor = 'rgba(120,200,255,0.45)'; divH.borderWidth = 0
+  jsmaf.root.children.push(divH)
+
+  // Column headers
+  const hdrOpt = new jsmaf.Text()
+  hdrOpt.text = 'OPTION'; hdrOpt.x = PAD_X + 22; hdrOpt.y = HEADER_H + 2; hdrOpt.style = 'colhdr'
+  jsmaf.root.children.push(hdrOpt)
+
+  const hdrVal = new jsmaf.Text()
+  hdrVal.text = 'VALUE'; hdrVal.x = VAL_X; hdrVal.y = HEADER_H + 2; hdrVal.style = 'colhdr'
+  jsmaf.root.children.push(hdrVal)
+
+  const hdrHnt = new jsmaf.Text()
+  hdrHnt.text = 'DESCRIPTION'; hdrHnt.x = HINT_X; hdrHnt.y = HEADER_H + 2; hdrHnt.style = 'colhdr'
+  jsmaf.root.children.push(hdrHnt)
+
+  // Column separators
+  const sep1 = new Image({ url: BTN_URL, x: VAL_X - 14, y: START_Y, width: 1, height: AVAIL_H, alpha: 0.14 })
+  sep1.borderColor = 'rgba(255,255,255,0.2)'; sep1.borderWidth = 0
+  jsmaf.root.children.push(sep1)
+
+  const sep2 = new Image({ url: BTN_URL, x: HINT_X - 14, y: START_Y, width: 1, height: AVAIL_H, alpha: 0.10 })
+  sep2.borderColor = 'rgba(255,255,255,0.2)'; sep2.borderWidth = 0
+  jsmaf.root.children.push(sep2)
+
+  // ── Slot widgets ──────────────────────────────────────────────────────────
+  const slotBgs:    Image[]      = []
+  const slotBars:   Image[]      = []
+  const slotSecs:   jsmaf.Text[] = []
+  const slotLabels: jsmaf.Text[] = []
+  const slotArrows: jsmaf.Text[] = []
+  const slotValues: jsmaf.Text[] = []
+  const slotHints:  jsmaf.Text[] = []
+
+  for (let s = 0; s < VISIBLE; s++) {
+    const bY = START_Y + s * (BTN_H + BTN_GAP)
+
+    const bg = new Image({ url: BTN_URL, x: PAD_X, y: bY, width: ROW_W, height: BTN_H, alpha: 0.10 })
+    bg.borderColor = 'rgba(255,255,255,0.13)'; bg.borderWidth = 1
+    slotBgs.push(bg); jsmaf.root.children.push(bg)
+
+    const bar = new Image({ url: BTN_URL, x: PAD_X, y: bY, width: 5, height: BTN_H, alpha: 0.26 })
+    bar.borderColor = 'rgb(120,200,255)'; bar.borderWidth = 0
+    slotBars.push(bar); jsmaf.root.children.push(bar)
+
+    const sec = new jsmaf.Text(); sec.text = ''; sec.x = PAD_X + 14; sec.y = bY + 10; sec.style = 'secbadge'
+    slotSecs.push(sec); jsmaf.root.children.push(sec)
+
+    const lbl = new jsmaf.Text(); lbl.text = ''; lbl.x = PAD_X + 14; lbl.y = bY + 30; lbl.style = 'muted'
+    slotLabels.push(lbl); jsmaf.root.children.push(lbl)
+
+    const arr = new jsmaf.Text(); arr.text = ''; arr.x = VAL_X - 28; arr.y = bY + 28; arr.style = 'dim'
+    slotArrows.push(arr); jsmaf.root.children.push(arr)
+
+    const vt = new jsmaf.Text(); vt.text = ''; vt.x = VAL_X; vt.y = bY + 28; vt.style = 'val'
+    slotValues.push(vt); jsmaf.root.children.push(vt)
+
+    const ht = new jsmaf.Text(); ht.text = ''; ht.x = HINT_X; ht.y = bY + 28; ht.style = 'hint'
+    slotHints.push(ht); jsmaf.root.children.push(ht)
   }
 
-  const configOptions = [
-    { key: 'autolapse', label: lang.autoLapse, imgKey: 'autoLapse', type: 'toggle' },
-    { key: 'autopoop', label: lang.autoPoop, imgKey: 'autoPoop', type: 'toggle' },
-    { key: 'autoclose', label: lang.autoClose, imgKey: 'autoClose', type: 'toggle' },
-    { key: 'music', label: lang.music, imgKey: 'music', type: 'toggle' },
-    { key: 'jb_behavior', label: lang.jbBehavior, imgKey: 'jbBehavior', type: 'cycle' },
-    { key: 'theme', label: lang.theme || 'Theme', imgKey: 'theme', type: 'cycle' }
-  ]
+  // Scroll indicators
+  const arrowUp = new jsmaf.Text(); arrowUp.text = '▲  Scroll up'
+  arrowUp.x = SW / 2 - 70; arrowUp.y = HEADER_H + 2; arrowUp.style = 'scroll'; arrowUp.visible = false
+  jsmaf.root.children.push(arrowUp)
 
-  const centerX = 960
-  const startY = 200
-  const buttonSpacing = 120
-  const buttonWidth = 400
-  const buttonHeight = 80
+  const arrowDn = new jsmaf.Text(); arrowDn.text = '▼  More below'
+  arrowDn.x = SW / 2 - 70
+  arrowDn.y = START_Y + VISIBLE * (BTN_H + BTN_GAP) + 4; arrowDn.style = 'scroll'; arrowDn.visible = false
+  jsmaf.root.children.push(arrowDn)
 
-  for (let i = 0; i < configOptions.length; i++) {
-    const configOption = configOptions[i]!
-    const btnX = centerX - buttonWidth / 2
-    const btnY = startY + i * buttonSpacing
+  // Back label
+  const navY = SH - FOOTER_H - 52
+  const bt = new jsmaf.Text()
+  bt.text = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
+  bt.x = PAD_X; bt.y = navY + 10; bt.style = 'back'
+  jsmaf.root.children.push(bt)
 
-    const button = new Image({
-      url: normalButtonImg,
-      x: btnX,
-      y: btnY,
-      width: buttonWidth,
-      height: buttonHeight
-    })
-    buttons.push(button)
-    jsmaf.root.children.push(button)
+  // ── Footer ────────────────────────────────────────────────────────────────
+  const footBg = new Image({ url: BTN_URL, x: 0, y: SH - FOOTER_H, width: SW, height: FOOTER_H, alpha: 0.40 })
+  footBg.borderColor = 'transparent'; footBg.borderWidth = 0
+  jsmaf.root.children.push(footBg)
 
-    buttonMarkers.push(null)
+  const confirmLabel = jsmaf.circleIsAdvanceButton ? 'O' : 'X'
+  const backLabel    = jsmaf.circleIsAdvanceButton ? 'X' : 'O'
+  const fh = new jsmaf.Text()
+  fh.text = '↑↓  Navigate    ' + confirmLabel + '  Change value    ' + backLabel + '  Save & back'
+  fh.x = SW / 2 - 270; fh.y = SH - FOOTER_H + 14; fh.style = 'footer'
+  jsmaf.root.children.push(fh)
 
-    let btnText: Image | jsmaf.Text
-    if (useImageText) {
-      btnText = new Image({
-        url: textImageBase + configOption.imgKey + '.png',
-        x: btnX + 20,
-        y: btnY + 15,
-        width: 200,
-        height: 50
-      })
-    } else {
-      btnText = new jsmaf.Text()
-      btnText.text = configOption.label
-      btnText.x = btnX + 30
-      btnText.y = btnY + 28
-      btnText.style = 'white'
+  // ── State ─────────────────────────────────────────────────────────────────
+  let cur = 0; let scrollOff = 0
+
+  function getVal (idx: number): string {
+    const o = opts[idx]!; const k = o.key as keyof Cfg
+    if (o.type === 'toggle')   return C[k] ? 'ON' : 'OFF'
+    if (k === 'jb_behavior')   return jbLabels[C.jb_behavior] || jbLabels[0]!
+    if (k === 'theme')         { const ti = availableThemes.indexOf(C.theme); return themeLabels[ti >= 0 ? ti : 0]! }
+    if (k === 'exp_core')      return 'Core ' + C.exp_core
+    if (k === 'exp_grooms')    return '' + C.exp_grooms
+    if (k === 'exp_races')     return '' + C.exp_races
+    if (k === 'exp_timeout')   return C.exp_timeout + 's'
+    return ''
+  }
+
+  function renderRows () {
+    for (let s = 0; s < VISIBLE; s++) {
+      const idx = scrollOff + s; const vis = idx < TOTAL
+      slotBgs[s]!.visible    = vis; slotBars[s]!.visible  = vis
+      slotSecs[s]!.visible   = vis; slotLabels[s]!.visible = vis
+      slotArrows[s]!.visible = vis; slotValues[s]!.visible = vis
+      slotHints[s]!.visible  = vis
+      if (!vis) continue
+
+      const o   = opts[idx]!
+      const sel = idx === cur
+      const val = getVal(idx)
+      const isOn     = o.type === 'toggle' && val === 'ON'
+      const isCycle  = o.type === 'cycle'
+
+      slotBgs[s]!.alpha       = sel ? 0.24 : 0.10
+      slotBgs[s]!.borderColor = sel ? 'rgba(80,200,255,0.82)' : 'rgba(255,255,255,0.13)'
+      slotBgs[s]!.borderWidth = sel ? 2 : 1
+      slotBars[s]!.alpha      = sel ? 1.0 : 0.26
+      slotBars[s]!.borderColor = sel
+        ? (o.type === 'toggle' ? (isOn ? 'rgb(80,230,150)' : 'rgb(255,100,100)') : 'rgb(80,200,255)')
+        : 'rgb(120,200,255)'
+
+      // Section badge — only on first row of each section
+      const prevSec = idx > 0 ? opts[idx - 1]!.section : ''
+      slotSecs[s]!.text = o.section !== prevSec ? o.section : ''
+
+      slotLabels[s]!.text  = o.label
+      slotLabels[s]!.style = sel ? 'white' : 'muted'
+
+      slotArrows[s]!.text  = isCycle ? '›' : ''
+      slotArrows[s]!.style = sel ? 'selval' : 'dim'
+
+      slotValues[s]!.text = val
+      slotValues[s]!.style = o.type === 'toggle'
+        ? (isOn ? 'toggle_on' : 'toggle_off')
+        : (sel ? 'selval' : 'val')
+
+      slotHints[s]!.text = o.hint
     }
-    buttonTexts.push(btnText)
-    jsmaf.root.children.push(btnText)
-
-    if (configOption.type === 'toggle') {
-      const checkmark = new Image({
-        url: currentConfig[configOption.key as keyof typeof currentConfig] ? 'file:///assets/img/check_small_on.png' : 'file:///assets/img/check_small_off.png',
-        x: btnX + 320,
-        y: btnY + 20,
-        width: 40,
-        height: 40
-      })
-      valueTexts.push(checkmark)
-      jsmaf.root.children.push(checkmark)
-    } else {
-      let valueLabel: Image | jsmaf.Text
-      if (configOption.key === 'jb_behavior') {
-        if (useImageText) {
-          valueLabel = new Image({
-            url: textImageBase + jbBehaviorImgKeys[currentConfig.jb_behavior] + '.png',
-            x: btnX + 230,
-            y: btnY + 15,
-            width: 150,
-            height: 50
-          })
-        } else {
-          valueLabel = new jsmaf.Text()
-          valueLabel.text = jbBehaviorLabels[currentConfig.jb_behavior] || jbBehaviorLabels[0]!
-          valueLabel.x = btnX + 250
-          valueLabel.y = btnY + 28
-          valueLabel.style = 'white'
-        }
-      } else if (configOption.key === 'theme') {
-        const themeIndex = availableThemes.indexOf(currentConfig.theme)
-        const displayIndex = themeIndex >= 0 ? themeIndex : 0
-
-        valueLabel = new jsmaf.Text()
-        valueLabel.text = themeLabels[displayIndex] || themeLabels[0]!
-        valueLabel.x = btnX + 250
-        valueLabel.y = btnY + 28
-        valueLabel.style = 'white'
-      }
-      valueTexts.push(valueLabel)
-      jsmaf.root.children.push(valueLabel)
-    }
-
-    buttonOrigPos.push({ x: btnX, y: btnY })
-    textOrigPos.push({ x: btnText.x, y: btnText.y })
+    arrowUp.visible = scrollOff > 0
+    arrowDn.visible = (scrollOff + VISIBLE) < TOTAL
   }
 
-  let backHint: Image | jsmaf.Text
-  if (useImageText) {
-    backHint = new Image({
-      url: textImageBase + (jsmaf.circleIsAdvanceButton ? 'xToGoBack.png' : 'oToGoBack.png'),
-      x: centerX - 60,
-      y: startY + configOptions.length * buttonSpacing + 120,
-      width: 150,
-      height: 40
-    })
-  } else {
-    backHint = new jsmaf.Text()
-    backHint.text = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
-    backHint.x = centerX - 60
-    backHint.y = startY + configOptions.length * buttonSpacing + 120
-    backHint.style = 'white'
-  }
-  jsmaf.root.children.push(backHint)
-
-  let zoomInInterval: number | null = null
-  let zoomOutInterval: number | null = null
-  let prevButton = -1
-
-  function easeInOut (t: number) {
-    return (1 - Math.cos(t * Math.PI)) / 2
+  function clamp () {
+    if (cur < scrollOff) scrollOff = cur
+    else if (cur >= scrollOff + VISIBLE) scrollOff = cur - VISIBLE + 1
   }
 
-  function animateZoomIn (btn: Image, text: jsmaf.Text, btnOrigX: number, btnOrigY: number, textOrigX: number, textOrigY: number) {
-    if (zoomInInterval) jsmaf.clearInterval(zoomInInterval)
-    const btnW = buttonWidth
-    const btnH = buttonHeight
-    const startScale = btn.scaleX || 1.0
-    const endScale = 1.1
-    const duration = 175
-    let elapsed = 0
-    const step = 16
-
-    zoomInInterval = jsmaf.setInterval(function () {
-      elapsed += step
-      const t = Math.min(elapsed / duration, 1)
-      const eased = easeInOut(t)
-      const scale = startScale + (endScale - startScale) * eased
-
-      btn.scaleX = scale
-      btn.scaleY = scale
-      btn.x = btnOrigX - (btnW * (scale - 1)) / 2
-      btn.y = btnOrigY - (btnH * (scale - 1)) / 2
-      text.scaleX = scale
-      text.scaleY = scale
-      text.x = textOrigX - (btnW * (scale - 1)) / 2
-      text.y = textOrigY - (btnH * (scale - 1)) / 2
-
-      if (t >= 1) {
-        jsmaf.clearInterval(zoomInInterval ?? -1)
-        zoomInInterval = null
-      }
-    }, step)
-  }
-
-  function animateZoomOut (btn: Image, text: jsmaf.Text, btnOrigX: number, btnOrigY: number, textOrigX: number, textOrigY: number) {
-    if (zoomOutInterval) jsmaf.clearInterval(zoomOutInterval)
-    const btnW = buttonWidth
-    const btnH = buttonHeight
-    const startScale = btn.scaleX || 1.1
-    const endScale = 1.0
-    const duration = 175
-    let elapsed = 0
-    const step = 16
-
-    zoomOutInterval = jsmaf.setInterval(function () {
-      elapsed += step
-      const t = Math.min(elapsed / duration, 1)
-      const eased = easeInOut(t)
-      const scale = startScale + (endScale - startScale) * eased
-
-      btn.scaleX = scale
-      btn.scaleY = scale
-      btn.x = btnOrigX - (btnW * (scale - 1)) / 2
-      btn.y = btnOrigY - (btnH * (scale - 1)) / 2
-      text.scaleX = scale
-      text.scaleY = scale
-      text.x = textOrigX - (btnW * (scale - 1)) / 2
-      text.y = textOrigY - (btnH * (scale - 1)) / 2
-
-      if (t >= 1) {
-        jsmaf.clearInterval(zoomOutInterval ?? -1)
-        zoomOutInterval = null
-      }
-    }, step)
-  }
-
-  function updateHighlight () {
-    // Animate out the previous button
-    const prevButtonObj = buttons[prevButton]
-    const buttonMarker = buttonMarkers[prevButton]
-    if (prevButton >= 0 && prevButton !== currentButton && prevButtonObj) {
-      prevButtonObj.url = normalButtonImg
-      prevButtonObj.alpha = 0.7
-      prevButtonObj.borderColor = 'transparent'
-      prevButtonObj.borderWidth = 0
-      if (buttonMarker) buttonMarker.visible = false
-      animateZoomOut(prevButtonObj, buttonTexts[prevButton]!, buttonOrigPos[prevButton]!.x, buttonOrigPos[prevButton]!.y, textOrigPos[prevButton]!.x, textOrigPos[prevButton]!.y)
-    }
-
-    // Set styles for all buttons
-    for (let i = 0; i < buttons.length; i++) {
-      const button = buttons[i]
-      const buttonMarker = buttonMarkers[i]
-      const buttonText = buttonTexts[i]
-      const buttonOrigPos_ = buttonOrigPos[i]
-      const textOrigPos_ = textOrigPos[i]
-      if (button === undefined || buttonText === undefined || buttonOrigPos_ === undefined || textOrigPos_ === undefined) continue
-      if (i === currentButton) {
-        button.url = selectedButtonImg
-        button.alpha = 1.0
-        button.borderColor = 'rgb(100,180,255)'
-        button.borderWidth = 3
-        if (buttonMarker) buttonMarker.visible = true
-        animateZoomIn(button, buttonText, buttonOrigPos_.x, buttonOrigPos_.y, textOrigPos_.x, textOrigPos_.y)
-      } else if (i !== prevButton) {
-        button.url = normalButtonImg
-        button.alpha = 0.7
-        button.borderColor = 'transparent'
-        button.borderWidth = 0
-        button.scaleX = 1.0
-        button.scaleY = 1.0
-        button.x = buttonOrigPos_.x
-        button.y = buttonOrigPos_.y
-        buttonText.scaleX = 1.0
-        buttonText.scaleY = 1.0
-        buttonText.x = textOrigPos_.x
-        buttonText.y = textOrigPos_.y
-        if (buttonMarker) buttonMarker.visible = false
-      }
-    }
-
-    prevButton = currentButton
-  }
-
-  function updateValueText (index: number) {
-    const options = configOptions[index]
-    const valueText = valueTexts[index]
-    if (!options || !valueText) return
-    const key = options.key
-    if (options.type === 'toggle') {
-      const value = currentConfig[key as keyof typeof currentConfig]
-      valueText.url = value ? 'file:///assets/img/check_small_on.png' : 'file:///assets/img/check_small_off.png'
-    } else {
-      if (key === 'jb_behavior') {
-        if (useImageText) {
-          (valueText as Image).url = textImageBase + jbBehaviorImgKeys[currentConfig.jb_behavior] + '.png'
-        } else {
-          (valueText as jsmaf.Text).text = jbBehaviorLabels[currentConfig.jb_behavior] || jbBehaviorLabels[0]
-        }
-      } else if (key === 'theme') {
-        const themeIndex = availableThemes.indexOf(currentConfig.theme)
-        const displayIndex = themeIndex >= 0 ? themeIndex : 0;
-
-        (valueText as jsmaf.Text).text = themeLabels[displayIndex] || themeLabels[0]!
-      }
-    }
-  }
-
-  function saveConfig (onDone?: () => void) {
-    if (!configLoaded) {
-      log('Config not loaded yet, skipping save')
-      if (onDone) onDone()
-      return
-    }
-    const configData = {
+  // ── Save / Load ───────────────────────────────────────────────────────────
+  function saveConfig (done?: () => void) {
+    if (!configLoaded) { if (done) done(); return }
+    const out = {
       config: {
-        autolapse: currentConfig.autolapse,
-        autopoop: currentConfig.autopoop,
-        autoclose: currentConfig.autoclose,
-        autoclose_delay: currentConfig.autoclose_delay,
-        music: currentConfig.music,
-        jb_behavior: currentConfig.jb_behavior,
-        theme: currentConfig.theme
+        autolapse: C.autolapse, autopoop: C.autopoop, autoclose: C.autoclose,
+        autoclose_delay: C.autoclose_delay, music: C.music,
+        jb_behavior: C.jb_behavior, theme: C.theme,
+        exploit: {
+          core: C.exp_core, rtprio: 256, grooms: C.exp_grooms,
+          races: C.exp_races, alias: 100, sds: 64, workers: 2, timeout_s: C.exp_timeout
+        }
       },
       payloads: userPayloads
     }
-
-    const configContent = JSON.stringify(configData, null, 2)
-
-    fs.write('config.json', configContent, function (err) {
-      if (err) {
-        log('ERROR: Failed to save config: ' + err.message)
-      } else {
-        log('Config saved successfully')
-      }
-      if (onDone) onDone()
+    fs.write('config.json', JSON.stringify(out, null, 2), function (err) {
+      if (err) log('Save error: ' + err.message); else log('Config saved')
+      if (done) done()
     })
   }
 
   function loadConfig () {
     fs.read('config.json', function (err: Error | null, data?: string) {
-      if (err) {
-        log('ERROR: Failed to read config: ' + err.message)
-        return
-      }
-
+      if (err) { log('Load error: ' + err.message); configLoaded = true; renderRows(); return }
       try {
-        const configData = JSON.parse(data || '{}')
-
-        if (configData.config) {
-          const CONFIG = configData.config
-
-          currentConfig.autolapse = CONFIG.autolapse || false
-          currentConfig.autopoop = CONFIG.autopoop || false
-          currentConfig.autoclose = CONFIG.autoclose || false
-          currentConfig.autoclose_delay = CONFIG.autoclose_delay || 0
-          currentConfig.music = CONFIG.music !== false
-          currentConfig.jb_behavior = CONFIG.jb_behavior || 0
-
-          // Validate and set theme (themes are auto-discovered from directory scan)
-          if (CONFIG.theme && availableThemes.includes(CONFIG.theme)) {
-            currentConfig.theme = CONFIG.theme
-          } else {
-            log('WARNING: Theme "' + (CONFIG.theme || 'undefined') + '" not found in available themes, using default')
-            currentConfig.theme = availableThemes[0] || 'default'
+        const d = JSON.parse(data || '{}')
+        if (d.config) {
+          const G = d.config
+          C.autolapse       = G.autolapse       || false
+          C.autopoop        = G.autopoop        || false
+          C.autoclose       = G.autoclose       || false
+          C.autoclose_delay = G.autoclose_delay || 0
+          C.music           = G.music           !== false
+          C.jb_behavior     = G.jb_behavior     || 0
+          C.theme = (G.theme && availableThemes.includes(G.theme)) ? G.theme : 'default'
+          if (d.payloads && Array.isArray(d.payloads)) userPayloads = d.payloads.slice()
+          if (G.exploit) {
+            const ex = G.exploit
+            if (ex.core      !== undefined) C.exp_core    = ex.core
+            if (ex.grooms    !== undefined) C.exp_grooms  = ex.grooms
+            if (ex.races     !== undefined) C.exp_races   = ex.races
+            if (ex.timeout_s !== undefined) C.exp_timeout = ex.timeout_s
           }
-
-          // Preserve user's payloads
-          if (configData.payloads && Array.isArray(configData.payloads)) {
-            userPayloads = configData.payloads.slice()
-          }
-
-          for (let i = 0; i < configOptions.length; i++) {
-            updateValueText(i)
-          }
-          if (currentConfig.music) {
-            startBgmIfEnabled()
-          } else {
-            stopBgm()
-          }
-          configLoaded = true
-          log('Config loaded successfully')
         }
-      } catch (e) {
-        log('ERROR: Failed to parse config: ' + (e as Error).message)
-        configLoaded = true // Allow saving even on error
-      }
+        configLoaded = true; renderRows()
+        if (C.music) { if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled() }
+        else { if (typeof stopBgm === 'function') stopBgm() }
+        log('Config loaded')
+      } catch (e) { log('Parse: ' + (e as Error).message); configLoaded = true; renderRows() }
     })
   }
 
-  function handleButtonPress () {
-    if (currentButton < configOptions.length) {
-      const option = configOptions[currentButton]!
-      const key = option.key
-
-      if (option.type === 'cycle') {
-        if (key === 'jb_behavior') {
-          currentConfig.jb_behavior = (currentConfig.jb_behavior + 1) % jbBehaviorLabels.length
-          log(key + ' = ' + jbBehaviorLabels[currentConfig.jb_behavior])
-        } else if (key === 'theme') {
-          const themeIndex = availableThemes.indexOf(currentConfig.theme)
-          const displayIndex = themeIndex >= 0 ? themeIndex : 0
-          const nextIndex = (displayIndex + 1) % availableThemes.length
-          currentConfig.theme = availableThemes[nextIndex]!
-          log(key + ' = ' + currentConfig.theme)
+  // ── Cycle / Toggle ────────────────────────────────────────────────────────
+  function onPress () {
+    const o = opts[cur]; if (!o) return
+    const k = o.key as keyof Cfg
+    if (o.type === 'cycle') {
+      if      (k === 'jb_behavior') { C.jb_behavior = (C.jb_behavior + 1) % jbLabels.length }
+      else if (k === 'theme')       { const ti = availableThemes.indexOf(C.theme); C.theme = availableThemes[(ti + 1) % availableThemes.length]! }
+      else if (k === 'exp_core')    { C.exp_core = (C.exp_core + 1) % 6 }
+      else if (k === 'exp_grooms')  { const v = [128,256,512,768,1024,1280]; const i = v.indexOf(C.exp_grooms);  C.exp_grooms  = v[(i+1)%v.length]! }
+      else if (k === 'exp_races')   { const v = [50,75,100,150,200,300];     const i = v.indexOf(C.exp_races);   C.exp_races   = v[(i+1)%v.length]! }
+      else if (k === 'exp_timeout') { const v = [5,8,10,15,20];              const i = v.indexOf(C.exp_timeout); C.exp_timeout = v[(i+1)%v.length]! }
+    } else {
+      if (k === 'autolapse' || k === 'autopoop' || k === 'autoclose' || k === 'music') {
+        C[k] = !C[k]
+        if (k === 'music') {
+          if (typeof CONFIG !== 'undefined') CONFIG.music = C.music
+          if (C.music) { if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled() }
+          else { if (typeof stopBgm === 'function') stopBgm() }
         }
-      } else {
-        const boolKey = key as 'autolapse' | 'autopoop' | 'autoclose' | 'music'
-        currentConfig[boolKey] = !currentConfig[boolKey]
-
-        if (boolKey === 'music') {
-          if (typeof CONFIG !== 'undefined') {
-            CONFIG.music = currentConfig.music
-          }
-          if (currentConfig.music) {
-            startBgmIfEnabled()
-          } else {
-            stopBgm()
-          }
-        }
-
-        if (key === 'autolapse' && currentConfig.autolapse === true) {
-          currentConfig.autopoop = false
-          for (let i = 0; i < configOptions.length; i++) {
-            if (configOptions[i]!.key === 'autopoop') {
-              updateValueText(i)
-              break
-            }
-          }
-          log('autopoop disabled (autolapse enabled)')
-        } else if (key === 'autopoop' && currentConfig.autopoop === true) {
-          currentConfig.autolapse = false
-          for (let i = 0; i < configOptions.length; i++) {
-            if (configOptions[i]!.key === 'autolapse') {
-              updateValueText(i)
-              break
-            }
-          }
-          log('autolapse disabled (autopoop enabled)')
-        }
-
-        log(key + ' = ' + currentConfig[boolKey])
+        if (k === 'autolapse' && C.autolapse) C.autopoop  = false
+        if (k === 'autopoop'  && C.autopoop)  C.autolapse = false
       }
-
-      updateValueText(currentButton)
-      saveConfig()
     }
+    renderRows(); saveConfig()
   }
 
+  // ── Input ─────────────────────────────────────────────────────────────────
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
-  const backKey = jsmaf.circleIsAdvanceButton ? 14 : 13
+  const backKey    = jsmaf.circleIsAdvanceButton ? 14 : 13
 
-  jsmaf.onKeyDown = function (keyCode) {
-    if (keyCode === 6 || keyCode === 5) {
-      currentButton = (currentButton + 1) % buttons.length
-      playSound(SFX_CURSOR)
-      updateHighlight()
-    } else if (keyCode === 4 || keyCode === 7) {
-      currentButton = (currentButton - 1 + buttons.length) % buttons.length
-      playSound(SFX_CURSOR)
-      updateHighlight()
-    } else if (keyCode === confirmKey) {
-      playSound(SFX_CONFIRM)
-      handleButtonPress()
-    } else if (keyCode === backKey) {
-      log('Saving and restarting...')
-      playSound(SFX_CANCEL)
+  jsmaf.onKeyDown = function (kc: number) {
+    if (kc === 6 || kc === 5) {
+      cur = (cur + 1) % TOTAL; sfx(SFX_CUR); clamp(); renderRows()
+    } else if (kc === 4 || kc === 7) {
+      cur = (cur - 1 + TOTAL) % TOTAL; sfx(SFX_CUR); clamp(); renderRows()
+    } else if (kc === confirmKey) {
+      sfx(SFX_OK); onPress()
+    } else if (kc === backKey) {
+      sfx(SFX_BCK)
       saveConfig(function () {
-        debugging.restart()
+        try {
+          include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'default') + '/main.js')
+        } catch (e) { log('Back error: ' + (e as Error).message) }
       })
     }
   }
 
-  updateHighlight()
-  loadConfig()
-
-  log('Config UI loaded.')
+  renderRows(); loadConfig()
+  log('Config UI loaded — ' + TOTAL + ' options.')
+  ;((_a) => {})(libc_addr) // suppress unused import
 })()

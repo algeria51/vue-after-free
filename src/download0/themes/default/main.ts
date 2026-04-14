@@ -1,336 +1,212 @@
-import { lang, useImageText, textImageBase } from 'download0/languages'
+import { lang } from 'download0/languages'
 import { libc_addr } from 'download0/userland'
-import { fn, BigInt } from 'download0/types'
 
-(function () {
+;(function () {
   include('languages.js')
   log('Loading main menu...')
 
-  let currentButton = 0
-  const buttons: Image[] = []
-  const buttonTexts: jsmaf.Text[] = []
-  const buttonMarkers: Image[] = []
-  const buttonOrigPos: { x: number, y: number }[] = []
-  const textOrigPos: { x: number, y: number }[] = []
+  if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
-  const normalButtonImg = 'file:///assets/img/button_over_9.png'
-  const selectedButtonImg = 'file:///assets/img/button_over_9.png'
+  // ── Constants ─────────────────────────────────────────────────────────────
+  const SW      = 1920
+  const SH      = 1080
+  const CX      = SW / 2
+  const BTN_W   = 600
+  const BTN_H   = 88
+  const BTN_L   = CX - BTN_W / 2
+  const START_Y = 340
+  const GAP     = 108
+  const BG_URL  = 'file:///../download0/img/multiview_bg_VAF.png'
+  const BTN_URL = 'file:///../download0/img/NeonBtn.png'
+  const SFX_CUR = 'file:///../download0/sfx/cursor.wav'
+  const SFX_OK  = 'file:///../download0/sfx/confirm.wav'
+  const SFX_BCK = 'file:///../download0/sfx/cancel.wav'
 
-  // ── Sound effects (controlled by music setting) ───────────────────────────
-  const SFX_CURSOR = 'file:///../download0/sfx/cursor.wav'
-  const SFX_CONFIRM = 'file:///../download0/sfx/confirm.wav'
-  const SFX_CANCEL = 'file:///../download0/sfx/cancel.wav'
-
-  function playSound (url: string) {
-    // Respect the music/sfx toggle from CONFIG
+  function sfx (url: string) {
     if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return
-    try {
-      const clip = new jsmaf.AudioClip()
-      clip.volume = 1.0
-      clip.open(url)
-    } catch (e) {
-      log('SFX error: ' + (e as Error).message)
-    }
+    try { const c = new jsmaf.AudioClip(); c.volume = 1.0; c.open(url) } catch (_e) { /* no audio */ }
   }
 
+  // ── Styles ────────────────────────────────────────────────────────────────
   jsmaf.root.children.length = 0
 
-  new Style({ name: 'white', color: 'white', size: 24 })
-  new Style({ name: 'title', color: 'white', size: 32 })
+  new Style({ name: 'label',  color: 'rgb(255,255,255)',        size: 26 })
+  new Style({ name: 'sel',    color: 'rgb(255,255,255)',        size: 26 })
+  new Style({ name: 'num',    color: 'rgba(255,255,255,0.28)',  size: 15 })
+  new Style({ name: 'numsel', color: 'rgba(120,210,255,0.90)', size: 15 })
+  new Style({ name: 'arrow',  color: 'rgba(255,255,255,0.25)', size: 20 })
+  new Style({ name: 'arrsel', color: 'rgba(120,200,255,0.80)', size: 20 })
+  new Style({ name: 'footer', color: 'rgba(255,255,255,0.28)', size: 16 })
+  new Style({ name: 'exit',   color: 'rgb(255,100,100)',        size: 26 })
+  new Style({ name: 'exitd',  color: 'rgba(255,100,100,0.45)', size: 26 })
 
-  if (typeof startBgmIfEnabled === 'function') {
-    startBgmIfEnabled()
-  }
+  // ── Background ────────────────────────────────────────────────────────────
+  jsmaf.root.children.push(new Image({ url: BG_URL, x: 0, y: 0, width: SW, height: SH }))
 
-  const background = new Image({
-    url: 'file:///../download0/img/multiview_bg_VAF.png',
-    x: 0,
-    y: 0,
-    width: 1920,
-    height: 1080
-  })
-  jsmaf.root.children.push(background)
+  // ── Header ────────────────────────────────────────────────────────────────
+  const hdr = new Image({ url: BTN_URL, x: 0, y: 0, width: SW, height: 120, alpha: 0.14 })
+  hdr.borderColor = 'rgba(120,200,255,0.12)'; hdr.borderWidth = 0
+  jsmaf.root.children.push(hdr)
 
-  const centerX = 960
-  const logoWidth = 600
-  const logoHeight = 338
+  const hdrAccent = new Image({ url: BTN_URL, x: 0, y: 0, width: 5, height: 120, alpha: 1.0 })
+  hdrAccent.borderColor = 'rgb(80,200,255)'; hdrAccent.borderWidth = 0
+  jsmaf.root.children.push(hdrAccent)
 
-  const logo = new Image({
+  // Logo — centered
+  jsmaf.root.children.push(new Image({
     url: 'file:///../download0/img/logo.png',
-    x: centerX - logoWidth / 2,
-    y: 50,
-    width: logoWidth,
-    height: logoHeight
-  })
-  jsmaf.root.children.push(logo)
+    x: CX - 180, y: 36, width: 360, height: 204
+  }))
 
-  const menuOptions = [
-    { label: lang.jailbreak, script: 'loader.js', imgKey: 'jailbreak' },
-    { label: lang.payloadMenu, script: 'payload_host.js', imgKey: 'payloadMenu' },
-    { label: lang.config, script: 'config_ui.js', imgKey: 'config' }
+  // Divider below logo area
+  const div = new Image({ url: BTN_URL, x: BTN_L - 40, y: 280, width: BTN_W + 80, height: 1, alpha: 0.22 })
+  div.borderColor = 'rgba(120,200,255,0.4)'; div.borderWidth = 0
+  jsmaf.root.children.push(div)
+
+  // ── Menu options ──────────────────────────────────────────────────────────
+  type MenuItem = { label: string; script: string; num: string }
+  const menuOptions: MenuItem[] = [
+    { label: lang.jailbreak,   script: 'loader.js',       num: '01' },
+    { label: lang.payloadMenu, script: 'payload_host.js', num: '02' },
+    { label: lang.config,      script: 'config_ui.js',    num: '03' },
   ]
 
-  const startY = 450
-  const buttonSpacing = 120
-  const buttonWidth = 400
-  const buttonHeight = 80
+  const btns:  Image[]      = []
+  const bars:  Image[]      = []
+  const texts: jsmaf.Text[] = []
+  const nums:  jsmaf.Text[] = []
+  const arrs:  jsmaf.Text[] = []
+  const origB: { x: number; y: number }[] = []
+  const origT: { x: number; y: number }[] = []
 
   for (let i = 0; i < menuOptions.length; i++) {
-    const btnX = centerX - buttonWidth / 2
-    const btnY = startY + i * buttonSpacing
+    const o  = menuOptions[i]!
+    const bY = START_Y + i * GAP
 
-    const button = new Image({
-      url: normalButtonImg,
-      x: btnX,
-      y: btnY,
-      width: buttonWidth,
-      height: buttonHeight
-    })
-    buttons.push(button)
-    jsmaf.root.children.push(button)
+    const btn = new Image({ url: BTN_URL, x: BTN_L, y: bY, width: BTN_W, height: BTN_H, alpha: 0.10 })
+    btn.borderColor = 'rgba(255,255,255,0.14)'; btn.borderWidth = 1
+    btns.push(btn); jsmaf.root.children.push(btn)
 
-    const marker = new Image({
-      url: 'file:///assets/img/ad_pod_marker.png',
-      x: btnX + buttonWidth - 50,
-      y: btnY + 35,
-      width: 12,
-      height: 12,
-      visible: false
-    })
-    buttonMarkers.push(marker)
-    jsmaf.root.children.push(marker)
+    const bar = new Image({ url: BTN_URL, x: BTN_L, y: bY, width: 5, height: BTN_H, alpha: 0.28 })
+    bar.borderColor = 'rgb(120,200,255)'; bar.borderWidth = 0
+    bars.push(bar); jsmaf.root.children.push(bar)
 
-    let btnText: Image | jsmaf.Text
-    if (useImageText) {
-      btnText = new Image({
-        url: textImageBase + menuOptions[i]!.imgKey + '.png',
-        x: btnX + 20,
-        y: btnY + 15,
-        width: 300,
-        height: 50
-      })
-    } else {
-      btnText = new jsmaf.Text()
-      btnText.text = menuOptions[i]!.label
-      btnText.x = btnX + buttonWidth / 2 - 60
-      btnText.y = btnY + buttonHeight / 2 - 12
-      btnText.style = 'white'
-    }
-    buttonTexts.push(btnText)
-    jsmaf.root.children.push(btnText)
+    const num = new jsmaf.Text(); num.text = o.num
+    num.x = BTN_L + 14; num.y = bY + 36; num.style = 'num'
+    nums.push(num); jsmaf.root.children.push(num)
 
-    buttonOrigPos.push({ x: btnX, y: btnY })
-    textOrigPos.push({ x: btnText.x, y: btnText.y })
+    const txt = new jsmaf.Text(); txt.text = o.label.toUpperCase()
+    txt.x = BTN_L + 52; txt.y = bY + 31; txt.style = 'label'
+    texts.push(txt); jsmaf.root.children.push(txt)
+
+    const arr = new jsmaf.Text(); arr.text = '›'
+    arr.x = BTN_L + BTN_W - 36; arr.y = bY + 28; arr.style = 'arrow'
+    arrs.push(arr); jsmaf.root.children.push(arr)
+
+    origB.push({ x: BTN_L, y: bY })
+    origT.push({ x: txt.x, y: txt.y })
   }
 
-  const exitX = centerX - buttonWidth / 2
-  const exitY = startY + menuOptions.length * buttonSpacing + 100
+  // ── Exit button ───────────────────────────────────────────────────────────
+  const exitY   = START_Y + menuOptions.length * GAP + 18
+  const exitBtn = new Image({ url: BTN_URL, x: BTN_L, y: exitY, width: BTN_W, height: BTN_H, alpha: 0.08 })
+  exitBtn.borderColor = 'rgba(255,80,80,0.16)'; exitBtn.borderWidth = 1
+  btns.push(exitBtn); jsmaf.root.children.push(exitBtn)
 
-  const exitButton = new Image({
-    url: normalButtonImg,
-    x: exitX,
-    y: exitY,
-    width: buttonWidth,
-    height: buttonHeight
-  })
-  buttons.push(exitButton)
-  jsmaf.root.children.push(exitButton)
+  const exitBar = new Image({ url: BTN_URL, x: BTN_L, y: exitY, width: 5, height: BTN_H, alpha: 0.28 })
+  exitBar.borderColor = 'rgb(255,100,100)'; exitBar.borderWidth = 0
+  bars.push(exitBar); jsmaf.root.children.push(exitBar)
 
-  const exitMarker = new Image({
-    url: 'file:///assets/img/ad_pod_marker.png',
-    x: exitX + buttonWidth - 50,
-    y: exitY + 35,
-    width: 12,
-    height: 12,
-    visible: false
-  })
-  buttonMarkers.push(exitMarker)
-  jsmaf.root.children.push(exitMarker)
+  const exitNum = new jsmaf.Text(); exitNum.text = '04'
+  exitNum.x = BTN_L + 14; exitNum.y = exitY + 36; exitNum.style = 'num'
+  nums.push(exitNum); jsmaf.root.children.push(exitNum)
 
-  let exitText: Image | jsmaf.Text
-  if (useImageText) {
-    exitText = new Image({
-      url: textImageBase + 'exit.png',
-      x: exitX + 20,
-      y: exitY + 15,
-      width: 300,
-      height: 50
-    })
-  } else {
-    exitText = new jsmaf.Text()
-    exitText.text = lang.exit
-    exitText.x = exitX + buttonWidth / 2 - 20
-    exitText.y = exitY + buttonHeight / 2 - 12
-    exitText.style = 'white'
-  }
-  buttonTexts.push(exitText)
-  jsmaf.root.children.push(exitText)
+  const exitTxt = new jsmaf.Text(); exitTxt.text = lang.exit.toUpperCase()
+  exitTxt.x = BTN_L + 52; exitTxt.y = exitY + 31; exitTxt.style = 'exitd'
+  texts.push(exitTxt); jsmaf.root.children.push(exitTxt)
 
-  buttonOrigPos.push({ x: exitX, y: exitY })
-  textOrigPos.push({ x: exitText.x, y: exitText.y })
+  const exitArr = new jsmaf.Text(); exitArr.text = '›'
+  exitArr.x = BTN_L + BTN_W - 36; exitArr.y = exitY + 28; exitArr.style = 'arrow'
+  arrs.push(exitArr); jsmaf.root.children.push(exitArr)
 
-  let zoomInInterval: number | null = null
-  let zoomOutInterval: number | null = null
-  let prevButton = -1
+  origB.push({ x: BTN_L, y: exitY })
+  origT.push({ x: exitTxt.x, y: exitTxt.y })
 
-  function easeInOut (t: number) {
-    return (1 - Math.cos(t * Math.PI)) / 2
-  }
+  // ── Footer ────────────────────────────────────────────────────────────────
+  const FOOTER_H = 44
+  const footBg = new Image({ url: BTN_URL, x: 0, y: SH - FOOTER_H, width: SW, height: FOOTER_H, alpha: 0.40 })
+  footBg.borderColor = 'transparent'; footBg.borderWidth = 0
+  jsmaf.root.children.push(footBg)
 
-  function animateZoomIn (btn: Image, text: jsmaf.Text, btnOrigX: number, btnOrigY: number, textOrigX: number, textOrigY: number) {
-    if (zoomInInterval) jsmaf.clearInterval(zoomInInterval)
-    const btnW = buttonWidth
-    const btnH = buttonHeight
-    const startScale = btn.scaleX || 1.0
-    const endScale = 1.1
-    const duration = 175
-    let elapsed = 0
-    const step = 16
+  const confirmLabel = jsmaf.circleIsAdvanceButton ? 'O' : 'X'
+  const fh = new jsmaf.Text()
+  fh.text = '↑↓  Navigate    ' + confirmLabel + '  Select'
+  fh.x = CX - 140; fh.y = SH - FOOTER_H + 14; fh.style = 'footer'
+  jsmaf.root.children.push(fh)
 
-    zoomInInterval = jsmaf.setInterval(function () {
-      elapsed += step
-      const t = Math.min(elapsed / duration, 1)
-      const eased = easeInOut(t)
-      const scale = startScale + (endScale - startScale) * eased
+  // ── Highlight ─────────────────────────────────────────────────────────────
+  let cur = 0; let prev = -1
+  const TOTAL = btns.length
 
-      btn.scaleX = scale
-      btn.scaleY = scale
-      btn.x = btnOrigX - (btnW * (scale - 1)) / 2
-      btn.y = btnOrigY - (btnH * (scale - 1)) / 2
-      text.scaleX = scale
-      text.scaleY = scale
-      text.x = textOrigX - (btnW * (scale - 1)) / 2
-      text.y = textOrigY - (btnH * (scale - 1)) / 2
+  function highlight () {
+    for (let i = 0; i < TOTAL; i++) {
+      const isExit = i === TOTAL - 1
+      const sel    = i === cur
 
-      if (t >= 1 && zoomInInterval) {
-        jsmaf.clearInterval(zoomInInterval)
-        zoomInInterval = null
-      }
-    }, step)
-  }
+      btns[i]!.alpha       = sel ? 0.24 : (isExit ? 0.08 : 0.10)
+      btns[i]!.borderColor = sel
+        ? (isExit ? 'rgba(255,80,80,0.70)' : 'rgba(120,200,255,0.70)')
+        : (isExit ? 'rgba(255,80,80,0.16)' : 'rgba(255,255,255,0.14)')
+      btns[i]!.borderWidth = sel ? 2 : 1
+      bars[i]!.alpha       = sel ? 1.0 : 0.28
+      bars[i]!.borderColor = sel
+        ? (isExit ? 'rgb(255,100,100)' : 'rgb(80,220,255)')
+        : (isExit ? 'rgb(255,100,100)' : 'rgb(120,200,255)')
 
-  function animateZoomOut (btn: Image, text: jsmaf.Text, btnOrigX: number, btnOrigY: number, textOrigX: number, textOrigY: number) {
-    if (zoomOutInterval) jsmaf.clearInterval(zoomOutInterval)
-    const btnW = buttonWidth
-    const btnH = buttonHeight
-    const startScale = btn.scaleX || 1.1
-    const endScale = 1.0
-    const duration = 175
-    let elapsed = 0
-    const step = 16
+      texts[i]!.style = sel ? (isExit ? 'exit' : 'sel') : (isExit ? 'exitd' : 'label')
+      nums[i]!.style  = sel ? 'numsel' : 'num'
+      arrs[i]!.style  = sel ? 'arrsel' : 'arrow'
 
-    zoomOutInterval = jsmaf.setInterval(function () {
-      elapsed += step
-      const t = Math.min(elapsed / duration, 1)
-      const eased = easeInOut(t)
-      const scale = startScale + (endScale - startScale) * eased
-
-      btn.scaleX = scale
-      btn.scaleY = scale
-      btn.x = btnOrigX - (btnW * (scale - 1)) / 2
-      btn.y = btnOrigY - (btnH * (scale - 1)) / 2
-      text.scaleX = scale
-      text.scaleY = scale
-      text.x = textOrigX - (btnW * (scale - 1)) / 2
-      text.y = textOrigY - (btnH * (scale - 1)) / 2
-
-      if (t >= 1 && zoomOutInterval) {
-        jsmaf.clearInterval(zoomOutInterval)
-        zoomOutInterval = null
-      }
-    }, step)
-  }
-
-  function updateHighlight () {
-    // Animate out the previous button
-    const prevButtonObj = buttons[prevButton]
-    const buttonMarker = buttonMarkers[prevButton]
-    if (prevButton >= 0 && prevButton !== currentButton && prevButtonObj && buttonMarker) {
-      prevButtonObj.url = normalButtonImg
-      prevButtonObj.alpha = 0.7
-      prevButtonObj.borderColor = 'transparent'
-      prevButtonObj.borderWidth = 0
-      buttonMarker.visible = false
-      animateZoomOut(prevButtonObj, buttonTexts[prevButton]!, buttonOrigPos[prevButton]!.x, buttonOrigPos[prevButton]!.y, textOrigPos[prevButton]!.x, textOrigPos[prevButton]!.y)
-    }
-
-    // Set styles for all buttons
-    for (let i = 0; i < buttons.length; i++) {
-      const button = buttons[i]
-      const buttonMarker = buttonMarkers[i]
-      const buttonText = buttonTexts[i]
-      const buttonOrigPos_ = buttonOrigPos[i]
-      const textOrigPos_ = textOrigPos[i]
-      if (button === undefined || buttonText === undefined || buttonOrigPos_ === undefined || textOrigPos_ === undefined || buttonMarker === undefined) continue
-      if (i === currentButton) {
-        button.url = selectedButtonImg
-        button.alpha = 1.0
-        button.borderColor = 'rgb(100,180,255)'
-        button.borderWidth = 3
-        buttonMarker.visible = true
-        animateZoomIn(button, buttonText, buttonOrigPos_.x, buttonOrigPos_.y, textOrigPos_.x, textOrigPos_.y)
-      } else if (i !== prevButton) {
-        button.url = normalButtonImg
-        button.alpha = 0.7
-        button.borderColor = 'transparent'
-        button.borderWidth = 0
-        button.scaleX = 1.0
-        button.scaleY = 1.0
-        button.x = buttonOrigPos_.x
-        button.y = buttonOrigPos_.y
-        buttonText.scaleX = 1.0
-        buttonText.scaleY = 1.0
-        buttonText.x = textOrigPos_.x
-        buttonText.y = textOrigPos_.y
-        buttonMarker.visible = false
+      if (i !== prev || sel) {
+        const sc = sel ? 1.03 : 1.0
+        const dX = sel ? -(BTN_W * 0.03) / 2 : 0
+        const dY = sel ? -(BTN_H * 0.03) / 2 : 0
+        btns[i]!.scaleX = sc; btns[i]!.scaleY = sc
+        btns[i]!.x = origB[i]!.x + dX; btns[i]!.y = origB[i]!.y + dY
+        texts[i]!.scaleX = sc; texts[i]!.scaleY = sc
+        texts[i]!.x = origT[i]!.x + dX
       }
     }
-
-    prevButton = currentButton
+    prev = cur
   }
 
-  function handleButtonPress () {
-    if (currentButton === buttons.length - 1) {
-      playSound(SFX_CANCEL)
-      include('includes/kill_vue.js')
-    } else if (currentButton < menuOptions.length) {
-      playSound(SFX_CONFIRM)
-      const selectedOption = menuOptions[currentButton]
-      if (!selectedOption) return
-      if (selectedOption.script === 'loader.js') {
-        jsmaf.onKeyDown = function () {}
-      }
-      log('Loading ' + selectedOption.script + '...')
-      try {
-        if (selectedOption.script.includes('loader.js')) {
-          include(selectedOption.script)
-        } else {
-          include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'default') + '/' + selectedOption.script)
-        }
-      } catch (e) {
-        log('ERROR loading ' + selectedOption.script + ': ' + (e as Error).message)
-        if ((e as Error).stack) log((e as Error).stack!)
-      }
-    }
-  }
-
+  // ── Input ─────────────────────────────────────────────────────────────────
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
 
-  jsmaf.onKeyDown = function (keyCode) {
-    if (keyCode === 6 || keyCode === 5) {
-      currentButton = (currentButton + 1) % buttons.length
-      playSound(SFX_CURSOR)
-      updateHighlight()
-    } else if (keyCode === 4 || keyCode === 7) {
-      currentButton = (currentButton - 1 + buttons.length) % buttons.length
-      playSound(SFX_CURSOR)
-      updateHighlight()
-    } else if (keyCode === confirmKey) {
-      handleButtonPress()
+  jsmaf.onKeyDown = function (kc: number) {
+    if (kc === 6 || kc === 5) {
+      cur = (cur + 1) % TOTAL; sfx(SFX_CUR); highlight()
+    } else if (kc === 4 || kc === 7) {
+      cur = (cur - 1 + TOTAL) % TOTAL; sfx(SFX_CUR); highlight()
+    } else if (kc === confirmKey) {
+      sfx(SFX_OK)
+      if (cur === TOTAL - 1) {
+        try { include('includes/kill_vue.js') } catch (_e) { /* ignore */ }
+      } else {
+        const o = menuOptions[cur]; if (!o) return
+        if (o.script === 'loader.js') jsmaf.onKeyDown = function () { /* locked */ }
+        try {
+          if (o.script === 'loader.js') {
+            include(o.script)
+          } else {
+            include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'default') + '/' + o.script)
+          }
+        } catch (e) { log('Nav error: ' + (e as Error).message) }
+      }
     }
   }
 
-  updateHighlight()
-
+  highlight()
   log('Main menu loaded.')
+  ;((_a, _b) => {})(libc_addr, SFX_BCK) // suppress unused import warnings
 })()

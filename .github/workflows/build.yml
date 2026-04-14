@@ -62,27 +62,15 @@ jobs:
         run: |
           mkdir -p dist-lite/download0
           mkdir -p dist-lite/download0/themes/default
-          
 
           # Core runtime JS
           for f in serve.js.aes dummy_psn.json.aes loader.js userland.js types.js kernel.js \
                    lapse.js netctrl_c0w_twins.js binloader.js check-jailbroken.js defs.js; do
             cp dist/download0/$f dist-lite/download0/
-            
           done
 
           # Hardcoded lite config - auto detect, auto close, no music, no menu
-          printf '{
-              "config": {
-                  "autolapse": true,
-                  "autopoop": false,
-                  "autoclose": true,
-                  "autoclose_delay": 3000,
-                  "music": false,
-                  "jb_behavior": 0
-              },
-              "payloads": []
-          }' > dist-lite/download0/config.json
+          printf '{\n    "config": {\n        "autolapse": true,\n        "autopoop": false,\n        "autoclose": true,\n        "autoclose_delay": 3000,\n        "music": false,\n        "jb_behavior": 0\n    },\n    "payloads": []\n}' > dist-lite/download0/config.json
 
           # Generate lite manifest
           cd dist-lite/download0
@@ -153,7 +141,7 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        
+
   ufs-image:
     needs: build
     runs-on: ubuntu-latest
@@ -172,29 +160,13 @@ jobs:
           prepare: ""
           run: |
             set -e
-
-            # Create 256MB image file
             truncate -s 256M download0.dat
-
-            # Attach as memory disk (returns e.g. "md0")
             MD=$(mdconfig -a -t vnode -f "$(pwd)/download0.dat")
-
-            # Create UFS2 filesystem
             newfs -O 2 -b 32768 -f 4096 /dev/${MD}
-
-            # Mount
             mount /dev/${MD} /mnt
-
-            # Copy dist contents
             cp -R dist/download0/* /mnt/
-
-            # Create empty dirs
             mkdir -p /mnt/mgl /mnt/video_cache /mnt/xhr_cache
-
-            # Set permissions
             chmod -R 777 /mnt/*
-
-            # Unmount and detach
             umount /mnt
             mdconfig -d -u ${MD}
 
@@ -236,29 +208,13 @@ jobs:
           prepare: ""
           run: |
             set -e
-
-            # Create 256MB image file
             truncate -s 256M download0.dat
-
-            # Attach as memory disk
             MD=$(mdconfig -a -t vnode -f "$(pwd)/download0.dat")
-
-            # Create UFS2 filesystem
             newfs -O 2 -b 32768 -f 4096 /dev/${MD}
-
-            # Mount
             mount /dev/${MD} /mnt
-
-            # Copy lite dist contents
             cp -R dist-lite/download0/* /mnt/
-
-            # Create empty dirs
             mkdir -p /mnt/mgl /mnt/video_cache /mnt/xhr_cache
-
-            # Set permissions
             chmod -R 777 /mnt/*
-
-            # Unmount and detach
             umount /mnt
             mdconfig -d -u ${MD}
 
