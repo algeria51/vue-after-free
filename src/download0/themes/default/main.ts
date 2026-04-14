@@ -6,46 +6,46 @@ import { libc_addr } from 'download0/userland'
   log('Loading main menu...')
   if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
-  const DARK  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
+  const DARK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
   const WHITE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
-  const CYAN  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIOPEfAAODAhiMwlb1AAAAAElFTkSuQmCC'
-  const RED   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
+  const CYAN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIOPEfAAODAhiMwlb1AAAAAElFTkSuQmCC'
+  const RED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
 
-  const SW = 1920, SH = 1080, CX = SW / 2
-  const HDR = 155, FTR = 50
-  const BW = 700, BH = 96, BL = CX - BW / 2
-  const SY = 265, GAP = 22
+  const SW = 1920; const SH = 1080; const CX = SW / 2
+  const HDR = 155; const FTR = 50
+  const BW = 700; const BH = 96; const BL = CX - BW / 2
+  const SY = 265; const GAP = 22
 
-  const SFX_CUR  = 'file:///../download0/sfx/cursor.wav'
-  const SFX_OK   = 'file:///../download0/sfx/confirm.wav'
+  const SFX_CUR = 'file:///../download0/sfx/cursor.wav'
+  const SFX_OK = 'file:///../download0/sfx/confirm.wav'
   const SFX_BACK = 'file:///../download0/sfx/cancel.wav'
 
   // AUDIO POOL — plain loop, no Array.from (safer for old WebKit)
   const poolCur: jsmaf.AudioClip[] = []
-  const poolOk:  jsmaf.AudioClip[] = []
+  const poolOk: jsmaf.AudioClip[] = []
   const poolBck: jsmaf.AudioClip[] = []
   for (let _i = 0; _i < 8; _i++) { const c = new jsmaf.AudioClip(); c.volume = 1.0; poolCur.push(c) }
-  for (let _i = 0; _i < 4; _i++) { const c = new jsmaf.AudioClip(); c.volume = 1.0; poolOk.push(c)  }
+  for (let _i = 0; _i < 4; _i++) { const c = new jsmaf.AudioClip(); c.volume = 1.0; poolOk.push(c) }
   for (let _i = 0; _i < 4; _i++) { const c = new jsmaf.AudioClip(); c.volume = 1.0; poolBck.push(c) }
-  let pCur = 0, pOk = 0, pBck = 0
-  function sfxCur()  { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolCur[pCur]!.open(SFX_CUR);  pCur = (pCur + 1) % poolCur.length  } catch (_e) {} }
-  function sfxOk()   { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolOk[pOk]!.open(SFX_OK);    pOk  = (pOk  + 1) % poolOk.length   } catch (_e) {} }
-  function sfxBack() { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolBck[pBck]!.open(SFX_BACK); pBck = (pBck + 1) % poolBck.length  } catch (_e) {} }
+  let pCur = 0; let pOk = 0; let pBck = 0
+  function sfxCur () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolCur[pCur]!.open(SFX_CUR); pCur = (pCur + 1) % poolCur.length } catch (_e) {} }
+  function sfxOk () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolOk[pOk]!.open(SFX_OK); pOk = (pOk + 1) % poolOk.length } catch (_e) {} }
+  function sfxBack () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolBck[pBck]!.open(SFX_BACK); pBck = (pBck + 1) % poolBck.length } catch (_e) {} }
 
   jsmaf.root.children.length = 0
 
   // Styles
-  new Style({ name: 'logo',   color: 'rgb(60,220,255)',        size: 50 })
-  new Style({ name: 'sub',    color: 'rgba(140,230,255,0.45)', size: 17 })
-  new Style({ name: 'label',  color: 'rgba(200,235,255,0.80)', size: 27 })
-  new Style({ name: 'sel',    color: 'rgb(255,255,255)',        size: 27 })
-  new Style({ name: 'num',    color: 'rgba(60,215,255,0.35)',  size: 13 })
-  new Style({ name: 'numsel', color: 'rgb(60,220,255)',         size: 13 })
-  new Style({ name: 'arr',    color: 'rgba(255,255,255,0.16)', size: 26 })
-  new Style({ name: 'arrsel', color: 'rgb(60,220,255)',         size: 26 })
-  new Style({ name: 'exit',   color: 'rgb(255,90,100)',         size: 27 })
-  new Style({ name: 'exitd',  color: 'rgba(255,90,100,0.45)',  size: 27 })
-  new Style({ name: 'ftr',    color: 'rgba(100,225,255,0.28)', size: 15 })
+  new Style({ name: 'logo', color: 'rgb(60,220,255)', size: 50 })
+  new Style({ name: 'sub', color: 'rgba(140,230,255,0.45)', size: 17 })
+  new Style({ name: 'label', color: 'rgba(200,235,255,0.80)', size: 27 })
+  new Style({ name: 'sel', color: 'rgb(255,255,255)', size: 27 })
+  new Style({ name: 'num', color: 'rgba(60,215,255,0.35)', size: 13 })
+  new Style({ name: 'numsel', color: 'rgb(60,220,255)', size: 13 })
+  new Style({ name: 'arr', color: 'rgba(255,255,255,0.16)', size: 26 })
+  new Style({ name: 'arrsel', color: 'rgb(60,220,255)', size: 26 })
+  new Style({ name: 'exit', color: 'rgb(255,90,100)', size: 27 })
+  new Style({ name: 'exitd', color: 'rgba(255,90,100,0.45)', size: 27 })
+  new Style({ name: 'ftr', color: 'rgba(100,225,255,0.28)', size: 15 })
 
   // Background
   const bg = new Image({ url: DARK, x: 0, y: 0, width: SW, height: SH })
@@ -73,19 +73,19 @@ import { libc_addr } from 'download0/userland'
   // Menu buttons
   type Item = { label: string; script: string; num: string; ic: string }
   const items: Item[] = [
-    { label: lang.jailbreak,   script: 'loader.js',       num: '01', ic: '⚡' },
+    { label: lang.jailbreak, script: 'loader.js', num: '01', ic: '⚡' },
     { label: lang.payloadMenu, script: 'payload_host.js', num: '02', ic: '◈' },
-    { label: lang.config,      script: 'config_ui.js',    num: '03', ic: '⚙' },
+    { label: lang.config, script: 'config_ui.js', num: '03', ic: '⚙' },
   ]
 
-  const btns: Image[]      = []
-  const glws: Image[]      = []
-  const bars: Image[]      = []
+  const btns: Image[] = []
+  const glws: Image[] = []
+  const bars: Image[] = []
   const txts: jsmaf.Text[] = []
   const nums: jsmaf.Text[] = []
   const arrs: jsmaf.Text[] = []
-  const oB: {x:number;y:number}[] = []
-  const oT: {x:number;y:number}[] = []
+  const oB: { x: number;y: number }[] = []
+  const oT: { x: number;y: number }[] = []
 
   for (let i = 0; i < items.length; i++) {
     const o = items[i]!; const bY = SY + i * (BH + GAP)
@@ -144,12 +144,12 @@ import { libc_addr } from 'download0/userland'
   fTxt.style = 'ftr'; fTxt.text = '↑↓  Navigate    ' + clbl + '  Select'
   fTxt.x = CX - 120; fTxt.y = SH - FTR + 18; jsmaf.root.children.push(fTxt)
 
-  let cur = 0, prev = -1
+  let cur = 0; let prev = -1
   const TOTAL = btns.length
 
   function highlight () {
     for (let i = 0; i < TOTAL; i++) {
-      const isExit = i === TOTAL - 1, sel = i === cur
+      const isExit = i === TOTAL - 1; const sel = i === cur
       btns[i]!.alpha = sel ? 0.20 : isExit ? 0.04 : 0.06
       btns[i]!.borderColor = sel ? (isExit ? 'rgba(255,80,90,0.88)' : 'rgba(60,200,230,0.88)') : (isExit ? 'rgba(255,80,90,0.20)' : 'rgba(60,200,230,0.16)')
       btns[i]!.borderWidth = sel ? 2 : 1
@@ -174,17 +174,13 @@ import { libc_addr } from 'download0/userland'
 
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
   jsmaf.onKeyDown = function (kc: number) {
-    if (kc === 6 || kc === 5) { cur = (cur + 1) % TOTAL; sfxCur(); highlight() }
-    else if (kc === 4 || kc === 7) { cur = (cur - 1 + TOTAL) % TOTAL; sfxCur(); highlight() }
-    else if (kc === confirmKey) {
+    if (kc === 6 || kc === 5) { cur = (cur + 1) % TOTAL; sfxCur(); highlight() } else if (kc === 4 || kc === 7) { cur = (cur - 1 + TOTAL) % TOTAL; sfxCur(); highlight() } else if (kc === confirmKey) {
       sfxOk()
-      if (cur === TOTAL - 1) { try { include('includes/kill_vue.js') } catch (_e) {} }
-      else {
+      if (cur === TOTAL - 1) { try { include('includes/kill_vue.js') } catch (_e) {} } else {
         const o = items[cur]; if (!o) return
         if (o.script === 'loader.js') jsmaf.onKeyDown = function () {}
         try {
-          if (o.script === 'loader.js') { include(o.script) }
-          else { include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'default') + '/' + o.script) }
+          if (o.script === 'loader.js') { include(o.script) } else { include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'default') + '/' + o.script) }
         } catch (e) { log('Nav error: ' + (e as Error).message) }
       }
     }
