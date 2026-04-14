@@ -9,41 +9,43 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   include('check-jailbroken.js')
   if (typeof startBgmIfEnabled === 'function') startBgmIfEnabled()
 
-  const DARK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4xACAAA4ACGcHPdwAAAAAElFTkSuQmCC'
+  // ─── Palette ───────────────────────────────────────────────────────────────
+  const DARK  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg4+ADAAA0AB0VS5vvAAAAAElFTkSuQmCC'
   const WHITE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC'
-  const CYAN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMIOPEfAAODAhiMwlb1AAAAAElFTkSuQmCC'
-  const RED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4HxAAAAPxAaAHMjeOAAAAAElFTkSuQmCC'
+  const AMBER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4v9MIAASlAeurtfG0AAAAAElFTkSuQmCC'
+  const RED   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP44BYAAAOwAYeW+1bOAAAAAElFTkSuQmCC'
 
+  // ─── Layout ────────────────────────────────────────────────────────────────
   const SW = 1920; const SH = 1080; const PAD = 80
-  const HDR = 155; const FTR = 50
-  const BW = SW - PAD * 2; const BH = 88; const GAP = 6
-  const AVAIL = SH - HDR - FTR - 24
-  const MAXR = Math.min(9, Math.floor(AVAIL / (BH + GAP)))
-  const SY = HDR + 12
+  const HDR = 160; const FTR = 52
+  // Row dimensions — taller so text has breathing room
+  const BW = SW - PAD * 2; const BH = 90; const GAP = 8
+  // Available height for rows (leave 70px above footer for back-button strip)
+  const BACK_STRIP = 70
+  const AVAIL = SH - HDR - FTR - BACK_STRIP - 16
+  const MAXR  = Math.min(9, Math.floor(AVAIL / (BH + GAP)))
+  const SY    = HDR + 14
 
-  const SFX_CUR = 'file:///../download0/sfx/cursor.wav'
-  const SFX_OK = 'file:///../download0/sfx/confirm.wav'
+  // ─── Audio ─────────────────────────────────────────────────────────────────
+  const SFX_CUR  = 'file:///../download0/sfx/cursor.wav'
+  const SFX_OK   = 'file:///../download0/sfx/confirm.wav'
   const SFX_BACK = 'file:///../download0/sfx/cancel.wav'
-
-  // AUDIO POOL — plain for-loop, safe on old WebKit
-  const poolCur: jsmaf.AudioClip[] = []
-  const poolOk: jsmaf.AudioClip[] = []
-  const poolBack: jsmaf.AudioClip[] = []
+  const poolCur: jsmaf.AudioClip[] = []; const poolOk: jsmaf.AudioClip[] = []; const poolBack: jsmaf.AudioClip[] = []
   for (let _i = 0; _i < 8; _i++) { const c = new jsmaf.AudioClip(); c.volume = 1.0; poolCur.push(c) }
   for (let _i = 0; _i < 4; _i++) { const c = new jsmaf.AudioClip(); c.volume = 1.0; poolOk.push(c) }
   for (let _i = 0; _i < 4; _i++) { const c = new jsmaf.AudioClip(); c.volume = 1.0; poolBack.push(c) }
   let pCur = 0; let pOk = 0; let pBack = 0
-  function sfxCur () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolCur[pCur]!.open(SFX_CUR); pCur = (pCur + 1) % poolCur.length } catch (_e) {} }
-  function sfxOk () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolOk[pOk]!.open(SFX_OK); pOk = (pOk + 1) % poolOk.length } catch (_e) {} }
-  function sfxBack () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolBack[pBack]!.open(SFX_BACK); pBack = (pBack + 1) % poolBack.length } catch (_e) {} }
+  function sfxCur  () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolCur[pCur]!.open(SFX_CUR);  pCur  = (pCur+1)%poolCur.length  } catch (_e) {} }
+  function sfxOk   () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolOk[pOk]!.open(SFX_OK);    pOk   = (pOk+1)%poolOk.length   } catch (_e) {} }
+  function sfxBack () { if (typeof CONFIG !== 'undefined' && CONFIG.music === false) return; try { poolBack[pBack]!.open(SFX_BACK); pBack = (pBack+1)%poolBack.length } catch (_e) {} }
 
   is_jailbroken = checkJailbroken()
 
-  // Scan payloads
-  try { fn.register(0x05, 'ph_open', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
-  try { fn.register(0x06, 'ph_close', ['bigint'], 'bigint') } catch (_e) {}
-  try { fn.register(0x110, 'ph_getdnts', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
-  try { fn.register(0x03, 'ph_read', ['bigint', 'bigint', 'bigint'], 'bigint') } catch (_e) {}
+  // ─── Payload scan ──────────────────────────────────────────────────────────
+  try { fn.register(0x05, 'ph_open',    ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x06, 'ph_close',   ['bigint'],                  'bigint') } catch (_e) {}
+  try { fn.register(0x110,'ph_getdnts', ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
+  try { fn.register(0x03, 'ph_read',    ['bigint','bigint','bigint'], 'bigint') } catch (_e) {}
 
   type FE = { name: string; path: string; ext: string }
   const fileList: FE[] = []
@@ -61,14 +63,15 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       if (!cnt.eq(new BigInt(0xffffffff, 0xffffffff)) && cnt.lo > 0) {
         let off = 0
         while (off < cnt.lo) {
-          const rl = mem.view(dbuf.add(new BigInt(0, off + 4))).getUint16(0, true)
-          const dt = mem.view(dbuf.add(new BigInt(0, off + 6))).getUint8(0)
-          const nl = mem.view(dbuf.add(new BigInt(0, off + 7))).getUint8(0)
+          const rl = mem.view(dbuf.add(new BigInt(0, off+4))).getUint16(0, true)
+          const dt = mem.view(dbuf.add(new BigInt(0, off+6))).getUint8(0)
+          const nl = mem.view(dbuf.add(new BigInt(0, off+7))).getUint8(0)
           let name = ''
-          for (let i = 0; i < nl; i++) name += String.fromCharCode(mem.view(dbuf.add(new BigInt(0, off + 8 + i))).getUint8(0))
+          for (let i = 0; i < nl; i++) name += String.fromCharCode(mem.view(dbuf.add(new BigInt(0, off+8+i))).getUint8(0))
           if (dt === 8 && name !== '.' && name !== '..') {
             const low = name.toLowerCase()
-            if (low.endsWith('.elf') || low.endsWith('.bin') || low.endsWith('.js')) { fileList.push({ name, path: sp + '/' + name, ext: (name.split('.').pop() || '').toUpperCase() }) }
+            if (low.endsWith('.elf') || low.endsWith('.bin') || low.endsWith('.js'))
+              fileList.push({ name, path: sp + '/' + name, ext: (name.split('.').pop() || '').toUpperCase() })
           }
           off += rl
         }
@@ -81,53 +84,60 @@ import { checkJailbroken } from 'download0/check-jailbroken'
 
   jsmaf.root.children.length = 0
 
-  // Styles
-  new Style({ name: 'ptitle', color: 'rgb(255,255,255)', size: 30 })
-  new Style({ name: 'pcount', color: 'rgba(100,220,255,0.60)', size: 16 })
-  new Style({ name: 'pwhite', color: 'rgb(255,255,255)', size: 22 })
-  new Style({ name: 'pmuted', color: 'rgba(190,235,255,0.65)', size: 22 })
-  new Style({ name: 'pnum', color: 'rgba(60,215,255,0.40)', size: 15 })
-  new Style({ name: 'pnumsel', color: 'rgb(60,225,255)', size: 15 })
-  new Style({ name: 'pbadge', color: 'rgba(60,215,255,0.75)', size: 12 })
-  new Style({ name: 'pbsel', color: 'rgb(60,225,255)', size: 12 })
-  new Style({ name: 'ppath', color: 'rgba(150,230,255,0.30)', size: 13 })
-  new Style({ name: 'pscroll', color: 'rgba(60,220,255,0.75)', size: 16 })
-  new Style({ name: 'pback', color: 'rgba(255,100,110,0.90)', size: 20 })
-  new Style({ name: 'pftr', color: 'rgba(100,225,255,0.28)', size: 15 })
-  new Style({ name: 'pempty', color: 'rgba(190,235,255,0.70)', size: 28 })
-  new Style({ name: 'pemsub', color: 'rgba(150,230,255,0.42)', size: 18 })
+  // ─── Styles ────────────────────────────────────────────────────────────────
+  new Style({ name: 'ptitle',  color: 'rgb(255,255,255)',          size: 30 })
+  new Style({ name: 'pcount',  color: 'rgba(255,210,120,0.65)',    size: 16 })
+  new Style({ name: 'pwhite',  color: 'rgb(255,255,255)',          size: 23 })
+  new Style({ name: 'pmuted',  color: 'rgba(235,228,212,0.88)',    size: 23 })
+  new Style({ name: 'pnum',    color: 'rgba(255,185,50,0.45)',     size: 15 })
+  new Style({ name: 'pnumsel', color: 'rgb(255,210,80)',           size: 15 })
+  new Style({ name: 'pbadge',  color: 'rgba(255,185,50,0.80)',     size: 12 })
+  new Style({ name: 'pbsel',   color: 'rgb(255,215,100)',          size: 12 })
+  new Style({ name: 'ppath',   color: 'rgba(200,190,160,0.42)',    size: 13 })
+  new Style({ name: 'pscroll', color: 'rgba(255,200,80,0.80)',     size: 16 })
+  new Style({ name: 'pback',   color: 'rgba(240,80,90,0.92)',      size: 20 })
+  new Style({ name: 'pftr',    color: 'rgba(255,215,130,0.36)',    size: 15 })
+  new Style({ name: 'pempty',  color: 'rgba(235,228,212,0.88)',    size: 28 })
+  new Style({ name: 'pemsub',  color: 'rgba(200,190,160,0.58)',    size: 18 })
 
-  // Background
+  // ─── Background ────────────────────────────────────────────────────────────
   const bg = new Image({ url: DARK, x: 0, y: 0, width: SW, height: SH })
   bg.alpha = 1.0; bg.borderWidth = 0; jsmaf.root.children.push(bg)
-  const topLine = new Image({ url: CYAN, x: 0, y: 0, width: SW, height: 3 })
-  topLine.alpha = 0.75; topLine.borderWidth = 0; jsmaf.root.children.push(topLine)
-  const gl = new Image({ url: CYAN, x: 0, y: 0, width: 700, height: 480 })
-  gl.alpha = 0.022; gl.borderWidth = 0; jsmaf.root.children.push(gl)
+  const gl = new Image({ url: AMBER, x: 0, y: 0, width: 700, height: 460 })
+  gl.alpha = 0.028; gl.borderWidth = 0; jsmaf.root.children.push(gl)
 
-  // Header
+  // ─── Header ────────────────────────────────────────────────────────────────
+  const topBar = new Image({ url: AMBER, x: 0, y: 0, width: SW, height: 3 })
+  topBar.alpha = 0.88; topBar.borderWidth = 0; jsmaf.root.children.push(topBar)
   const hBg = new Image({ url: WHITE, x: 0, y: 0, width: SW, height: HDR })
-  hBg.alpha = 0.04; hBg.borderWidth = 0; jsmaf.root.children.push(hBg)
-  const hAccent = new Image({ url: CYAN, x: 0, y: 0, width: 4, height: HDR })
+  hBg.alpha = 0.058; hBg.borderWidth = 0; jsmaf.root.children.push(hBg)
+  const hAccent = new Image({ url: AMBER, x: 0, y: 0, width: 5, height: HDR })
   hAccent.alpha = 1.0; hAccent.borderWidth = 0; jsmaf.root.children.push(hAccent)
-  const hLine = new Image({ url: CYAN, x: 0, y: HDR - 1, width: SW, height: 1 })
-  hLine.alpha = 0.18; hLine.borderWidth = 0; jsmaf.root.children.push(hLine)
+  const hLine = new Image({ url: AMBER, x: 0, y: HDR - 1, width: SW, height: 1 })
+  hLine.alpha = 0.24; hLine.borderWidth = 0; jsmaf.root.children.push(hLine)
 
   const ttl = new jsmaf.Text()
   ttl.style = 'ptitle'; ttl.text = (lang.payloadMenu || 'PAYLOAD MENU').toUpperCase()
-  ttl.x = PAD; ttl.y = 36; jsmaf.root.children.push(ttl)
+  ttl.x = PAD; ttl.y = 38; jsmaf.root.children.push(ttl)
   const cntT = new jsmaf.Text()
   cntT.style = 'pcount'
   cntT.text = TOTAL === 0 ? 'No payloads found' : TOTAL + ' file' + (TOTAL !== 1 ? 's' : '') + ' available'
-  cntT.x = PAD; cntT.y = 92; jsmaf.root.children.push(cntT)
+  cntT.x = PAD; cntT.y = 100; jsmaf.root.children.push(cntT)
 
-  // Back + Footer
-  const navY = SH - FTR - 54
+  // ─── Back button strip (above footer) ──────────────────────────────────────
+  const bsY = SH - FTR - BACK_STRIP
+  const bsSep = new Image({ url: AMBER, x: 0, y: bsY, width: SW, height: 1 })
+  bsSep.alpha = 0.15; bsSep.borderWidth = 0; jsmaf.root.children.push(bsSep)
+  const bsBg = new Image({ url: WHITE, x: 0, y: bsY + 1, width: SW, height: BACK_STRIP - 1 })
+  bsBg.alpha = 0.04; bsBg.borderWidth = 0; jsmaf.root.children.push(bsBg)
   const backT = new jsmaf.Text()
-  backT.style = 'pback'; backT.text = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
-  backT.x = PAD; backT.y = navY + 10; jsmaf.root.children.push(backT)
-  const fLine = new Image({ url: CYAN, x: 0, y: SH - FTR, width: SW, height: 1 })
-  fLine.alpha = 0.18; fLine.borderWidth = 0; jsmaf.root.children.push(fLine)
+  backT.style = 'pback'
+  backT.text = jsmaf.circleIsAdvanceButton ? lang.xToGoBack : lang.oToGoBack
+  backT.x = PAD; backT.y = bsY + 20; jsmaf.root.children.push(backT)
+
+  // ─── Footer ────────────────────────────────────────────────────────────────
+  const fLine = new Image({ url: AMBER, x: 0, y: SH - FTR, width: SW, height: 1 })
+  fLine.alpha = 0.24; fLine.borderWidth = 0; jsmaf.root.children.push(fLine)
   const fBg = new Image({ url: WHITE, x: 0, y: SH - FTR + 1, width: SW, height: FTR - 1 })
   fBg.alpha = 0.05; fBg.borderWidth = 0; jsmaf.root.children.push(fBg)
   const clbl = jsmaf.circleIsAdvanceButton ? 'O' : 'X'; const blbl = jsmaf.circleIsAdvanceButton ? 'X' : 'O'
@@ -135,74 +145,65 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   fTxt.style = 'pftr'; fTxt.text = '↑↓  Navigate    ' + clbl + '  Launch    ' + blbl + '  Back'
   fTxt.x = SW / 2 - 200; fTxt.y = SH - FTR + 18; jsmaf.root.children.push(fTxt)
 
-  // ═══════════════════════════════════════════════════════════════════════
-  // PRE-ALLOCATED SLOTS
-  // Strategy: Image uses .visible for show/hide (works reliably).
-  //           Text uses .text = '' to hide, .text = content to show.
-  //           NEVER rely on Text.alpha — may not be implemented in engine.
-  // ═══════════════════════════════════════════════════════════════════════
-  const sBg: Image[] = []
-  const sGlw: Image[] = []
-  const sBar: Image[] = []
-  const sNum: jsmaf.Text[] = []
-  const sLbl: jsmaf.Text[] = []
-  const sPth: jsmaf.Text[] = []
-  const sBdg: jsmaf.Text[] = []
+  // ─── Pre-allocated row slots ───────────────────────────────────────────────
+  // Image.visible controls bg/bar; Text.text='' hides text (safer than alpha)
+  const sBg:  Image[]        = []; const sGlw: Image[]        = []
+  const sBar: Image[]        = []; const sNum: jsmaf.Text[]   = []
+  const sLbl: jsmaf.Text[]   = []; const sPth: jsmaf.Text[]   = []
+  const sBdg: jsmaf.Text[]   = []
 
   for (let s = 0; s < MAXR; s++) {
     const bY = SY + s * (BH + GAP)
 
     const rowBg = new Image({ url: WHITE, x: PAD, y: bY, width: BW, height: BH, visible: false })
-    rowBg.alpha = 0.06; rowBg.borderWidth = 1
+    rowBg.alpha = 0.10; rowBg.borderColor = 'rgba(255,185,50,0.20)'; rowBg.borderWidth = 1
     sBg.push(rowBg); jsmaf.root.children.push(rowBg)
 
-    const rowGlw = new Image({ url: CYAN, x: PAD, y: bY, width: BW, height: BH, visible: false })
-    rowGlw.alpha = 0.055; rowGlw.borderWidth = 0
+    const rowGlw = new Image({ url: AMBER, x: PAD, y: bY, width: BW, height: BH, visible: false })
+    rowGlw.alpha = 0.060; rowGlw.borderWidth = 0
     sGlw.push(rowGlw); jsmaf.root.children.push(rowGlw)
 
-    const rowBar = new Image({ url: CYAN, x: PAD, y: bY, width: 4, height: BH, visible: false })
-    rowBar.alpha = 0.38; rowBar.borderWidth = 0
+    const rowBar = new Image({ url: AMBER, x: PAD, y: bY, width: 5, height: BH, visible: false })
+    rowBar.alpha = 0.50; rowBar.borderWidth = 0
     sBar.push(rowBar); jsmaf.root.children.push(rowBar)
 
-    // Text: initialized with single space so engine registers the element,
-    // hidden by setting .text = '' (empty text renders nothing)
     const rowNum = new jsmaf.Text()
-    rowNum.style = 'pnum'; rowNum.text = ''; rowNum.x = PAD + 16; rowNum.y = bY + 32
+    rowNum.style = 'pnum'; rowNum.text = ''; rowNum.x = PAD + 18; rowNum.y = bY + 36
     sNum.push(rowNum); jsmaf.root.children.push(rowNum)
 
     const rowLbl = new jsmaf.Text()
-    rowLbl.style = 'pmuted'; rowLbl.text = ''; rowLbl.x = PAD + 56; rowLbl.y = bY + 18
+    rowLbl.style = 'pmuted'; rowLbl.text = ''; rowLbl.x = PAD + 58; rowLbl.y = bY + 18
     sLbl.push(rowLbl); jsmaf.root.children.push(rowLbl)
 
     const rowPth = new jsmaf.Text()
-    rowPth.style = 'ppath'; rowPth.text = ''; rowPth.x = PAD + 56; rowPth.y = bY + 56
+    rowPth.style = 'ppath'; rowPth.text = ''; rowPth.x = PAD + 58; rowPth.y = bY + 56
     sPth.push(rowPth); jsmaf.root.children.push(rowPth)
 
     const rowBdg = new jsmaf.Text()
-    rowBdg.style = 'pbadge'; rowBdg.text = ''; rowBdg.x = PAD + BW - 120; rowBdg.y = bY + 34
+    rowBdg.style = 'pbadge'; rowBdg.text = ''; rowBdg.x = PAD + BW - 120; rowBdg.y = bY + 36
     sBdg.push(rowBdg); jsmaf.root.children.push(rowBdg)
   }
 
-  // Scroll indicators — hidden by setting text = ''
+  // Scroll indicators
   const upInd = new jsmaf.Text()
   upInd.style = 'pscroll'; upInd.text = ''; upInd.x = SW / 2 - 70; upInd.y = HDR + 2
   jsmaf.root.children.push(upInd)
   const dnInd = new jsmaf.Text()
-  dnInd.style = 'pscroll'; dnInd.text = ''; dnInd.x = SW / 2 - 70; dnInd.y = SY + MAXR * (BH + GAP) + 4
+  dnInd.style = 'pscroll'; dnInd.text = ''; dnInd.x = SW / 2 - 70; dnInd.y = SY + MAXR * (BH + GAP) + 6
   jsmaf.root.children.push(dnInd)
 
-  // Empty state — hidden by setting text = ''
+  // Empty state
   const emTxt = new jsmaf.Text()
-  emTxt.style = 'pempty'; emTxt.text = ''; emTxt.x = SW / 2 - 190; emTxt.y = SH / 2 - 70
+  emTxt.style = 'pempty'; emTxt.text = ''; emTxt.x = SW / 2 - 200; emTxt.y = SH / 2 - 80
   jsmaf.root.children.push(emTxt)
   const emS1 = new jsmaf.Text()
-  emS1.style = 'pemsub'; emS1.text = ''; emS1.x = SW / 2 - 225; emS1.y = SH / 2 + 4
+  emS1.style = 'pemsub'; emS1.text = ''; emS1.x = SW / 2 - 232; emS1.y = SH / 2
   jsmaf.root.children.push(emS1)
   const emS2 = new jsmaf.Text()
-  emS2.style = 'pemsub'; emS2.text = ''; emS2.x = SW / 2 - 128; emS2.y = SH / 2 + 44
+  emS2.style = 'pemsub'; emS2.text = ''; emS2.x = SW / 2 - 130; emS2.y = SH / 2 + 42
   jsmaf.root.children.push(emS2)
   const emS3 = new jsmaf.Text()
-  emS3.style = 'pemsub'; emS3.text = ''; emS3.x = SW / 2 - 198; emS3.y = SH / 2 + 84
+  emS3.style = 'pemsub'; emS3.text = ''; emS3.x = SW / 2 - 200; emS3.y = SH / 2 + 84
   jsmaf.root.children.push(emS3)
 
   let cur = 0; let scrollOff = 0
@@ -214,11 +215,10 @@ import { checkJailbroken } from 'download0/check-jailbroken'
 
   function renderRows () {
     if (TOTAL === 0) {
-      // Show empty state via text content; hide all slots via Image.visible
       emTxt.text = '◈   No Payloads Found'
-      emS1.text = 'Place  .elf  /  .bin  /  .js  files in:'
-      emS2.text = '/download0/payloads/'
-      emS3.text = is_jailbroken ? '/data/payloads/   (also supported)' : ''
+      emS1.text  = 'Place  .elf  /  .bin  /  .js  files in:'
+      emS2.text  = '/download0/payloads/'
+      emS3.text  = is_jailbroken ? '/data/payloads/   (also supported)' : ''
       upInd.text = ''; dnInd.text = ''
       for (let s = 0; s < MAXR; s++) {
         sBg[s]!.visible = false; sGlw[s]!.visible = false; sBar[s]!.visible = false
@@ -226,43 +226,37 @@ import { checkJailbroken } from 'download0/check-jailbroken'
       }
       return
     }
-    // Hide empty state
     emTxt.text = ''; emS1.text = ''; emS2.text = ''; emS3.text = ''
-    upInd.text = scrollOff > 0 ? '▲  Scroll up' : ''
-    dnInd.text = (scrollOff + MAXR) < TOTAL ? '▼  More below' : ''
+    upInd.text = scrollOff > 0                   ? '▲  Scroll up'   : ''
+    dnInd.text = (scrollOff + MAXR) < TOTAL      ? '▼  More below'  : ''
 
     for (let s = 0; s < MAXR; s++) {
       const idx = scrollOff + s
       if (idx >= TOTAL) {
-        // Hide this slot — Image.visible + empty text
         sBg[s]!.visible = false; sGlw[s]!.visible = false; sBar[s]!.visible = false
         sNum[s]!.text = ''; sLbl[s]!.text = ''; sPth[s]!.text = ''; sBdg[s]!.text = ''
         continue
       }
-      // Show this slot
-      const f = fileList[idx]!
-      const sel = idx === cur
+      const f = fileList[idx]!; const sel = idx === cur
       let disp = f.name.replace(/\.(elf|bin|js)$/i, '')
       if (disp.length > 68) disp = disp.slice(0, 66) + '..'
       const hint = f.path.startsWith('/data/') ? '/data/payloads' : '/download0/payloads'
 
-      sBg[s]!.visible = true
-      sBg[s]!.alpha = sel ? 0.20 : 0.06
-      sBg[s]!.borderColor = sel ? 'rgba(60,200,230,0.90)' : 'rgba(60,160,180,0.18)'
+      sBg[s]!.visible     = true
+      sBg[s]!.alpha       = sel ? 0.22 : 0.10
+      sBg[s]!.borderColor = sel ? 'rgba(255,185,50,0.92)' : 'rgba(255,185,50,0.20)'
       sBg[s]!.borderWidth = sel ? 2 : 1
+      sGlw[s]!.visible    = sel
+      sBar[s]!.visible    = true
+      sBar[s]!.alpha      = sel ? 1.0 : 0.50
 
-      sGlw[s]!.visible = sel
-      sBar[s]!.visible = true
-      sBar[s]!.alpha = sel ? 1.0 : 0.38
-
-      // Text: just set content — empty = invisible, non-empty = visible
       sNum[s]!.style = sel ? 'pnumsel' : 'pnum'
-      sNum[s]!.text = String(idx + 1).padStart(2, '0')
+      sNum[s]!.text  = String(idx + 1).padStart(2, '0')
       sLbl[s]!.style = sel ? 'pwhite' : 'pmuted'
-      sLbl[s]!.text = disp
-      sPth[s]!.text = hint
+      sLbl[s]!.text  = disp
+      sPth[s]!.text  = hint
       sBdg[s]!.style = sel ? 'pbsel' : 'pbadge'
-      sBdg[s]!.text = f.ext
+      sBdg[s]!.text  = f.ext
     }
   }
 
@@ -294,13 +288,14 @@ import { checkJailbroken } from 'download0/check-jailbroken'
   }
 
   const confirmKey = jsmaf.circleIsAdvanceButton ? 13 : 14
-  const backKey = jsmaf.circleIsAdvanceButton ? 14 : 13
+  const backKey    = jsmaf.circleIsAdvanceButton ? 14 : 13
   jsmaf.onKeyDown = function (kc: number) {
     if (kc === 6 || kc === 5) {
       if (TOTAL > 0) { cur = (cur + 1) % TOTAL; sfxCur(); clamp(); renderRows() }
     } else if (kc === 4 || kc === 7) {
       if (TOTAL > 0) { cur = (cur - 1 + TOTAL) % TOTAL; sfxCur(); clamp(); renderRows() }
-    } else if (kc === confirmKey) { sfxOk(); launchPayload() } else if (kc === backKey) {
+    } else if (kc === confirmKey) { sfxOk(); launchPayload()
+    } else if (kc === backKey) {
       sfxBack()
       try { include('themes/' + (typeof CONFIG !== 'undefined' && CONFIG.theme ? CONFIG.theme : 'default') + '/main.js') } catch (e) { log('Back: ' + (e as Error).message) }
     }
